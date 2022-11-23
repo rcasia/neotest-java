@@ -1,12 +1,15 @@
+
 ---@class neotest.Adapter
 ---@field name string
-local NeotestJavaAdapter = {name = 'neotest-java'}
+NeotestJavaAdapter = {name = 'neotest-java'}
   ---Find the project root directory given a current directory to work from.
   ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
   ---@async
   ---@param dir string @Directory to treat as cwd
   ---@return string | nil @Absolute root dir of test suite
-  function NeotestJavaAdapter.root(dir) end
+  function NeotestJavaAdapter.root(dir)
+    return dir:match('(.*)src')
+  end
 
   ---Filter directories when searching for test files
   ---@async
@@ -38,3 +41,5 @@ local NeotestJavaAdapter = {name = 'neotest-java'}
   ---@return table<string, neotest.Result>
   function NeotestJavaAdapter.results(spec, result, tree) end
 
+
+return NeotestJavaAdapter
