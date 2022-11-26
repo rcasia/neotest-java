@@ -6,6 +6,7 @@ local IsTestFileChecker = require "core.is_test_file_checker"
 ---@class neotest.Adapter
 ---@field name string
 NeotestJavaAdapter = {name = 'neotest-java'}
+
   ---Find the project root directory given a current directory to work from.
   ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
   ---@async
