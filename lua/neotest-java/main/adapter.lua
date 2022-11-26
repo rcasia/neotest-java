@@ -1,6 +1,7 @@
 
 local RootFinder = require "core.root_finder"
 local DirFinder = require "core.dir_finder"
+local IsTestFileChecker = require "core.is_test_file_checker"
 
 ---@class neotest.Adapter
 ---@field name string
@@ -28,7 +29,7 @@ NeotestJavaAdapter = {name = 'neotest-java'}
   ---@param file_path string
   ---@return boolean
   function NeotestJavaAdapter.is_test_file(file_path)
-
+    return IsTestFileChecker.isTestFile(file_path)
   end
 
   ---Given a file path, parse all the tests within it.
