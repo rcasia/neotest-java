@@ -1,4 +1,6 @@
 
+require "core.root_finder"
+
 ---@class neotest.Adapter
 ---@field name string
 NeotestJavaAdapter = {name = 'neotest-java'}
@@ -8,7 +10,7 @@ NeotestJavaAdapter = {name = 'neotest-java'}
   ---@param dir string @Directory to treat as cwd
   ---@return string | nil @Absolute root dir of test suite
   function NeotestJavaAdapter.root(dir)
-    return dir:match('(.*)src')
+    return RootFinder.findRoot(dir)
   end
 
   ---Filter directories when searching for test files
