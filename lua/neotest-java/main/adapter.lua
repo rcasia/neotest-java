@@ -1,5 +1,6 @@
 
-require "core.root_finder"
+local RootFinder = require "core.root_finder"
+local DirFinder = require "core.dir_finder"
 
 ---@class neotest.Adapter
 ---@field name string
@@ -20,7 +21,7 @@ NeotestJavaAdapter = {name = 'neotest-java'}
   ---@param root string Root directory of project
   ---@return boolean
   function NeotestJavaAdapter.filter_dir(name, rel_path, root)
-    return rel_path:match('src/test/java') ~= nil
+    return DirFinder.filterDir(name, rel_path, root)
   end
 
   ---@async
