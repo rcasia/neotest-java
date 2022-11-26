@@ -17,12 +17,16 @@ NeotestJavaAdapter = {name = 'neotest-java'}
   ---@param rel_path string Path to directory, relative to root
   ---@param root string Root directory of project
   ---@return boolean
-  function NeotestJavaAdapter.filter_dir(name, rel_path, root) end
+  function NeotestJavaAdapter.filter_dir(name, rel_path, root)
+    return rel_path:match('src/test/java') ~= nil
+  end
 
   ---@async
   ---@param file_path string
   ---@return boolean
-  function NeotestJavaAdapter.is_test_file(file_path) end
+  function NeotestJavaAdapter.is_test_file(file_path)
+
+  end
 
   ---Given a file path, parse all the tests within it.
   ---@async
