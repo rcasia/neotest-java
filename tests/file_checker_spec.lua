@@ -9,7 +9,7 @@ describe("file_checker", function()
       "src/test/java/neotest/NeotestTest.java",
       "src/test/java/neotest/RepositoryTest.java",
     }
-  
+
     for _, file_path in ipairs(test_files) do
       assert.are.equal(true, plugin.is_test_file(file_path))
     end
