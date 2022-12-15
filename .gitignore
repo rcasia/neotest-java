@@ -1,7 +1,6 @@
 **/demo
 **/.vim
 /luarocks
-/lua
 /lua_modules
 /.luarocks
 
