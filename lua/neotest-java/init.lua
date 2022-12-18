@@ -3,6 +3,7 @@ local FileChecker = require('neotest-java.core.file_checker')
 local RootFinder = require('neotest-java.core.root_finder')
 local DirFilter = require('neotest-java.core.dir_filter')
 local PositionsDiscoverer = require('neotest-java.core.positions_discoverer')
+local SpecBuilder = require('neotest-java.core.spec_builder')
 
 ---@class neotest.Adapter
 ---@field name string
@@ -44,7 +45,9 @@ NeotestJavaAdapter = {name = 'neotest-java'}
 
   ---@param args neotest.RunArgs
   ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-  function NeotestJavaAdapter.build_spec(args) end
+  function NeotestJavaAdapter.build_spec(args)
+    return SpecBuilder.build_spec(args)
+  end
 
   ---@async
   ---@param spec neotest.RunSpec
