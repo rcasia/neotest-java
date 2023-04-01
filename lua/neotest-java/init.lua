@@ -4,6 +4,7 @@ local RootFinder = require('neotest-java.core.root_finder')
 local DirFilter = require('neotest-java.core.dir_filter')
 local PositionsDiscoverer = require('neotest-java.core.positions_discoverer')
 local SpecBuilder = require('neotest-java.core.spec_builder')
+local ResultBuilder = require('neotest-java.core.result_builder')
 
 ---@class neotest.Adapter
 ---@field name string
@@ -54,7 +55,9 @@ NeotestJavaAdapter = {name = 'neotest-java'}
   ---@param result neotest.StrategyResult
   ---@param tree neotest.Tree
   ---@return table<string, neotest.Result>
-  function NeotestJavaAdapter.results(spec, result, tree) end
+  function NeotestJavaAdapter.results(spec, result, tree)
+    return ResultBuilder.build_results(spec, result, tree)
+  end
 
 
 return NeotestJavaAdapter
