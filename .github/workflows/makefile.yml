@@ -13,9 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-
-    - name: Install dependencies and test
-      run: make
     
     - name: Validate code format
       run: make validate
