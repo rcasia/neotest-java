@@ -3,26 +3,23 @@ local plugin = require("neotest-java")
 local Tree = require("neotest.types").Tree
 
 describe("RootFinder", function()
-	it(
-		"should find the root of a project",
-		function()
-			-- given
-			local absoluteDirs = {
-				"/home/user/project/src/main/java",
-				"/home/user/project/src/main/resources",
-				"/home/user/project/src/test/java",
-				"/home/user/project/src/test/resources",
-			}
+	it("should find the root of a project", function()
+		-- given
+		local absoluteDirs = {
+			"/home/user/project/src/main/java",
+			"/home/user/project/src/main/resources",
+			"/home/user/project/src/test/java",
+			"/home/user/project/src/test/resources",
+		}
 
-			local expectedRoot = "/home/user/project"
+		local expectedRoot = "/home/user/project"
 
-			-- when
-			for _, dir in ipairs(absoluteDirs) do
-				local actualRoot = plugin.root(dir)
+		-- when
+		for _, dir in ipairs(absoluteDirs) do
+			local actualRoot = plugin.root(dir)
 
-				-- then
-				assert.are.same(actualRoot, expectedRoot)
-			end
+			-- then
+			assert.are.same(actualRoot, expectedRoot)
 		end
-	)
+	end)
 end)
