@@ -1,4 +1,4 @@
-.PHONY: test clean
+.PHONY: clean test
 
 test: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
 	./scripts/test
@@ -21,3 +21,8 @@ deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 clean:
 	rm -rf deps/plenary.nvim deps/nvim-treesitter deps/neotest
 
+validate:
+	stylua --check .
+
+format:
+	stylua .
