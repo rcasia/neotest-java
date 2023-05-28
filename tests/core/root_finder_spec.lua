@@ -10,6 +10,7 @@ describe("RootFinder", function()
 			"/home/user/project/src/main/resources",
 			"/home/user/project/src/test/java",
 			"/home/user/project/src/test/resources",
+			"/home/user/project",
 		}
 
 		local expectedRoot = "/home/user/project"
@@ -19,7 +20,7 @@ describe("RootFinder", function()
 			local actualRoot = plugin.root(dir)
 
 			-- then
-			assert.are.same(actualRoot, expectedRoot)
+			assert.are.same(expectedRoot, actualRoot)
 		end
 	end)
 end)
