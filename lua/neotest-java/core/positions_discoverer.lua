@@ -9,14 +9,15 @@ PositionsDiscoverer = {}
 function PositionsDiscoverer:discover_positions(file_path)
 	local query = [[
       ;; @Test function
-      (( method_declaration
+      (method_declaration
         (modifiers
           (marker_annotation
-            name: (identifier) @annotation (#any-of? @annotation "Test" "ParameterizedTest")
+            name: (identifier) @annotation 
+              (#any-of? @annotation "Test" "ParameterizedTest")
             )
         )
-        name: (identifier) @test.name (#offset! @test.name)
-      )) @test.definition
+        name: (identifier) @test.name
+      ) @test.definition
     ]]
 
 	return lib.treesitter.parse_positions(file_path, query)

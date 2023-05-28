@@ -17,6 +17,12 @@ class Test {
     assertThat(1).isEqualTo(1);
   }
 
+  @ParameterizedTest
+  @MethodSource("provideStringsForIsBlank")
+  public void shouldFindThis4() {
+    assertThat(1).isEqualTo(1);
+  }
+
   private void assertThat(int i) {
     // do nothing
   }
