@@ -17,17 +17,25 @@ function SpecBuilder.build_spec(args)
 		"-Dtest=" .. test_reference,
 	})
 
+	print("command: " .. vim.inspect(command))
+
 	local a = {
 		command = table.concat(command, " "),
 		cwd = root,
+		symbol = position.name,
 	}
 
-  print("build_spec object: " .. vim.inspect(a))
+	print("build_spec object: " .. vim.inspect(a))
 
-  return a
+	return a
 end
 
 function SpecBuilder.findJavaReference(relative_path, name)
+	-- if name contains java, then it's a class
+	if string.find(name, ".java", 1, true) then
+		return relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", "")
+	end
+
 	return relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", "") .. "#" .. name
 end
 

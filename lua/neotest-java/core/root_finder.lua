@@ -7,7 +7,7 @@ SpecBuilder = {}
 ---@param dir string @Directory to treat as cwd
 ---@return string | nil @Absolute root dir of test suite
 function SpecBuilder.findRoot(dir)
-  return lib.files.match_root_pattern("pom.xml")(dir)
+	return lib.files.match_root_pattern("pom.xml")(dir)
 end
 
 return SpecBuilder

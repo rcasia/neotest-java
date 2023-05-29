@@ -7,22 +7,22 @@ DirFilter = {}
 ---@param root string Root directory of project
 ---@return boolean
 function DirFilter:filter_dir(name, rel_path, root)
-  local excluded = {
-    "target",
-    "build",
-    "out",
-    "bin",
-    "resources",
-    "main",
-  }
+	local excluded = {
+		"target",
+		"build",
+		"out",
+		"bin",
+		"resources",
+		"main",
+	}
 
-  for _, v in ipairs(excluded) do
-    if name == v then
-      return false
-    end
-  end
+	for _, v in ipairs(excluded) do
+		if name == v then
+			return false
+		end
+	end
 
-  return true
+	return true
 end
 
 return DirFilter
