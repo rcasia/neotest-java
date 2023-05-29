@@ -21,6 +21,5 @@ describe("PositionsDiscoverer", function()
 		assert.equals(actual_list[3][1].name, "shouldFindThis2")
 		assert.equals(actual_list[4][1].name, "shouldFindThis3")
 		assert.equals(actual_list[5][1].name, "shouldFindThis4")
-
 	end)
 end)
