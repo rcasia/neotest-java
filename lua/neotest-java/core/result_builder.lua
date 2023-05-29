@@ -13,16 +13,22 @@ ResultBuilder = {}
 function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
-	results["prueba"] = {
-		status = "skipped",
-		output = "output",
-		short = "short",
-		errors = {
-			{
-				message = "message",
-				trace = "trace",
-			},
-		},
+	-- results["prueba"] = {
+	-- 	status = "passed",
+	-- 	output = "output",
+	-- 	short = "short",
+	-- 	errors = {
+	-- 		{
+	-- 			message = "message",
+	-- 			trace = "trace",
+	-- 		},
+	-- 	},
+	-- }
+
+  local id = tree:data().id
+  print("id: " .. id)
+	results[id] = {
+		status = "passed",
 	}
 
 	return results
