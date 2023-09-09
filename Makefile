@@ -1,10 +1,14 @@
-.PHONY: clean test
+.PHONY: clean
 
-test: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
+all: test
+
+test: install
 	./scripts/test
 
-test-fail-fast: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
+test-fail-fast: install
 	./scripts/test --fail-fast
+
+install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
 
 deps/plenary.nvim:
 	mkdir -p deps
