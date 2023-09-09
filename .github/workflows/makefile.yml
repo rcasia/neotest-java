@@ -1,0 +1,26 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: rhysd/action-setup-vim@v1
+      with:
+        neovim: true
+
+    - name: Install dependencies
+      run: make install
+
+    - name: Run tests
+      run: make test
+

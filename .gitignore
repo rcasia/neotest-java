@@ -4,4 +4,4 @@
 /lua_modules
 /.luarocks
 
-deps/**
+deps
