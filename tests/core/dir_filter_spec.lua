@@ -17,6 +17,12 @@ describe("DirFilter", function()
 		-- then
 		for _, path in ipairs(relative_paths) do
 			local result = plugin:filter_dir(name, path, root)
+
+      -- print path when test fails
+      if result then
+        print("Expected to filter out: " .. path)
+      end
+
 			assert.is_false(result)
 		end
 	end)
@@ -35,7 +41,13 @@ describe("DirFilter", function()
 		-- then
 		for _, path in ipairs(relative_paths) do
 			local result = plugin:filter_dir(name, path, root)
+
+      -- print path when test fails
+      if not result then
+        print("Expected to not filter out: " .. path)
+      end
 			assert.is_true(result)
+
 		end
 	end)
 end)
