@@ -1,13 +1,18 @@
 local async = require("nio").tests
 local plugin = require("neotest-java")
 
+local function getCurrentDir()
+  return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
+end
+
 describe("ResultBuilder", function()
 	async.it("builds the results", function()
 		--given
 		local runSpec = {
+      -- TODO: use a real test runner
 			command = [[/usr/bin/java]],
 			env = {},
-			cwd = [[/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/demo]],
+			cwd = getCurrentDir() .. "tests/fixtures/demo",
 			context = {},
 			strategy = "java",
 			stream = function() end,
@@ -18,21 +23,8 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-    -- local positions = plugin.discover_positions("/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/Test.java"):to_list()
-    -- print (vim.inspect(positions))
-		-- local tree = function()
-      -- return {
-        -- data = function()
-          -- return {
-            -- path = "/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/Test.java",
-            -- name = "shouldNotFail",
-          -- }
-        -- end,
-      -- }
-    -- end
-    --
-    local tree = plugin.discover_positions("/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/Test.java")
-    -- print (vim.inspect(positions))
+    local file_path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java"
+    local tree = plugin.discover_positions(file_path)
 
 		--when
 		local actual = plugin.results(runSpec, strategyResult, tree)
