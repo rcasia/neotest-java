@@ -46,7 +46,7 @@ function ResultBuilder.build_results(spec, result, tree)
 			local xml_data = xml.parse(data)
 
 			for _, testcase in ipairs(xml_data.testsuite.testcase) do
-				print("testcase: " .. vim.inspect(testcase))
+				-- print("testcase: " .. vim.inspect(testcase))
 				test_cases[testcase._attr.name] = testcase
 			end
 		end

@@ -1,4 +1,4 @@
-local async = require("nio").tests
+local async = require("plenary.async").tests
 local plugin = require("neotest-java")
 local Tree = require("neotest.types.tree")
 
@@ -8,7 +8,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			command = [[/usr/bin/java]],
 			env = {},
-			cwd = [[/home/rcasia/REPOS/opensource/neotest-java/demo]],
+			cwd = [[/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/demo]],
 			context = {},
 			strategy = "java",
 			stream = function() end,
