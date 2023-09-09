@@ -17,7 +17,7 @@ function DirFilter:filter_dir(name, rel_path, root)
 	}
 
 	for _, v in ipairs(excluded) do
-		if name == v then
+		if string.find(rel_path, v) then
 			return false
 		end
 	end
