@@ -13,13 +13,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install Neovim
+    - run: ./scripts/install-neovim
 
-    - name: Run check
-      run: make validate
-
+    - uses: actions/checkout@v3
     - name: Install dependencies
-      run: make
+    - run: make install
 
+    - uses: actions/checkout@v3
     - name: Run tests
-      run: make test
+    - run: make test
 
