@@ -3,13 +3,12 @@ local plugin = require("neotest-java")
 local Tree = require("neotest.types.tree")
 
 local function getCurrentDir()
-  return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
+	return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 end
 
 describe("SpecBuilder", function()
 	async.it("builds the spec for method", function()
-
-    local path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java"
+		local path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java"
 
 		local args = {
 			tree = {

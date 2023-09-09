@@ -3,7 +3,7 @@ local plugin = require("neotest-java")
 local Tree = require("neotest.types").Tree
 
 local function getCurrentDir()
-  return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
+	return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 end
 
 describe("PositionsDiscoverer", function()
