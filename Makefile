@@ -3,6 +3,9 @@
 test: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
 	./scripts/test
 
+test-fail-fast: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
+	./scripts/test --fail-fast
+
 deps/plenary.nvim:
 	mkdir -p deps
 	git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git $@
