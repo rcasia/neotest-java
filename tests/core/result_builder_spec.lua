@@ -1,14 +1,14 @@
-local async = require("plenary.async.tests")
+local async = require("nio").tests
 local plugin = require("neotest-java")
 local Tree = require("neotest.types.tree")
 
 describe("ResultBuilder", function()
-	it("builds the results", function()
+	async.it("builds the results", function()
 		--given
 		local runSpec = {
 			command = [[/usr/bin/java]],
 			env = {},
-			cwd = [[/home/runner/work/neotest-java/neotest-java]],
+			cwd = [[/home/rcasia/REPOS/opensource/neotest-java/demo]],
 			context = {},
 			strategy = "java",
 			stream = function() end,
@@ -19,7 +19,11 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local tree = {}
+    -- local positions = plugin.discover_positions("/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/Test.java"):to_list()
+    -- print (vim.inspect(positions))
+		-- local tree = Tree.from_list(positions)
+
+    local tree = {}
 
 		--when
 		local actual = plugin.results(runSpec, strategyResult, tree)

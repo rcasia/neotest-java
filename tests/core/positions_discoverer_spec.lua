@@ -1,11 +1,11 @@
-local async = require("plenary.async.tests")
+local async = require("nio").tests
 local plugin = require("neotest-java")
 local Tree = require("neotest.types").Tree
 
 describe("PositionsDiscoverer", function()
 	async.it("should discover test method names", function()
 		-- given
-		local file_path = "./tests/fixtures/Test.java"
+		local file_path = "/home/rcasia/REPOS/opensource/neotest-java/tests/fixtures/Test.java"
 
 		-- when
 		local actual = plugin.discover_positions(file_path)
