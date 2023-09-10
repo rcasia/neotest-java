@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Testing
 
 on:
   push:
@@ -12,7 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+
+    - name: Setup Maven Action
+      uses: s4u/setup-maven-action@v1.9.0
 
     - uses: rhysd/action-setup-vim@v1
       with:
@@ -20,6 +22,9 @@ jobs:
 
     - name: Install dependencies
       run: make install
+
+    - name: Prepare demo repositories
+      run: make prepare-demo
 
     - name: Run tests
       run: make test
