@@ -20,18 +20,6 @@ ResultBuilder = {}
 function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
-	-- results["prueba"] = {
-	-- 	status = "passed",
-	-- 	output = "output",
-	-- 	short = "short",
-	-- 	errors = {
-	-- 		{
-	-- 			message = "message",
-	-- 			trace = "trace",
-	-- 		},
-	-- 	},
-	-- }
-
 	local reports_dir = spec.cwd .. "/target/surefire-reports"
 	local files = scan.scan_dir(reports_dir, { depth = 1 })
 	local test_cases = {}
@@ -46,19 +34,10 @@ function ResultBuilder.build_results(spec, result, tree)
 			local xml_data = xml.parse(data)
 
 			for _, testcase in ipairs(xml_data.testsuite.testcase) do
-				-- print("testcase: " .. vim.inspect(testcase))
 				test_cases[testcase._attr.name] = testcase
 			end
 		end
 	end
-
-	-- test: {
-	-- id = "/home/rcasia/REPOS/playground/demo/src/test/java/com/example/demo/DemoApplicationTest.java::contextLoads",
-	-- name = "contextLoads",
-	-- path = "/home/rcasia/REPOS/playground/demo/src/test/java/com/example/demo/DemoApplicationTest.java",
-	-- range = { 7, 1, 10, 2 },
-	-- type = "test"
-	-- }
 
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()

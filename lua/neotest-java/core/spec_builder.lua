@@ -17,17 +17,11 @@ function SpecBuilder.build_spec(args)
 		"-Dtest=" .. test_reference,
 	})
 
-	print("command: " .. vim.inspect(command))
-
-	local a = {
+	return {
 		command = table.concat(command, " "),
 		cwd = root,
 		symbol = position.name,
 	}
-
-	print("build_spec object: " .. vim.inspect(a))
-
-	return a
 end
 
 function SpecBuilder.findJavaReference(relative_path, name)
