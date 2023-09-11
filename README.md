@@ -9,7 +9,7 @@ It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter
 
 Using vim-plug:
 ```vim
-Plug 'rcasia/neotest-java', , { 'do': ':TSInstall java' }
+Plug 'rcasia/neotest-java', { 'do': ':TSInstall java' }
 ```
 
 ## ⚙ Configuration
