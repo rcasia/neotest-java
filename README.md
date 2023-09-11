@@ -1,6 +1,22 @@
-# neotest-java
 [![Makefile CI](https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml/badge.svg)](https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml)
+# neotest-java
 
-## 🚧 Work In Progress
+[Neotest](https://github.com/rcarriga/neotest) adapter for Rust, using JUnit.
 
-Plugin adapter for [neotest](https://github.com/nvim-neotest/neotest)
+## 🔧 Installation
+
+It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+
+Using vim-plug:
+```vim
+Plug 'rcasia/neotest-java', , { 'do': ':TSInstall java' }
+```
+
+## ⚙ Configuration
+```lua
+require("neotest").setup({
+  adapters = {
+    require("neotest-java")
+  }
+})
+```
