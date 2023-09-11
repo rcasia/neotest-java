@@ -11,14 +11,19 @@ function SpecBuilder.build_spec(args)
 	local test_reference = SpecBuilder.findJavaReference(relative_path, position.name)
 
 	-- TODO: add support for multiple modules projects
-	local command = vim.tbl_flatten({
+	local command_table = vim.tbl_flatten({
 		"mvn",
+		"clean",
 		"test",
 		"-Dtest=" .. test_reference,
 	})
 
+	local command = table.concat(command_table, " ")
+	-- TODO: add debug logger
+	-- print("Running command: " .. command)
+
 	return {
-		command = table.concat(command, " "),
+		command = command,
 		cwd = root,
 		symbol = position.name,
 	}

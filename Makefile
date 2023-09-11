@@ -1,12 +1,16 @@
 .PHONY: clean
 
-all: test
+all: prepare-demo test
 
 test: install
 	./scripts/test
 
 test-fail-fast: install
 	./scripts/test --fail-fast
+
+prepare-demo:
+	# it is expected to fail because there are failing tests
+	-mvn -f tests/fixtures/demo/pom.xml clean test
 
 install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
 
@@ -27,6 +31,7 @@ deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 
 clean:
 	rm -rf deps/plenary.nvim deps/nvim-treesitter deps/neotest
+	mvn -f tests/fixtures/demo/pom.xml clean
 
 validate:
 	stylua --check .

@@ -28,7 +28,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#shouldNotFail"
 
-		local expected_command = "mvn test -Dtest=" .. expected_position
+		local expected_command = "mvn clean test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
 
 		assert.are.equal(expected_command, actual.command)
@@ -54,7 +54,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#ExampleTest"
 
-		local expected_command = "mvn test -Dtest=" .. expected_position
+		local expected_command = "mvn clean test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
 
 		assert.are.equal(expected_command, actual.command)

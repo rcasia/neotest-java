@@ -10,6 +10,17 @@ local context_manager = require("plenary.context_manager")
 local with = context_manager.with
 local open = context_manager.open
 
+function isIndexedTable(tbl)
+	local index = 1
+	for k, _ in pairs(tbl) do
+		if k ~= index then
+			return false
+		end
+		index = index + 1
+	end
+	return true
+end
+
 ResultBuilder = {}
 
 ---@async
@@ -22,7 +33,7 @@ function ResultBuilder.build_results(spec, result, tree)
 
 	local reports_dir = spec.cwd .. "/target/surefire-reports"
 	local files = scan.scan_dir(reports_dir, { depth = 1 })
-	local test_cases = {}
+	local testcases = {}
 
 	for _, file in ipairs(files) do
 		if string.find(file, ".xml", 1, true) then
@@ -33,8 +44,22 @@ function ResultBuilder.build_results(spec, result, tree)
 
 			local xml_data = xml.parse(data)
 
-			for _, testcase in ipairs(xml_data.testsuite.testcase) do
-				test_cases[testcase._attr.name] = testcase
+			local testcases_in_xml = xml_data.testsuite.testcase
+
+			-- index table if not array
+			if not isIndexedTable(testcases_in_xml) then
+				testcases_in_xml = { testcases_in_xml }
+			end
+
+			if not testcases_in_xml then
+				-- TODO: use an actual logger
+				print("[neotest-java] No test cases found")
+				break
+			else
+				-- testcases_in_xml is an array
+				for _, testcase in ipairs(testcases_in_xml) do
+					testcases[testcase._attr.name] = testcase
+				end
 			end
 		end
 	end
@@ -42,7 +67,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
 		if node_data.type == "test" then
-			local test_case = test_cases[node_data.name]
+			local test_case = testcases[node_data.name]
 
 			if not test_case then
 				results[node_data.id] = {
