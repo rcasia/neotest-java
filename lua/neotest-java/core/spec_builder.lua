@@ -9,14 +9,25 @@ function SpecBuilder.build_spec(args)
 	local root = RootFinder.findRoot(position.path)
 	local relative_path = position.path:sub(#root + 2)
 	local test_reference = SpecBuilder.findJavaReference(relative_path, position.name)
+	local is_integration_test = string.find(position.path, "IT.java", 1, true)
 
 	-- TODO: add support for multiple modules projects
-	local command_table = vim.tbl_flatten({
-		"mvn",
-		"clean",
-		"test",
-		"-Dtest=" .. test_reference,
-	})
+	local command_table = {}
+	if is_integration_test then
+		command_table = vim.tbl_flatten({
+			"mvn",
+			"clean",
+			"verify",
+			"-Dit.test=" .. test_reference,
+		})
+	else
+		command_table = vim.tbl_flatten({
+			"mvn",
+			"clean",
+			"test",
+			"-Dtest=" .. test_reference,
+		})
+	end
 
 	local command = table.concat(command_table, " ")
 	-- TODO: add debug logger
