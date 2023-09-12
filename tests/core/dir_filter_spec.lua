@@ -36,6 +36,7 @@ describe("DirFilter", function()
 			"src/test/java/com/example/",
 			"src/test/java/com/example/Example.java",
 			"src/test/java/com/example/ExampleTest.java",
+			"src/test/java/com/example/resources/ExampleSpec.java",
 		}
 
 		local root = "/home/user/project"

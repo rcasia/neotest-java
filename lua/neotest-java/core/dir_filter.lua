@@ -18,6 +18,10 @@ DirFilter = {
 ---@return boolean
 function DirFilter.filter_dir(name, rel_path, root)
 	for _, v in ipairs(DirFilter.excluded_directories) do
+		if string.find(rel_path, "test") then
+			return true
+		end
+
 		if string.find(rel_path, v) then
 			return false
 		end
