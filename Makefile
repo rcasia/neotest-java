@@ -10,7 +10,7 @@ test-fail-fast: install
 
 prepare-demo:
 	# it is expected to fail because there are failing tests
-	-mvn -f tests/fixtures/demo/pom.xml clean test
+	-mvn -f tests/fixtures/demo/pom.xml clean verify --fail-at-end -Dtest="*"
 
 install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
 

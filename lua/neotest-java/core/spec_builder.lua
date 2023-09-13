@@ -18,7 +18,7 @@ function SpecBuilder.build_spec(args)
 			"mvn",
 			"clean",
 			"verify",
-			"-Dit.test=" .. test_reference,
+			"-Dtest=" .. test_reference,
 		})
 	else
 		command_table = vim.tbl_flatten({

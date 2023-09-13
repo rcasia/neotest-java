@@ -78,7 +78,7 @@ describe("SpecBuilder", function()
 		-- when
 		local actual = plugin.build_spec(args)
 
-		local expected_command = "mvn clean verify -Dit.test=com.example.demo.RepositoryIT#shouldWorkProperly"
+		local expected_command = "mvn clean verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
 
 		assert.are.equal(expected_command, actual.command)
