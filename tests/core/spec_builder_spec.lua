@@ -7,7 +7,7 @@ local function getCurrentDir()
 end
 
 describe("SpecBuilder", function()
-	async.it("builds the spec for method", function()
+	async.it("builds the spec for method in unit test class", function()
 		local path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java"
 
 		local args = {
@@ -35,7 +35,7 @@ describe("SpecBuilder", function()
 		assert.are.equal(expected_cwd, actual.cwd)
 	end)
 
-	async.it("builds the spec for class", function()
+	async.it("builds the spec for unit test class", function()
 		local args = {
 			tree = {
 				data = function()
@@ -55,6 +55,30 @@ describe("SpecBuilder", function()
 		local expected_position = "com.example.ExampleTest#ExampleTest"
 
 		local expected_command = "mvn clean test -Dtest=" .. expected_position
+		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
+
+		assert.are.equal(expected_command, actual.command)
+		assert.are.equal(expected_cwd, actual.cwd)
+	end)
+
+	async.it("builds the spec for method in integration test class", function()
+		local args = {
+			tree = {
+				data = function()
+					return {
+						path = getCurrentDir()
+							.. "tests/fixtures/demo/src/test/java/com/example/demo/RepositoryIT.java",
+						name = "shouldWorkProperly",
+					}
+				end,
+			},
+			extra_args = {},
+		}
+
+		-- when
+		local actual = plugin.build_spec(args)
+
+		local expected_command = "mvn clean verify -Dit.test=com.example.demo.RepositoryIT#shouldWorkProperly"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
 
 		assert.are.equal(expected_command, actual.command)
