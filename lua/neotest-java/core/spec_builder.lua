@@ -31,7 +31,7 @@ function SpecBuilder.build_spec(args)
 
 	local command = table.concat(command_table, " ")
 	-- TODO: add debug logger
-	-- print("Running command: " .. command)
+	print("Running command: " .. command)
 
 	return {
 		command = command,
