@@ -1,7 +1,9 @@
 [![Makefile CI](https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml/badge.svg)](https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml)
 # neotest-java
 
-[Neotest](https://github.com/rcarriga/neotest) adapter for Java, using JUnit.
+[Neotest](https://github.com/rcarriga/neotest) adapter for Java, using Maven.
+
+Gradle support incoming:grey_exclamation:
 
 ## 🔧 Installation
 
