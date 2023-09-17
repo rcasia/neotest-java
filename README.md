@@ -8,6 +8,7 @@
 Gradle support incoming:grey_exclamation:
 
 * Supports Maven projects
+* Supports multi-module projects
 * Supports integration tests
 * Supports @ParameterizedTest annotation
 
