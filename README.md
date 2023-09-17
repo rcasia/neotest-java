@@ -3,7 +3,13 @@
 
 [Neotest](https://github.com/rcarriga/neotest) adapter for Java, using Maven.
 
+## :white_check_mark: Features
+
 Gradle support incoming:grey_exclamation:
+
+* Supports Maven projects
+* Supports integration tests
+* Supports @ParameterizedTest annotation
 
 ## 🔧 Installation
 
