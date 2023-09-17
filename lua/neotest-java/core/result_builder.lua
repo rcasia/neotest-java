@@ -21,6 +21,26 @@ function isIndexedTable(tbl)
 	return true
 end
 
+function is_parametrized_test(testcases, name)
+  local count = 0
+  -- regex to match the name with some parameters and index at the end
+  -- example: subtractAMinusBEqualsC(int, int, int)[1]
+  local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
+
+  for k, _ in pairs(testcases) do
+    if string.match(k, regex) then
+      count = count + 1
+    end
+
+    if count > 1 then
+      return true
+    end
+  end
+
+  print("count", count)
+  return false
+end
+
 ResultBuilder = {}
 
 ---@async
@@ -33,7 +53,7 @@ function ResultBuilder.build_results(spec, result, tree)
 
 	local reports_dir = spec.cwd .. "/target/surefire-reports"
 	local files = scan.scan_dir(reports_dir, { depth = 1 })
-	local testcases = {}
+	local runned_testcases = {}
 
 	for _, file in ipairs(files) do
 		if string.find(file, ".xml", 1, true) then
@@ -44,41 +64,66 @@ function ResultBuilder.build_results(spec, result, tree)
 
 			local xml_data = xml.parse(data)
 
-			local testcases_in_xml = xml_data.testsuite.testcase
+			local runned_testcases_in_xml = xml_data.testsuite.testcase
 
 			-- index table if not array
-			if not isIndexedTable(testcases_in_xml) then
-				testcases_in_xml = { testcases_in_xml }
+			if not isIndexedTable(runned_testcases_in_xml) then
+				runned_testcases_in_xml = { runned_testcases_in_xml }
 			end
 
-			if not testcases_in_xml then
+			if not runned_testcases_in_xml then
 				-- TODO: use an actual logger
 				print("[neotest-java] No test cases found")
 				break
 			else
-				-- testcases_in_xml is an array
-				for _, testcase in ipairs(testcases_in_xml) do
-					testcases[testcase._attr.name] = testcase
+				-- runned_testcases_in_xml is an array
+				for _, testcase in ipairs(runned_testcases_in_xml) do
+					runned_testcases[testcase._attr.name] = testcase
 				end
 			end
 		end
 	end
 
+  print("runned_testcases", vim.inspect(runned_testcases))
+
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
-		if node_data.type == "test" then
-			local test_case = testcases[node_data.name]
+    local name = node_data.name
+    local type = node_data.type
+    local id = node_data.id
+    local is_not_test = type ~= "test"
+    local is_parameterized_test = is_parametrized_test(runned_testcases, name)
+
+    print("node_data", vim.inspect(node_data))
+
+    -- filter out non-test nodes
+    if is_not_test then
+      print("is_not_test hit for", name)
+      return
+    end
+
+		if is_parameterized_test then
+      print("parameterized hit for", name)
+    else
+      print("not parameterized hit for", name)
+			local test_case = runned_testcases[name]
+
+      print("test_case", vim.inspect(test_case))
+
+      print("node_data.name", vim.inspect(name))
 
 			if not test_case then
-				results[node_data.id] = {
+        print("skipped hit for", name)
+				results[id] = {
 					status = "skipped",
 				}
-			elseif test_case.failure then
-				results[node_data.id] = {
+			elseif test_case.failure ~= nil then
+				results[id] = {
 					status = "failed",
 				}
 			else
-				results[node_data.id] = {
+        print("passed hit for", name)
+				results[id] = {
 					status = "passed",
 				}
 			end
