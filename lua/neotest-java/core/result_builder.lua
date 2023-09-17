@@ -21,6 +21,41 @@ function isIndexedTable(tbl)
 	return true
 end
 
+function is_parameterized_test(testcases, name)
+	local count = 0
+	-- regex to match the name with some parameters and index at the end
+	-- example: subtractAMinusBEqualsC(int, int, int)[1]
+	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
+
+	for k, _ in pairs(testcases) do
+		if string.match(k, regex) then
+			count = count + 1
+		end
+
+		if count > 1 then
+			return true
+		end
+	end
+
+	return false
+end
+
+function any_contains_test_failure(testcases, name)
+	-- regex to match the name with some parameters and index at the end
+	-- example: subtractAMinusBEqualsC(int, int, int)[1]
+	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
+
+	for k, v in pairs(testcases) do
+		if string.match(k, regex) then
+			if v.failure then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 ResultBuilder = {}
 
 ---@async
@@ -66,21 +101,40 @@ function ResultBuilder.build_results(spec, result, tree)
 
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
-		if node_data.type == "test" then
-			local test_case = testcases[node_data.name]
+		local is_test = node_data.type == "test"
+		local is_parameterized = is_parameterized_test(testcases, node_data.name)
 
-			if not test_case then
-				results[node_data.id] = {
-					status = "skipped",
-				}
-			elseif test_case.failure then
-				results[node_data.id] = {
-					status = "failed",
-				}
+		if is_test then
+			if is_parameterized then
+				print("[neotest-java] parameterized test: " .. node_data.name)
+
+				local result = any_contains_test_failure(testcases, node_data.name)
+
+				if result then
+					results[node_data.id] = {
+						status = "failed",
+					}
+				else
+					results[node_data.id] = {
+						status = "passed",
+					}
+				end
 			else
-				results[node_data.id] = {
-					status = "passed",
-				}
+				local test_case = testcases[node_data.name]
+
+				if not test_case then
+					results[node_data.id] = {
+						status = "skipped",
+					}
+				elseif test_case.failure then
+					results[node_data.id] = {
+						status = "failed",
+					}
+				else
+					results[node_data.id] = {
+						status = "passed",
+					}
+				end
 			end
 		end
 	end

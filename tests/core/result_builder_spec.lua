@@ -113,4 +113,39 @@ describe("ResultBuilder", function()
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
+
+	async.it("builds the results for parameterized test", function()
+		--given
+		local runSpec = {
+			cwd = getCurrentDir() .. "tests/fixtures/demo",
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = getCurrentDir()
+			.. "tests/fixtures/demo/src/test/java/com/example/ParameterizedMethodTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = plugin.results(runSpec, strategyResult, tree)
+
+		--then
+		local actual = tableToString(results)
+		local expected = [[
+      {
+        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldFail"]
+          = {status="failed"}
+      ,
+        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldNotFail"]
+          = {status="passed"}
+      }
+    ]]
+
+		expected = expected:gsub("{{currentDir}}", getCurrentDir())
+
+		assert_equal_ignoring_whitespaces(expected, actual)
+	end)
 end)
