@@ -8,13 +8,13 @@ describe("RootFinder", function()
 	it("should find the root of a project", function()
 		-- given
 		local relativeDirs = {
-			"tests/fixtures/demo/src/main/java/com/example",
-			"tests/fixtures/demo/src/test/java/com/example",
-			"tests/fixtures/demo/src/main/resources",
-			"tests/fixtures/demo/src/test/resources",
-			"tests/fixtures/demo/src/main/java/com/example/Example.java",
-			"tests/fixtures/demo/src/test/java/com/example/ExampleTest.java",
-			"tests/fixtures/demo",
+			"tests/fixtures/maven-demo/src/main/java/com/example",
+			"tests/fixtures/maven-demo/src/test/java/com/example",
+			"tests/fixtures/maven-demo/src/main/resources",
+			"tests/fixtures/maven-demo/src/test/resources",
+			"tests/fixtures/maven-demo/src/main/java/com/example/Example.java",
+			"tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
+			"tests/fixtures/maven-demo",
 		}
 
 		local absoluteDirs = {}
@@ -22,7 +22,7 @@ describe("RootFinder", function()
 			absoluteDirs[i] = getCurrentDir() .. dir
 		end
 
-		local expectedRoot = getCurrentDir() .. "tests/fixtures/demo"
+		local expectedRoot = getCurrentDir() .. "tests/fixtures/maven-demo"
 
 		-- when
 		for _, dir in ipairs(absoluteDirs) do

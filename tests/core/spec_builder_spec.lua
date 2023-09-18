@@ -8,7 +8,7 @@ end
 
 describe("SpecBuilder", function()
 	async.it("builds the spec for method in unit test class", function()
-		local path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java"
+		local path = getCurrentDir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 
 		local args = {
 			tree = {
@@ -29,7 +29,7 @@ describe("SpecBuilder", function()
 		local expected_position = "com.example.ExampleTest#shouldNotFail"
 
 		local expected_command = "mvn clean test -Dtest=" .. expected_position
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
+		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 
 		assert.are.equal(expected_command, actual.command)
 		assert.are.equal(expected_cwd, actual.cwd)
@@ -40,7 +40,8 @@ describe("SpecBuilder", function()
 			tree = {
 				data = function()
 					return {
-						path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java",
+						path = getCurrentDir()
+							.. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
 						name = "ExampleTest",
 					}
 				end,
@@ -55,7 +56,7 @@ describe("SpecBuilder", function()
 		local expected_position = "com.example.ExampleTest#ExampleTest"
 
 		local expected_command = "mvn clean test -Dtest=" .. expected_position
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
+		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 
 		assert.are.equal(expected_command, actual.command)
 		assert.are.equal(expected_cwd, actual.cwd)
@@ -67,7 +68,7 @@ describe("SpecBuilder", function()
 				data = function()
 					return {
 						path = getCurrentDir()
-							.. "tests/fixtures/demo/src/test/java/com/example/demo/RepositoryIT.java",
+							.. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java",
 						name = "shouldWorkProperly",
 					}
 				end,
@@ -79,7 +80,7 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		local expected_command = "mvn clean verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/demo"
+		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 
 		assert.are.equal(expected_command, actual.command)
 		assert.are.equal(expected_cwd, actual.cwd)
