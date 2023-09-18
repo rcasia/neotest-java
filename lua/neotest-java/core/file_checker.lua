@@ -2,6 +2,7 @@ FileChecker = {
 	test_file_patterns = {
 		"IT%.java$",
 		"Test%.java$",
+		"Tests%.java$",
 		"IntegrationTest%.java$",
 		"IntegrationTests%.java$",
 	},

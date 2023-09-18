@@ -7,7 +7,19 @@ SpecBuilder = {}
 ---@param dir string @Directory to treat as cwd
 ---@return string | nil @Absolute root dir of test suite
 function SpecBuilder.findRoot(dir)
-	return lib.files.match_root_pattern("pom.xml")(dir)
+	matchers = {
+		"pom.xml",
+		"build.gradle",
+	}
+
+	for _, matcher in ipairs(matchers) do
+		local root = lib.files.match_root_pattern(matcher)(dir)
+		if root then
+			return root
+		end
+	end
+
+	return nil
 end
 
 return SpecBuilder
