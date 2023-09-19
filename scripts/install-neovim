@@ -1,3 +1,0 @@
-#!/bin/bash
-
-curl -L https://raw.githubusercontent.com/geloman-likes-rust/neovim-quickstart/main/install.sh | sh

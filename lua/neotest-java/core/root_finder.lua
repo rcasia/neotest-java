@@ -1,12 +1,12 @@
 local lib = require("neotest.lib")
 
-SpecBuilder = {}
+RootFinder = {}
 ---Find the project root directory given a current directory to work from.
 ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
 ---@async
 ---@param dir string @Directory to treat as cwd
 ---@return string | nil @Absolute root dir of test suite
-function SpecBuilder.findRoot(dir)
+function RootFinder.find_root(dir)
 	matchers = {
 		"pom.xml",
 		"build.gradle",
@@ -22,4 +22,4 @@ function SpecBuilder.findRoot(dir)
 	return nil
 end
 
-return SpecBuilder
+return RootFinder

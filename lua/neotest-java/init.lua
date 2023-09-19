@@ -17,10 +17,8 @@ function detect_project_type(root_path)
 	local gradle_build_file = root_path .. "/build.gradle"
 	local maven_build_file = root_path .. "/pom.xml"
 	if vim.fn.filereadable(gradle_build_file) == 1 then
-		print("gradle project detected")
 		return "gradle"
 	elseif vim.fn.filereadable(maven_build_file) == 1 then
-		print("maven project detected")
 		return "maven"
 	end
 end
@@ -31,7 +29,7 @@ end
 ---@param dir string @Directory to treat as cwd
 ---@return string | nil @Absolute root dir of test suite
 function NeotestJavaAdapter.root(dir)
-	return RootFinder.findRoot(dir)
+	return RootFinder.find_root(dir)
 end
 
 ---Filter directories when searching for test files
