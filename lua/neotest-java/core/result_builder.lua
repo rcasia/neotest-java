@@ -66,7 +66,15 @@ ResultBuilder = {}
 function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
-	local reports_dir = spec.cwd .. "/target/surefire-reports"
+	local project_type = spec.context.project_type
+
+	local reports_dir = ""
+	if project_type == "maven" then
+		reports_dir = spec.cwd .. "/target/surefire-reports"
+	elseif project_type == "gradle" then
+		reports_dir = spec.cwd .. "/build/test-results/test"
+	end
+
 	local files = scan.scan_dir(reports_dir, { depth = 1 })
 	local testcases = {}
 
@@ -93,7 +101,14 @@ function ResultBuilder.build_results(spec, result, tree)
 			else
 				-- testcases_in_xml is an array
 				for _, testcase in ipairs(testcases_in_xml) do
-					testcases[testcase._attr.name] = testcase
+					local name = testcase._attr.name
+
+					if project_type == "gradle" then
+						-- remove parameters
+						name = name:gsub("%(.*%)", "")
+					end
+
+					testcases[name] = testcase
 				end
 			end
 		end
@@ -106,6 +121,7 @@ function ResultBuilder.build_results(spec, result, tree)
 
 		if is_test then
 			if is_parameterized then
+				-- TODO: use an actual logger
 				print("[neotest-java] parameterized test: " .. node_data.name)
 
 				local result = any_contains_test_failure(testcases, node_data.name)

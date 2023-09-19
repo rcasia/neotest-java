@@ -8,7 +8,22 @@ local ResultBuilder = require("neotest-java.core.result_builder")
 
 ---@class neotest.Adapter
 ---@field name string
-NeotestJavaAdapter = { name = "neotest-java" }
+NeotestJavaAdapter = {
+	name = "neotest-java",
+	project_type = "maven",
+}
+
+function detect_project_type(root_path)
+	local gradle_build_file = root_path .. "/build.gradle"
+	local maven_build_file = root_path .. "/pom.xml"
+	if vim.fn.filereadable(gradle_build_file) == 1 then
+		print("gradle project detected")
+		return "gradle"
+	elseif vim.fn.filereadable(maven_build_file) == 1 then
+		print("maven project detected")
+		return "maven"
+	end
+end
 
 ---Find the project root directory given a current directory to work from.
 ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
@@ -47,7 +62,9 @@ end
 ---@param args neotest.RunArgs
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function NeotestJavaAdapter.build_spec(args)
-	return SpecBuilder.build_spec(args)
+	local root = NeotestJavaAdapter.root(args.tree:data().path)
+	NeotestJavaAdapter.project_type = detect_project_type(root)
+	return SpecBuilder.build_spec(args, NeotestJavaAdapter.project_type)
 end
 
 ---@async

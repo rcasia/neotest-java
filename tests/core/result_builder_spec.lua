@@ -15,10 +15,13 @@ function assert_equal_ignoring_whitespaces(expected, actual)
 end
 
 describe("ResultBuilder", function()
-	async.it("builds the results", function()
+	async.it("builds the results for maven", function()
 		--given
 		local runSpec = {
-			cwd = getCurrentDir() .. "tests/fixtures/demo",
+			cwd = getCurrentDir() .. "tests/fixtures/maven-demo",
+			context = {
+				project_type = "maven",
+			},
 		}
 
 		local strategyResult = {
@@ -26,7 +29,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/ExampleTest.java"
+		local file_path = getCurrentDir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -36,10 +39,10 @@ describe("ResultBuilder", function()
 		local actual = tableToString(results)
 		local expected = [[
       {
-        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+        ["{{currentDir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
           status = "failed"
         },
-        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
+        ["{{currentDir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
           status = "passed"
         }
       }
@@ -50,10 +53,51 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
-	async.it("builds the results when the is a single test method and it fails", function()
+	async.it("builds the results for gradle", function()
 		--given
 		local runSpec = {
-			cwd = getCurrentDir() .. "tests/fixtures/demo",
+			cwd = getCurrentDir() .. "tests/fixtures/gradle-demo",
+			context = {
+				project_type = "gradle",
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = getCurrentDir() .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = plugin.results(runSpec, strategyResult, tree)
+
+		--then
+		local actual = tableToString(results)
+		local expected = [[
+      {
+        ["{{currentDir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+          status = "failed"
+        },
+        ["{{currentDir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
+          status = "passed"
+        }
+      }
+    ]]
+
+		expected = expected:gsub("{{currentDir}}", getCurrentDir())
+
+		assert_equal_ignoring_whitespaces(expected, actual)
+	end)
+
+	async.it("builds the results when the is a single test method and it fails for gradle", function()
+		--given
+		local runSpec = {
+			cwd = getCurrentDir() .. "tests/fixtures/gradle-demo",
+			context = {
+				project_type = "gradle",
+			},
 		}
 
 		local strategyResult = {
@@ -62,7 +106,7 @@ describe("ResultBuilder", function()
 		}
 
 		local file_path = getCurrentDir()
-			.. "tests/fixtures/demo/src/test/java/com/example/SingleMethodFailingTest.java"
+			.. "tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -72,7 +116,42 @@ describe("ResultBuilder", function()
 		local actual = tableToString(results)
 		local expected = [[
     {
-      ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
+      ["{{currentDir}}tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
+
+      = { status = "failed" }
+    }
+    ]]
+		expected = expected:gsub("{{currentDir}}", getCurrentDir())
+
+		assert_equal_ignoring_whitespaces(expected, actual)
+	end)
+
+	async.it("builds the results when the is a single test method and it fails for maven", function()
+		--given
+		local runSpec = {
+			cwd = getCurrentDir() .. "tests/fixtures/maven-demo",
+			context = {
+				project_type = "maven",
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = getCurrentDir()
+			.. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = plugin.results(runSpec, strategyResult, tree)
+
+		--then
+		local actual = tableToString(results)
+		local expected = [[
+    {
+      ["{{currentDir}}tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
 
       = { status = "failed" }
     }
@@ -85,7 +164,10 @@ describe("ResultBuilder", function()
 	async.it("builds the results for integrations tests", function()
 		--given
 		local runSpec = {
-			cwd = getCurrentDir() .. "tests/fixtures/demo",
+			cwd = getCurrentDir() .. "tests/fixtures/maven-demo",
+			context = {
+				project_type = "maven",
+			},
 		}
 
 		local strategyResult = {
@@ -93,7 +175,8 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = getCurrentDir() .. "tests/fixtures/demo/src/test/java/com/example/demo/RepositoryIT.java"
+		local file_path = getCurrentDir()
+			.. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -103,7 +186,7 @@ describe("ResultBuilder", function()
 		local actual = tableToString(results)
 		local expected = [[
       {
-        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/demo/RepositoryIT.java::shouldWorkProperly"]
+        ["{{currentDir}}tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::shouldWorkProperly"]
 
       = {status="passed"}
       }
@@ -114,10 +197,13 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
-	async.it("builds the results for parameterized test", function()
+	async.it("builds the results for parameterized test for maven", function()
 		--given
 		local runSpec = {
-			cwd = getCurrentDir() .. "tests/fixtures/demo",
+			cwd = getCurrentDir() .. "tests/fixtures/maven-demo",
+			context = {
+				project_type = "maven",
+			},
 		}
 
 		local strategyResult = {
@@ -126,7 +212,7 @@ describe("ResultBuilder", function()
 		}
 
 		local file_path = getCurrentDir()
-			.. "tests/fixtures/demo/src/test/java/com/example/ParameterizedMethodTest.java"
+			.. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -136,10 +222,10 @@ describe("ResultBuilder", function()
 		local actual = tableToString(results)
 		local expected = [[
       {
-        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldFail"]
+        ["{{currentDir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldFail"]
           = {status="failed"}
       ,
-        ["{{currentDir}}tests/fixtures/demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldNotFail"]
+        ["{{currentDir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldNotFail"]
           = {status="passed"}
       }
     ]]

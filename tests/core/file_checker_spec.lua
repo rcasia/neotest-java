@@ -4,7 +4,7 @@ describe("file_checker", function()
 	it("should return true for unit test files", function()
 		local test_files = {
 			"src/test/java/neotest/NeotestTest.java",
-			"src/test/java/neotest/RepositoryTest.java",
+			"src/test/java/neotest/RepositoryTests.java",
 		}
 
 		for _, file_path in ipairs(test_files) do
