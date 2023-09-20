@@ -40,6 +40,7 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+          short = "expected: <true> but was: <false>",
           status = "failed"
         },
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
@@ -78,6 +79,7 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+          short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status = "failed"
         },
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
@@ -117,8 +119,10 @@ describe("ResultBuilder", function()
 		local expected = [[
     {
       ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
-
-      = { status = "failed" }
+      = { 
+        short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+        status = "failed"
+      }
     }
     ]]
 		expected = expected:gsub("{{current_dir}}", get_current_dir())
@@ -152,8 +156,10 @@ describe("ResultBuilder", function()
 		local expected = [[
     {
       ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
-
-      = { status = "failed" }
+      = { 
+        short = "expected: <true> but was: <false>",
+        status = "failed"
+      }
     }
     ]]
 		expected = expected:gsub("{{current_dir}}", get_current_dir())
@@ -223,7 +229,9 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldFail"]
-          = {status="failed"}
+          = {
+            status="failed"
+          }
       ,
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldNotFail"]
           = {status="passed"}

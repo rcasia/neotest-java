@@ -122,7 +122,7 @@ function ResultBuilder.build_results(spec, result, tree)
 		if is_test then
 			if is_parameterized then
 				-- TODO: use an actual logger
-				print("[neotest-java] parameterized test: " .. node_data.name)
+				-- print("[neotest-java] parameterized test: " .. node_data.name)
 
 				local result = any_contains_test_failure(testcases, node_data.name)
 
@@ -145,6 +145,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				elseif test_case.failure then
 					results[node_data.id] = {
 						status = "failed",
+						short = test_case.failure._attr.message,
 					}
 				else
 					results[node_data.id] = {
