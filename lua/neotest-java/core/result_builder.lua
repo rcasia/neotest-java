@@ -27,6 +27,9 @@ function is_parameterized_test(testcases, name)
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
 	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
 
+  -- TODO: indeed if the regex match just one time,
+  -- it is a parameterized test of one test case
+  -- so this for loop is not necessary
 	for k, _ in pairs(testcases) do
 		if string.match(k, regex) then
 			count = count + 1
