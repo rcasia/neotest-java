@@ -1,14 +1,9 @@
----@class neotest.Result
----@field status "passed"|"failed"|"skipped"
----@field output? string Path to file containing full output data
----@field short? string Shortened output string
----@field errors? neotest.Error[]
-
 local xml = require("neotest.lib.xml")
 local scan = require("plenary.scandir")
 local context_manager = require("plenary.context_manager")
 local with = context_manager.with
 local open = context_manager.open
+local test_parser = require("neotest-java.util.test_parser")
 
 function isIndexedTable(tbl)
 	local index = 1
@@ -27,6 +22,9 @@ function is_parameterized_test(testcases, name)
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
 	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
 
+	-- TODO: indeed if the regex match just one time,
+	-- it is a parameterized test of one test case
+	-- so this for loop is not necessary
 	for k, _ in pairs(testcases) do
 		if string.match(k, regex) then
 			count = count + 1
@@ -56,7 +54,38 @@ function any_contains_test_failure(testcases, name)
 	return false
 end
 
+function read_testcases_from_html(test_method_names, cwd, test_file_name)
+	local testcases = {}
+
+	local dir = cwd .. "/build/reports/tests/test/classes"
+	local filenames = scan.scan_dir(dir, { depth = 1 })
+
+	local testcases_from_html = {}
+	for _, filename in ipairs(filenames) do
+		if string.find(filename, test_file_name .. ".html", 1, true) then
+			testcases_from_html = test_parser.parse_html_gradle_report(filename)
+		end
+	end
+
+	for _, test_method_name in ipairs(test_method_names) do
+		result = testcases_from_html[test_method_name] or {}
+		if result.status == "failed" then
+			testcases[test_method_name] = { failure = "failure" }
+		else
+			testcases[test_method_name] = {}
+		end
+	end
+
+	return testcases
+end
+
 ResultBuilder = {}
+
+---@class neotest.Result
+---@field status "passed"|"failed"|"skipped"
+---@field output? string Path to file containing full output data
+---@field short? string Shortened output string
+---@field errors? neotest.Error[]
 
 ---@async
 ---@param spec neotest.RunSpec
@@ -67,6 +96,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
 	local project_type = spec.context.project_type
+	local test_file_name = spec.context.test_class_path
 
 	local reports_dir = ""
 	if project_type == "maven" then
@@ -75,8 +105,15 @@ function ResultBuilder.build_results(spec, result, tree)
 		reports_dir = spec.cwd .. "/build/test-results/test"
 	end
 
-	local files = scan.scan_dir(reports_dir, { depth = 1 })
 	local testcases = {}
+
+	local test_method_names = spec.context.test_method_names
+	if project_type == "gradle" and test_method_names and #test_method_names > 0 then
+		testcases_from_html = read_testcases_from_html(spec.context.test_method_names, spec.cwd, test_file_name)
+		testcases = testcases_from_html
+	end
+
+	local files = scan.scan_dir(reports_dir, { depth = 1 })
 
 	for _, file in ipairs(files) do
 		if string.find(file, ".xml", 1, true) then
