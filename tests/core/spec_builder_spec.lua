@@ -32,6 +32,8 @@ describe("SpecBuilder", function()
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
+			test_class_path = "com.example.ExampleTest",
+			test_method_names = {},
 		}
 
 		assert.are.equal(expected_command, actual.command)
@@ -62,6 +64,8 @@ describe("SpecBuilder", function()
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
+			test_class_path = "com.example.ExampleTest",
+			test_method_names = { "shouldNotFail" },
 		}
 
 		assert.are.equal(expected_command, actual.command)
@@ -93,6 +97,8 @@ describe("SpecBuilder", function()
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
+			test_class_path = "com.example.ExampleTest",
+			test_method_names = {},
 		}
 
 		assert.are.equal(expected_command, actual.command)
@@ -110,6 +116,28 @@ describe("SpecBuilder", function()
 						name = "ExampleTest.java",
 					}
 				end,
+				children = function()
+					return {
+						{
+							data = function()
+								return {
+									path = getCurrentDir()
+										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+									name = "firstTest",
+								}
+							end,
+						},
+						{
+							data = function()
+								return {
+									path = getCurrentDir()
+										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+									name = "secondTest",
+								}
+							end,
+						},
+					}
+				end,
 			},
 			extra_args = {},
 		}
@@ -122,6 +150,8 @@ describe("SpecBuilder", function()
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
+			test_class_path = "com.example.ExampleTest",
+			test_method_names = { "firstTest", "secondTest" },
 		}
 
 		assert.are.equal(expected_command, actual.command)
@@ -150,6 +180,8 @@ describe("SpecBuilder", function()
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
+			test_class_path = "com.example.demo.RepositoryIT",
+			test_method_names = {},
 		}
 
 		assert.are.equal(expected_command, actual.command)

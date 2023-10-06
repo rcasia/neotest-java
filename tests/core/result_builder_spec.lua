@@ -21,6 +21,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
+				test_class_path = "com.example.ExampleTest",
 			},
 		}
 
@@ -59,6 +60,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
 			context = {
 				project_type = "gradle",
+				test_class_path = "com.example.ExampleTest",
 			},
 		}
 
@@ -97,6 +99,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
 			context = {
 				project_type = "gradle",
+				test_class_path = "com.example.SingleMethodFailingTest",
 			},
 		}
 
@@ -132,6 +135,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
+				test_class_path = "com.example.SingleMethodFailingTest",
 			},
 		}
 
@@ -167,6 +171,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
+				test_class_path = "com.example.demo.RepositoryIT",
 			},
 		}
 
@@ -203,6 +208,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
+				test_class_path = "com.example.ParameterizedMethodTest",
 			},
 		}
 
@@ -226,6 +232,53 @@ describe("ResultBuilder", function()
           = {status="failed"}
       ,
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldNotFail"]
+          = {status="passed"}
+      }
+    ]]
+
+		expected = expected:gsub("{{current_dir}}", get_current_dir())
+
+		assert_equal_ignoring_whitespaces(expected, actual)
+	end)
+
+	async.it("builds the results for parameterized test for gradle", function()
+		--given
+		local runSpec = {
+			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
+			context = {
+				project_type = "gradle",
+				test_class_path = "com.example.ParameterizedMethodTest",
+				test_method_names = {
+					"shouldFail",
+					"shouldPass",
+					"shouldPass2",
+				},
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = get_current_dir()
+			.. "tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = plugin.results(runSpec, strategyResult, tree)
+
+		--then
+		local actual = table_to_string(results)
+		local expected = [[
+      {
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail"]
+          = {status="failed"}
+        ,
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldPass"]
+          = {status="passed"}
+        ,
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldPass2"]
           = {status="passed"}
       }
     ]]
