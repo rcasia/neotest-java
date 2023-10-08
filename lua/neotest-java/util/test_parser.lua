@@ -45,7 +45,6 @@ function TestParser.parse_html_gradle_report(filename)
 	if #xml_data.div == 0 then
 		names = xml_data.div.table.tr
 	else
-		print("else")
 		names = xml_data.div[2].table.tr
 	end
 

@@ -38,20 +38,21 @@ function is_parameterized_test(testcases, name)
 	return false
 end
 
-function any_contains_test_failure(testcases, name)
+function extract_test_failures(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
 	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
 
+	failures = {}
 	for k, v in pairs(testcases) do
 		if string.match(k, regex) then
 			if v.failure then
-				return true
+				failures[#failures + 1] = v
 			end
 		end
 	end
 
-	return false
+	return failures
 end
 
 function read_testcases_from_html(test_method_names, cwd, test_file_name)
@@ -161,11 +162,24 @@ function ResultBuilder.build_results(spec, result, tree)
 				-- TODO: use an actual logger
 				-- print("[neotest-java] parameterized test: " .. node_data.name)
 
-				local result = any_contains_test_failure(testcases, node_data.name)
+				local test_failures = extract_test_failures(testcases, node_data.name)
 
-				if result then
+				local short_failure_messages = {}
+				for _, failure in ipairs(test_failures) do
+					failure_message = failure.failure[1]
+					name = failure._attr.name
+					-- take just the first line of the failure message
+					short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
+					short_failure_messages[#short_failure_messages + 1] = short_failure_message
+				end
+
+				-- sort the messages alphabetically
+				table.sort(short_failure_messages)
+
+				if #test_failures > 0 then
 					results[node_data.id] = {
 						status = "failed",
+						short = table.concat(short_failure_messages, "\n"),
 					}
 				else
 					results[node_data.id] = {
@@ -182,6 +196,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				elseif test_case.failure then
 					results[node_data.id] = {
 						status = "failed",
+						short = test_case.failure._attr.message,
 					}
 				else
 					results[node_data.id] = {
