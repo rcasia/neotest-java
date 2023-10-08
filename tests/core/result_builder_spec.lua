@@ -281,7 +281,10 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail"]
-          = {status="failed"}
+          = {
+          short="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+          status="failed"
+          }
         ,
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldPass"]
           = {status="passed"}
