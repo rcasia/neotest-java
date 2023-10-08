@@ -19,7 +19,7 @@ public class ParameterizedMethodTest {
     @ParameterizedTest
     @CsvSource({
             "1,2",
-            "3,3",
+            "3,4",
             "4,4"
     })
     void parameterizedMethodShouldFail(Integer a, Integer b) {
