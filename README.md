@@ -35,3 +35,9 @@ require("neotest").setup({
   }
 })
 ```
+## :octocat: Contributing
+Feel free to contribute to this project by creating issues for bug reports, feature requests, or suggestions.
+
+You can also submit pull requests for any enhancements, bug fixes, or new features.
+
+Your contributions are greatly appreciated.
