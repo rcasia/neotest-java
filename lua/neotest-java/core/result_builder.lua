@@ -30,7 +30,7 @@ function is_parameterized_test(testcases, name)
 			count = count + 1
 		end
 
-		if count > 1 then
+		if count >= 1 then
 			return true
 		end
 	end
