@@ -7,6 +7,11 @@ local function getCurrentDir()
 end
 
 describe("SpecBuilder", function()
+	before_each(function()
+		-- set config
+		plugin.ignore_wrapper = false
+	end)
+
 	async.it("builds spec for one method in unit test class with maven", function()
 		local path = getCurrentDir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 
@@ -28,7 +33,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#shouldNotFail"
 
-		local expected_command = "mvn clean test -Dtest=" .. expected_position
+		local expected_command = "./mvnw clean test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
@@ -60,7 +65,7 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "gradle clean test --tests com.example.ExampleTest.shouldNotFail"
+		local expected_command = "./gradlew clean test --tests com.example.ExampleTest.shouldNotFail"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
@@ -93,7 +98,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#ExampleTest"
 
-		local expected_command = "mvn clean test -Dtest=" .. expected_position
+		local expected_command = "./mvnw clean test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
@@ -146,7 +151,7 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "gradle clean test --tests com.example.ExampleTest"
+		local expected_command = "./gradlew clean test --tests com.example.ExampleTest"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
@@ -176,11 +181,47 @@ describe("SpecBuilder", function()
 		-- when
 		local actual = plugin.build_spec(args)
 
-		local expected_command = "mvn clean verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
+		local expected_command = "./mvnw clean verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
 			test_class_path = "com.example.demo.RepositoryIT",
+			test_method_names = {},
+		}
+
+		assert.are.equal(expected_command, actual.command)
+		assert.are.equal(expected_cwd, actual.cwd)
+		assert.are.same(expeceted_context, actual.context)
+	end)
+
+	async.it("should ignore the wrapper", function()
+		local args = {
+			tree = {
+				data = function()
+					return {
+						path = getCurrentDir()
+							.. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
+						name = "ExampleTest",
+					}
+				end,
+			},
+			extra_args = {},
+		}
+
+		-- config
+		plugin.ignore_wrapper = true
+
+		-- when
+		local actual = plugin.build_spec(args)
+
+		-- then
+		local expected_position = "com.example.ExampleTest#ExampleTest"
+
+		local expected_command = "mvn clean test -Dtest=" .. expected_position
+		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
+		local expeceted_context = {
+			project_type = "maven",
+			test_class_path = "com.example.ExampleTest",
 			test_method_names = {},
 		}
 

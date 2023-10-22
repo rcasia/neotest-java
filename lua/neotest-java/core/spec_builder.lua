@@ -5,7 +5,7 @@ SpecBuilder = {}
 ---@param args neotest.RunArgs
 ---@param project_type string
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-function SpecBuilder.build_spec(args, project_type)
+function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	local position = args.tree:data()
 	local root = RootFinder.find_root(position.path)
 	local relative_path = position.path:sub(#root + 2)
@@ -17,8 +17,9 @@ function SpecBuilder.build_spec(args, project_type)
 
 	local test_method_names = {}
 	if project_type == "gradle" then
+		local executable = ignore_wrapper and "gradle" or "./gradlew"
 		command_table = {
-			"gradle",
+			executable,
 			"clean",
 			"test",
 			"--tests",
@@ -38,16 +39,17 @@ function SpecBuilder.build_spec(args, project_type)
 			test_class_path = string.gsub(test_class_path, "%.[^%.]*$", "")
 		end
 	elseif project_type == "maven" then
+		local executable = ignore_wrapper and "mvn" or "./mvnw"
 		if is_integration_test then
 			command_table = {
-				"mvn",
+				executable,
 				"clean",
 				"verify",
 				"-Dtest=" .. test_reference,
 			}
 		else
 			command_table = {
-				"mvn",
+				executable,
 				"clean",
 				"test",
 				"-Dtest=" .. test_reference,
