@@ -15,7 +15,7 @@
 * It works with multi-module projects too!
 
 
-## 🔧 Installation
+## :wrench: Installation
 
 It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 
@@ -27,11 +27,13 @@ Plug 'rcasia/neotest-java'
 ```
 
 
-## ⚙ Configuration
+## :gear: Configuration
 ```lua
 require("neotest").setup({
   adapters = {
-    require("neotest-java")
+    require("neotest-java")({
+        ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
+    })
   }
 })
 ```

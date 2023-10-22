@@ -10,7 +10,8 @@ local ResultBuilder = require("neotest-java.core.result_builder")
 ---@field name string
 NeotestJavaAdapter = {
 	name = "neotest-java",
-	project_type = "maven",
+	project_type = "maven", -- default to maven
+	ignore_wrapper = false, -- default to false
 }
 
 function detect_project_type(root_path)
@@ -62,7 +63,7 @@ end
 function NeotestJavaAdapter.build_spec(args)
 	local root = NeotestJavaAdapter.root(args.tree:data().path)
 	NeotestJavaAdapter.project_type = detect_project_type(root)
-	return SpecBuilder.build_spec(args, NeotestJavaAdapter.project_type)
+	return SpecBuilder.build_spec(args, NeotestJavaAdapter.project_type, NeotestJavaAdapter.ignore_wrapper)
 end
 
 ---@async
@@ -73,5 +74,31 @@ end
 function NeotestJavaAdapter.results(spec, result, tree)
 	return ResultBuilder.build_results(spec, result, tree)
 end
+
+function is_callable(obj)
+	return type(obj) == "function" or (type(obj) == "table" and type(getmetatable(obj).__call) == "function")
+end
+
+function check_wrapper()
+	local has_wrapper = vim.fn.filereadable("mvnw") == 1 or vim.fn.filereadable("gradlew") == 1
+	if not has_wrapper then
+		NeotestJavaAdapter.ignore_wrapper = true
+	end
+end
+
+setmetatable(NeotestJavaAdapter, {
+	__call = function(_, opts)
+		if is_callable(opts.ignore_wrapper) then
+			NeotestJavaAdapter.ignore_wrapper = opts.ignore_wrapper()
+		elseif opts.ignore_wrapper ~= nil then
+			NeotestJavaAdapter.ignore_wrapper = opts.ignore_wrapper
+		end
+
+		-- if the project doesn't have wrapper, ignore it
+		check_wrapper()
+
+		return NeotestJavaAdapter
+	end,
+})
 
 return NeotestJavaAdapter
