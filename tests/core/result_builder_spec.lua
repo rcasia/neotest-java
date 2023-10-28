@@ -208,7 +208,7 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
-	async.it("builds the results for parameterized test for maven", function()
+	async.it("builds the results for parameterized test with @CsvSource for maven", function()
 		--given
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
@@ -253,7 +253,7 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
-	async.it("builds the results for parameterized test for gradle", function()
+	async.it("builds the results for parameterized with @CsvSource test for gradle", function()
 		--given
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
@@ -294,6 +294,52 @@ describe("ResultBuilder", function()
           = {status="passed"}
         ,
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldPass2"]
+          = {status="passed"}
+      }
+    ]]
+
+		expected = expected:gsub("{{current_dir}}", get_current_dir())
+
+		assert_equal_ignoring_whitespaces(expected, actual)
+	end)
+
+	async.it("builds the results for parameterized with @EmptySource test for maven", function()
+		--given
+		local runSpec = {
+			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			context = {
+				project_type = "maven",
+				test_class_path = "com.example.EmptySourceTest",
+				test_method_names = {
+					"emptySourceShouldFail",
+					"emptySourceShouldPass",
+				},
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = get_current_dir()
+			.. "tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = plugin.results(runSpec, strategyResult, tree)
+
+		--then
+		local actual = table_to_string(results)
+		local expected = [[
+      {
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldFail"]
+          = {
+          short="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
+          status="failed"
+          }
+        ,
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldPass"]
           = {status="passed"}
       }
     ]]
