@@ -193,6 +193,11 @@ function ResultBuilder.build_results(spec, result, tree)
 					results[node_data.id] = {
 						status = "skipped",
 					}
+				elseif test_case.error then
+					results[node_data.id] = {
+						status = "failed",
+						short = test_case.error._attr.message,
+					}
 				elseif test_case.failure then
 					results[node_data.id] = {
 						status = "failed",
