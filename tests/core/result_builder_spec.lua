@@ -55,6 +55,43 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
+	async.it("builds the results for a maven test that has an error at start", function()
+		--given
+		local runSpec = {
+			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			context = {
+				project_type = "maven",
+				test_class_path = "com.example.ExampleTest",
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = get_current_dir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = plugin.results(runSpec, strategyResult, tree)
+
+		--then
+		local actual = table_to_string(results)
+		local expected = [[
+      {
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::shouldFailOnError"] = {
+          short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
+          status = "failed"
+        }
+      }
+    ]]
+
+		expected = expected:gsub("{{current_dir}}", get_current_dir())
+
+		assert_equal_ignoring_whitespaces(expected, actual)
+	end)
+
 	async.it("builds the results for gradle", function()
 		--given
 		local runSpec = {
