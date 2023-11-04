@@ -41,6 +41,7 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+          errors = {{ line=13, message="expected:<true>butwas:<false>" }},
           short = "expected: <true> but was: <false>",
           status = "failed"
         },
@@ -81,6 +82,7 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::shouldFailOnError"] = {
+	        errors = {{ message="Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed" }},
           short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
           status = "failed"
         }
@@ -198,6 +200,7 @@ describe("ResultBuilder", function()
     {
       ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
       = { 
+        errors = {{ line=9, message="expected: <true> but was: <false>" }},
         short = "expected: <true> but was: <false>",
         status = "failed"
       }
