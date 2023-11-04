@@ -120,6 +120,7 @@ describe("ResultBuilder", function()
 		local expected = [[
       {
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+	        errors = {{ line=14,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
           short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status = "failed"
         },
@@ -162,6 +163,7 @@ describe("ResultBuilder", function()
     {
       ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
       = { 
+	      errors = {{ line=9,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
         short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
         status = "failed"
       }
@@ -326,6 +328,7 @@ describe("ResultBuilder", function()
       {
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail"]
           = {
+	        errors = {{ line=36,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
           short="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status="failed"
           }
