@@ -3,8 +3,6 @@ tag-template: 'v$RESOLVED_VERSION'
 template: |
   ## Changes
   $CHANGES
-  ## Contributors
-  $CONTRIBUTORS
 categories:
   - title: '🚀 Features'
     labels:
