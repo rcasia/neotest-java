@@ -5,6 +5,13 @@ local with = context_manager.with
 local open = context_manager.open
 local test_parser = require("neotest-java.util.test_parser")
 
+--- @param classname string name of class
+--- @param testname string name of test
+--- @return string unique_key based on classname and testname
+local build_unique_key = function(classname, testname)
+	return classname .. "::" .. testname
+end
+
 function isIndexedTable(tbl)
 	local index = 1
 	for k, _ in pairs(tbl) do
@@ -69,11 +76,27 @@ function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	end
 
 	for _, test_method_name in ipairs(test_method_names) do
-		result = testcases_from_html[test_method_name] or {}
+		local unique_key = build_unique_key(test_file_name, test_method_name)
+		result = testcases_from_html[unique_key] or {}
 		if result.status == "failed" then
-			testcases[test_method_name] = { failure = "failure" }
+			for _, res in ipairs(result) do
+				if res.status == "failed" then
+					testcases[build_unique_key(res.classname, res.name)] = {
+						failure = { res.message },
+						_attr = {
+							name = res.name,
+						},
+					}
+				end
+			end
 		else
-			testcases[test_method_name] = {}
+			for _, res in ipairs(result) do
+				testcases[build_unique_key(res.classname, res.name)] = {
+					_attr = {
+						name = res.message,
+					},
+				}
+			end
 		end
 	end
 
@@ -117,7 +140,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	local files = scan.scan_dir(reports_dir, { depth = 1 })
 
 	for _, file in ipairs(files) do
-		if string.find(file, ".xml", 1, true) then
+		if string.find(file, test_file_name .. ".xml", 1, true) then
 			local data
 			with(open(file, "r"), function(reader)
 				data = reader:read("*a")
@@ -146,7 +169,7 @@ function ResultBuilder.build_results(spec, result, tree)
 						name = name:gsub("%(.*%)", "")
 					end
 
-					testcases[name] = testcase
+					testcases[build_unique_key(test_file_name, name)] = testcase
 				end
 			end
 		end
@@ -155,6 +178,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
 		local is_test = node_data.type == "test"
+		local unique_key = build_unique_key(test_file_name, node_data.name)
 		local is_parameterized = is_parameterized_test(testcases, node_data.name)
 
 		if is_test then
@@ -162,7 +186,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				-- TODO: use an actual logger
 				-- print("[neotest-java] parameterized test: " .. node_data.name)
 
-				local test_failures = extract_test_failures(testcases, node_data.name)
+				local test_failures = extract_test_failures(testcases, unique_key)
 
 				local short_failure_messages = {}
 				for _, failure in ipairs(test_failures) do
@@ -176,10 +200,12 @@ function ResultBuilder.build_results(spec, result, tree)
 				-- sort the messages alphabetically
 				table.sort(short_failure_messages)
 
+				local message = table.concat(short_failure_messages, "\n")
 				if #test_failures > 0 then
 					results[node_data.id] = {
 						status = "failed",
-						short = table.concat(short_failure_messages, "\n"),
+						short = message,
+						errors = { { message = message } },
 					}
 				else
 					results[node_data.id] = {
@@ -187,21 +213,32 @@ function ResultBuilder.build_results(spec, result, tree)
 					}
 				end
 			else
-				local test_case = testcases[node_data.name]
+				local test_case = testcases[unique_key]
 
 				if not test_case then
 					results[node_data.id] = {
 						status = "skipped",
 					}
 				elseif test_case.error then
+					local message = test_case.error._attr.message
 					results[node_data.id] = {
 						status = "failed",
-						short = test_case.error._attr.message,
+						short = message,
+						errors = { { message = message } },
 					}
 				elseif test_case.failure then
+					local message = test_case.failure._attr.message
+					local filename = string.match(test_case._attr.classname, "[%.]?([%a%$_][%a%d%$_]+)$") .. ".java"
+					local line_searchpattern = string.gsub(filename, "%.", "%%.") .. ":(%d+)%)"
+					local line = string.match(test_case.failure[1], line_searchpattern)
+					-- NOTE: errors array is expecting lines properties to be 0 index based
+					if line ~= nil then
+						line = line - 1
+					end
 					results[node_data.id] = {
 						status = "failed",
-						short = test_case.failure._attr.message,
+						short = message,
+						errors = { { message = message, line = line } },
 					}
 				else
 					results[node_data.id] = {

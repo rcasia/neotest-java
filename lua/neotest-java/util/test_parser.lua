@@ -3,6 +3,13 @@ local with = context_manager.with
 local open = context_manager.open
 local xml = require("neotest.lib.xml")
 
+--- @param classname string name of class
+--- @param testname string name of test
+--- @return string unique_key based on classname and testname
+local build_unique_key = function(classname, testname)
+	return classname .. "::" .. testname
+end
+
 TestParser = {}
 
 function is_array(tbl)
@@ -65,14 +72,15 @@ function TestParser.parse_html_gradle_report(filename)
 			-- example: subtractAMinusBEqualsC(int, int, int)[1]
 			-- becomes: subtractAMinusBEqualsC
 			short_name = string.match(name, "([^%(%[]+)")
+			local unique_key = build_unique_key(test_classname, short_name)
 
-			if testcases[short_name] == nil then
-				testcases[short_name] = {
+			if testcases[unique_key] == nil then
+				testcases[unique_key] = {
 					status = "passed",
 					{ name = name, status = status, classname = test_classname },
 				}
 			else
-				table.insert(testcases[short_name], { name = name, status = status, classname = test_classname })
+				table.insert(testcases[unique_key], { name = name, status = status, classname = test_classname })
 			end
 		end
 	end
@@ -97,11 +105,12 @@ function TestParser.parse_html_gradle_report(filename)
 		-- takes just the first line of the message
 		message = string.match(message, "([^\n]+)")
 
-		if testcases[short_name] ~= nil then
-			for k2, v2 in pairs(testcases[short_name]) do
+		local unique_key = build_unique_key(test_classname, short_name)
+		if testcases[unique_key] ~= nil then
+			for k2, v2 in pairs(testcases[unique_key]) do
 				if v2.name == name then
-					testcases[short_name].status = "failed"
-					testcases[short_name][k2].message = message
+					testcases[unique_key].status = "failed"
+					testcases[unique_key][k2].message = message
 				end
 			end
 		end
