@@ -1,5 +1,8 @@
 .PHONY: clean
 
+mvn = ./tests/fixtures/maven-demo/mvnw
+gradle = ./tests/fixtures/gradle-demo/gradlew
+
 all: prepare-demo test
 
 test: install
@@ -10,8 +13,8 @@ test-fail-fast: install
 
 prepare-demo:
 	# it is expected to fail because there are failing tests
-	-mvn -f tests/fixtures/maven-demo/pom.xml clean verify --fail-at-end -Dtest="*"
-	-gradle -p tests/fixtures/gradle-demo clean test --continue
+	-$(mvn) -f tests/fixtures/maven-demo/pom.xml clean verify --fail-at-end -Dtest="*"
+	-$(gradle) -p tests/fixtures/gradle-demo clean test --continue
 
 install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
 
@@ -32,8 +35,8 @@ deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 
 clean:
 	rm -rf deps/plenary.nvim deps/nvim-treesitter deps/neotest
-	mvn -f tests/fixtures/maven-demo/pom.xml clean
-	gradle -p tests/fixtures/gradle-demo clean
+	$(mvn) -f tests/fixtures/maven-demo/pom.xml clean
+	$(gradle) -p tests/fixtures/gradle-demo clean
 
 validate:
 	stylua --check .
