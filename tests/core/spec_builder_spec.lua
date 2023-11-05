@@ -36,7 +36,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#shouldNotFail"
 
-		local expected_command = "./mvnw clean test -Dtest=" .. expected_position
+		local expected_command = "./mvnw test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
@@ -68,7 +68,7 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "./gradlew clean test --tests com.example.ExampleTest.shouldNotFail"
+		local expected_command = "./gradlew test --tests com.example.ExampleTest.shouldNotFail"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
@@ -101,7 +101,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#ExampleTest"
 
-		local expected_command = "./mvnw clean test -Dtest=" .. expected_position
+		local expected_command = "./mvnw test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
@@ -154,7 +154,7 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "./gradlew clean test --tests com.example.ExampleTest"
+		local expected_command = "./gradlew test --tests com.example.ExampleTest"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
@@ -184,7 +184,7 @@ describe("SpecBuilder", function()
 		-- when
 		local actual = plugin.build_spec(args)
 
-		local expected_command = "./mvnw clean verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
+		local expected_command = "./mvnw verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
@@ -220,7 +220,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_position = "com.example.ExampleTest#ExampleTest"
 
-		local expected_command = "mvn clean test -Dtest=" .. expected_position
+		local expected_command = "mvn test -Dtest=" .. expected_position
 		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
