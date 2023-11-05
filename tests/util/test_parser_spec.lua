@@ -115,16 +115,21 @@ describe("test_parser", function()
 		assert.are.same(expected, actual)
 	end)
 
-	it("should return empty object when it has no parameterized test", function()
-		-- given
-		local filename = vim.fn.getcwd() .. "/tests/fixtures/com.example.SimpleTest2.html"
+	for _, filepath in ipairs({
+		"tests/fixtures/report-with-no-parameterized-test-1.html",
+		"tests/fixtures/report-with-no-parameterized-test-2.html",
+	}) do
+		it("should return empty object when it has no parameterized test: " .. filepath, function()
+			-- given
+			local absolute_filepath = vim.fn.getcwd() .. "/" .. filepath
 
-		-- when
-		local actual = test_parser.parse_html_gradle_report(filename)
+			-- when
+			local actual = test_parser.parse_html_gradle_report(absolute_filepath)
 
-		-- then
-		local expected = {}
+			-- then
+			local expected = {}
 
-		assert.are.same(expected, actual)
-	end)
+			assert.are.same(expected, actual)
+		end)
+	end
 end)
