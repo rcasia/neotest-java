@@ -278,6 +278,10 @@ describe("ResultBuilder", function()
 	      {
 		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldFail"]
 		  = {
+        errors={{message="
+			  parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\n
+			  parameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
+        "}},
 		    short="
 			  parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\n
 			  parameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
@@ -304,6 +308,7 @@ describe("ResultBuilder", function()
 				test_class_path = "com.example.ParameterizedTests",
 				test_method_names = {
 					"shouldFail",
+					"shouldFail2",
 					"shouldPass",
 					"shouldPass2",
 				},
@@ -328,8 +333,15 @@ describe("ResultBuilder", function()
       {
         ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail"]
           = {
-	        errors = {{ line=36,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
-          short="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+        errors= {{message="shouldFail(int,int,int)[1]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>"}},
+          short="shouldFail(int,int,int)[1]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+          status="failed"
+          }
+        ,
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail2"]
+          = {
+        errors= {{message="shouldFail2(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail2(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>"}},
+          short="shouldFail2(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail2(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status="failed"
           }
         ,
@@ -378,6 +390,7 @@ describe("ResultBuilder", function()
       {
         ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldFail"]
           = {
+          errors={{message="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>"}},
           short="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
           status="failed"
           }

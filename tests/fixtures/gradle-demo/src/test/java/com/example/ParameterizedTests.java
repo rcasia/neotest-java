@@ -36,4 +36,14 @@ public class ParameterizedTests{
     void shouldFail(int a, int b, int c) {
       assertTrue(a + b == c);
     }
+
+    @ParameterizedTest
+    @CsvSource({
+        "1, 1, 2",
+        "2, 3, 3",
+        "3, 4, 4"
+    })
+    void shouldFail2(int a, int b, int c) {
+      assertTrue(a + b == c);
+    }
 }

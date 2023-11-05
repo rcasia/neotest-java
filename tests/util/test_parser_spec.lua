@@ -10,7 +10,7 @@ describe("test_parser", function()
 
 		-- then
 		local expected = {
-			["shouldFail"] = {
+			["com.example.ParameterizedTests::shouldFail"] = {
 				status = "failed",
 				{
 					name = "shouldFail(int, int, int)[1]",
@@ -31,7 +31,7 @@ describe("test_parser", function()
 					message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
 				},
 			},
-			["shouldPass"] = {
+			["com.example.ParameterizedTests::shouldPass"] = {
 				status = "passed",
 				{
 					name = "shouldPass(int, int, int)[1]",
@@ -66,7 +66,7 @@ describe("test_parser", function()
 
 		-- then
 		local expected = {
-			["shouldPass"] = {
+			["com.example.SimpleTest::shouldPass"] = {
 				status = "passed",
 				{
 					name = "shouldPass(int, int, int)[1]",
@@ -101,7 +101,7 @@ describe("test_parser", function()
 
 		-- then
 		local expected = {
-			["shouldFail"] = {
+			["com.example.SimpleTest3::shouldFail"] = {
 				status = "failed",
 				{
 					name = "shouldFail(int, int)[1]",

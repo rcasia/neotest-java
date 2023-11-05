@@ -5,6 +5,13 @@ local with = context_manager.with
 local open = context_manager.open
 local test_parser = require("neotest-java.util.test_parser")
 
+--- @param classname string name of class
+--- @param testname string name of test
+--- @return string unique_key based on classname and testname
+local build_unique_key = function(classname, testname)
+	return classname .. "::" .. testname
+end
+
 function isIndexedTable(tbl)
 	local index = 1
 	for k, _ in pairs(tbl) do
@@ -69,22 +76,31 @@ function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	end
 
 	for _, test_method_name in ipairs(test_method_names) do
-		result = testcases_from_html[test_method_name] or {}
+		local unique_key = build_unique_key(test_file_name, test_method_name)
+		result = testcases_from_html[unique_key] or {}
 		if result.status == "failed" then
-			testcases[test_method_name] = { failure = "failure" }
+			for _, res in ipairs(result) do
+				if res.status == "failed" then
+					testcases[build_unique_key(res.classname, res.name)] = {
+						failure = { res.message },
+						_attr = {
+							name = res.name,
+						},
+					}
+				end
+			end
 		else
-			testcases[test_method_name] = {}
+			for _, res in ipairs(result) do
+				testcases[build_unique_key(res.classname, res.name)] = {
+					_attr = {
+						name = res.message,
+					},
+				}
+			end
 		end
 	end
 
 	return testcases
-end
-
---- @param classname string name of class
---- @param testname string name of test
---- @return string unique_key based on classname and testname
-local build_unique_key = function(classname, testname)
-	return classname .. "::" .. testname
 end
 
 ResultBuilder = {}
@@ -184,10 +200,12 @@ function ResultBuilder.build_results(spec, result, tree)
 				-- sort the messages alphabetically
 				table.sort(short_failure_messages)
 
+				local message = table.concat(short_failure_messages, "\n")
 				if #test_failures > 0 then
 					results[node_data.id] = {
 						status = "failed",
-						short = table.concat(short_failure_messages, "\n"),
+						short = message,
+						errors = { { message = message } },
 					}
 				else
 					results[node_data.id] = {
