@@ -358,50 +358,56 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
-	async.it("builds the results for parameterized with @EmptySource test for maven", function()
-		--given
-		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
-			context = {
-				project_type = "maven",
-				test_class_path = "com.example.EmptySourceTest",
-				test_method_names = {
-					"emptySourceShouldFail",
-					"emptySourceShouldPass",
+	for _, project_type in ipairs({ "maven", "gradle" }) do
+		async.it("builds the results for parameterized with @EmptySource test for " .. project_type, function()
+			--given
+			local runSpec = {
+				cwd = get_current_dir() .. "tests/fixtures/" .. project_type .. "-demo",
+				context = {
+					project_type = project_type,
+					test_class_path = "com.example.EmptySourceTest",
+					test_method_names = {
+						"emptySourceShouldFail",
+						"emptySourceShouldPass",
+					},
 				},
-			},
-		}
+			}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
+			local strategyResult = {
+				code = 0,
+				output = "output",
+			}
 
-		local file_path = get_current_dir()
-			.. "tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java"
-		local tree = plugin.discover_positions(file_path)
+			local file_path = get_current_dir()
+				.. "tests/fixtures/"
+				.. project_type
+				.. "-demo/src/test/java/com/example/EmptySourceTest.java"
+			local tree = plugin.discover_positions(file_path)
 
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+			--when
+			local results = plugin.results(runSpec, strategyResult, tree)
 
-		--then
-		local actual = table_to_string(results)
-		local expected = [[
+			--then
+			local actual = table_to_string(results)
+
+			local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldFail"]
+        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldFail"]
           = {
           errors={{message="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>"}},
           short="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldPass"]
+        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldPass"]
           = {status="passed"}
       }
     ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+			expected = expected:gsub("{{current_dir}}", get_current_dir())
+			expected = expected:gsub("{{project_type}}", project_type)
 
-		assert_equal_ignoring_whitespaces(expected, actual)
-	end)
+			assert_equal_ignoring_whitespaces(expected, actual)
+		end)
+	end
 end)
