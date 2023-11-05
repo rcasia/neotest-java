@@ -105,12 +105,12 @@ function TestParser.parse_html_gradle_report(filename)
 		-- takes just the first line of the message
 		message = string.match(message, "([^\n]+)")
 
-		if testcases[short_name] ~= nil then
-			local unique_key = build_unique_key(test_classname, short_name)
-			for k2, v2 in pairs(testcases[short_name]) do
+		local unique_key = build_unique_key(test_classname, short_name)
+		if testcases[unique_key] ~= nil then
+			for k2, v2 in pairs(testcases[unique_key]) do
 				if v2.name == name then
-					testcases[short_name].status = "failed"
-					testcases[short_name][k2].message = message
+					testcases[unique_key].status = "failed"
+					testcases[unique_key][k2].message = message
 				end
 			end
 		end
