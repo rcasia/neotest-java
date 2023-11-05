@@ -80,6 +80,13 @@ function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	return testcases
 end
 
+--- @param classname string name of class
+--- @param testname string name of test
+--- @return string unique_key based on classname and testname
+local build_unique_key = function(classname, testname)
+	return classname .. "::" .. testname
+end
+
 ResultBuilder = {}
 
 ---@class neotest.Result
@@ -117,7 +124,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	local files = scan.scan_dir(reports_dir, { depth = 1 })
 
 	for _, file in ipairs(files) do
-		if string.find(file, ".xml", 1, true) then
+		if string.find(file, test_file_name .. ".xml", 1, true) then
 			local data
 			with(open(file, "r"), function(reader)
 				data = reader:read("*a")
@@ -146,7 +153,7 @@ function ResultBuilder.build_results(spec, result, tree)
 						name = name:gsub("%(.*%)", "")
 					end
 
-					testcases[name] = testcase
+					testcases[build_unique_key(test_file_name, name)] = testcase
 				end
 			end
 		end
@@ -155,6 +162,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
 		local is_test = node_data.type == "test"
+		local unique_key = build_unique_key(test_file_name, node_data.name)
 		local is_parameterized = is_parameterized_test(testcases, node_data.name)
 
 		if is_test then
@@ -162,7 +170,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				-- TODO: use an actual logger
 				-- print("[neotest-java] parameterized test: " .. node_data.name)
 
-				local test_failures = extract_test_failures(testcases, node_data.name)
+				local test_failures = extract_test_failures(testcases, unique_key)
 
 				local short_failure_messages = {}
 				for _, failure in ipairs(test_failures) do
@@ -187,7 +195,7 @@ function ResultBuilder.build_results(spec, result, tree)
 					}
 				end
 			else
-				local test_case = testcases[node_data.name]
+				local test_case = testcases[unique_key]
 
 				if not test_case then
 					results[node_data.id] = {

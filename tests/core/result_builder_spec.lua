@@ -62,7 +62,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
-				test_class_path = "com.example.ExampleTest",
+				test_class_path = "com.example.ErroneousTest",
 			},
 		}
 
@@ -301,7 +301,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
 			context = {
 				project_type = "gradle",
-				test_class_path = "com.example.ParameterizedMethodTest",
+				test_class_path = "com.example.ParameterizedTests",
 				test_method_names = {
 					"shouldFail",
 					"shouldPass",
