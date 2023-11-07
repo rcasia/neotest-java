@@ -9,7 +9,10 @@ end
 describe("SpecBuilder", function()
 	before_each(function()
 		-- set config
-		plugin.ignore_wrapper = false
+		local config = {
+			ignore_wrapper = false,
+		}
+		plugin.config = config
 	end)
 
 	async.it("builds spec for one method in unit test class with maven", function()
@@ -209,7 +212,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- config
-		plugin.ignore_wrapper = true
+		plugin.config.ignore_wrapper = true
 
 		-- when
 		local actual = plugin.build_spec(args)
