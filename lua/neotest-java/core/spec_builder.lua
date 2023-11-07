@@ -20,7 +20,6 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		local executable = ignore_wrapper and "gradle" or "./gradlew"
 		command_table = {
 			executable,
-			"clean",
 			"test",
 			"--tests",
 			test_reference,
@@ -43,14 +42,12 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		if is_integration_test then
 			command_table = {
 				executable,
-				"clean",
 				"verify",
 				"-Dtest=" .. test_reference,
 			}
 		else
 			command_table = {
 				executable,
-				"clean",
 				"test",
 				"-Dtest=" .. test_reference,
 			}
