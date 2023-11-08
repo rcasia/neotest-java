@@ -8,7 +8,7 @@ PositionsDiscoverer = {}
 ---@return neotest.Tree | nil
 function PositionsDiscoverer:discover_positions(file_path)
 	local query = [[
-      ;; @Test function
+      ;; @Test and @ParameterizedTest functions
       (method_declaration
         (modifiers
           (marker_annotation
@@ -18,6 +18,7 @@ function PositionsDiscoverer:discover_positions(file_path)
         )
         name: (identifier) @test.name
       ) @test.definition
+
     ]]
 
 	return lib.treesitter.parse_positions(file_path, query)
