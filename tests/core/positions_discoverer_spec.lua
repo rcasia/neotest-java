@@ -15,14 +15,14 @@ describe("PositionsDiscoverer", function()
 		-- then
 		local actual_list = actual:to_list()
 
-		-- for debugging
-		-- print(actual)
-		-- print("value: " .. actual_list[3][1].name)
+		assert.equals("shouldFindThis1", actual_list[2][2][1].name)
+		assert.equals("shouldFindThis2", actual_list[2][3][1].name)
+		assert.equals("shouldFindThis3", actual_list[2][4][1].name)
+		assert.equals("shouldFindThis4", actual_list[2][5][1].name)
 
-		assert.equals(actual_list[2][1].name, "shouldFindThis1")
-		assert.equals(actual_list[3][1].name, "shouldFindThis2")
-		assert.equals(actual_list[4][1].name, "shouldFindThis3")
-		assert.equals(actual_list[5][1].name, "shouldFindThis4")
+		-- should find 4 tests
+		local actual_count = #actual:children()[1]:children()
+		assert.equals(4, actual_count)
 	end)
 
 	async.it("should discover nested tests", function()
@@ -33,7 +33,7 @@ describe("PositionsDiscoverer", function()
 		local actual = plugin.discover_positions(file_path)
 
 		-- then
-		local test_name = actual:to_list()[2][1].name
+		local test_name = actual:to_list()[2][2][2][1].name
 		assert.equals(test_name, "someTest")
 	end)
 end)

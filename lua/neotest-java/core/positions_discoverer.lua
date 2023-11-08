@@ -8,6 +8,12 @@ PositionsDiscoverer = {}
 ---@return neotest.Tree | nil
 function PositionsDiscoverer:discover_positions(file_path)
 	local query = [[
+
+       ;; Test class
+        (class_declaration
+          name: (identifier) @namespace.name
+        ) @namespace.definition
+
       ;; @Test and @ParameterizedTest functions
       (method_declaration
         (modifiers
@@ -21,7 +27,7 @@ function PositionsDiscoverer:discover_positions(file_path)
 
     ]]
 
-	return lib.treesitter.parse_positions(file_path, query)
+	return lib.treesitter.parse_positions(file_path, query, { nested_namespaces = true })
 end
 
 return PositionsDiscoverer

@@ -32,7 +32,6 @@ NeotestJavaAdapter = {
 		elseif NeotestJavaAdapter.project_type == "gradle" then
 			ignore_wrapper = vim.fn.filereadable("gradlew") == 1
 		end
-		print("ignore_wrapper: " .. tostring(ignore_wrapper))
 		return ignore_wrapper
 	end,
 }
