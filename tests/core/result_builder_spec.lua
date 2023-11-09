@@ -40,12 +40,12 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
-          errors = {{ line=13, message="expected:<true>butwas:<false>" }},
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
+          errors = {{ line=13, message="expected: <true> but was: <false>" }},
           short = "expected: <true> but was: <false>",
           status = "failed"
         },
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
           status = "passed"
         }
       }
@@ -81,7 +81,7 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::shouldFailOnError"] = {
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::ErroneousTest::shouldFailOnError"] = {
 	        errors = {{ message="Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed" }},
           short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
           status = "failed"
@@ -119,12 +119,12 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldFail"] = {
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
 	        errors = {{ line=14,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
           short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status = "failed"
         },
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::shouldNotFail"] = {
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
           status = "passed"
         }
       }
@@ -161,7 +161,7 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
     {
-      ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
+      ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] 
       = { 
 	      errors = {{ line=9,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
         short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
@@ -200,7 +200,7 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
     {
-      ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::shouldFail"] 
+      ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] 
       = { 
         errors = {{ line=9, message="expected: <true> but was: <false>" }},
         short = "expected: <true> but was: <false>",
@@ -239,7 +239,7 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::shouldWorkProperly"]
+        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::RepositoryIT::shouldWorkProperly"]
 
       = {status="passed"}
       }
@@ -276,7 +276,7 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
 	      {
-		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldFail"]
+		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"]
 		  = {
         errors={{message="
 			  parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\n
@@ -289,7 +289,7 @@ describe("ResultBuilder", function()
 		    status="failed"
 		  }
 	      ,
-		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::parameterizedMethodShouldNotFail"]
+		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldNotFail"]
 		  = {status="passed"}
 	      }
 	    ]]
@@ -331,24 +331,24 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail"]
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldFail"]
           = {
         errors= {{message="shouldFail(int,int,int)[1]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>"}},
           short="shouldFail(int,int,int)[1]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldFail2"]
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldFail2"]
           = {
         errors= {{message="shouldFail2(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail2(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>"}},
           short="shouldFail2(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail2(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldPass"]
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldPass"]
           = {status="passed"}
         ,
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::shouldPass2"]
+        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldPass2"]
           = {status="passed"}
       }
     ]]
@@ -392,14 +392,14 @@ describe("ResultBuilder", function()
 
 			local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldFail"]
+        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"]
           = {
           errors={{message="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>"}},
           short="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::emptySourceShouldPass"]
+        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"]
           = {status="passed"}
       }
     ]]
