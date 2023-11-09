@@ -33,7 +33,10 @@ describe("PositionsDiscoverer", function()
 		local actual = plugin.discover_positions(file_path)
 
 		-- then
-		local test_name = actual:to_list()[2][2][2][1].name
+		local test_name = actual:to_list()[2][2][2][2][1].name
 		assert.equals(test_name, "someTest")
+
+		local another_outer_test_name = actual:to_list()[2][2][3][1].name
+		assert.equals(another_outer_test_name, "oneMoreOuterTest")
 	end)
 end)
