@@ -1,6 +1,5 @@
 ---@diagnostic disable: undefined-doc-name
 
--- current dir
 local file_checker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
 local dir_filter = require("neotest-java.core.dir_filter")
@@ -63,14 +62,23 @@ end
 ---@param args neotest.RunArgs
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function NeotestJavaAdapter.build_spec(args)
-	local root = NeotestJavaAdapter.root(args.tree:data().path)
-	NeotestJavaAdapter.project_type = detect_project_type(root)
+	-- TODO: find a way to avoid to make this steps every time
+	local self = NeotestJavaAdapter
 
-	local ignore_wrapper = NeotestJavaAdapter.config.ignore_wrapper
+	-- find root
+	local root = self.root(args.tree:data().path)
+
+	-- detect project type
+	self.project_type = detect_project_type(root)
+
+	-- decide to ignore wrapper or not
+	local ignore_wrapper = self.config.ignore_wrapper
 	if not ignore_wrapper then
 		ignore_wrapper = not there_is_wrapper_in(root)
 	end
-	return spec_builder.build_spec(args, NeotestJavaAdapter.project_type, ignore_wrapper)
+
+	-- build spec
+	return spec_builder.build_spec(args, self.project_type, ignore_wrapper)
 end
 
 ---@async
