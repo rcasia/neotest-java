@@ -1,10 +1,12 @@
+---@diagnostic disable: undefined-doc-name
+
 -- current dir
-local FileChecker = require("neotest-java.core.file_checker")
-local RootFinder = require("neotest-java.core.root_finder")
-local DirFilter = require("neotest-java.core.dir_filter")
-local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
-local SpecBuilder = require("neotest-java.core.spec_builder")
-local ResultBuilder = require("neotest-java.core.result_builder")
+local file_checker = require("neotest-java.core.file_checker")
+local root_finder = require("neotest-java.core.root_finder")
+local dir_filter = require("neotest-java.core.dir_filter")
+local position_discoverer = require("neotest-java.core.positions_discoverer")
+local spec_builder = require("neotest-java.core.spec_builder")
+local result_builder = require("neotest-java.core.result_builder")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -30,7 +32,7 @@ NeotestJavaAdapter = {
 ---@param dir string @Directory to treat as cwd
 ---@return string | nil @Absolute root dir of test suite
 function NeotestJavaAdapter.root(dir)
-	return RootFinder.find_root(dir)
+	return root_finder.find_root(dir)
 end
 
 ---Filter directories when searching for test files
@@ -40,14 +42,14 @@ end
 ---@param root string Root directory of project
 ---@return boolean
 function NeotestJavaAdapter.filter_dir(name, rel_path, root)
-	return DirFilter.filter_dir(name, rel_path, root)
+	return dir_filter.filter_dir(name, rel_path, root)
 end
 
 ---@async
 ---@param file_path string
 ---@return boolean
 function NeotestJavaAdapter.is_test_file(file_path)
-	return FileChecker.isTestFile(file_path)
+	return file_checker.isTestFile(file_path)
 end
 
 ---Given a file path, parse all the tests within it.
@@ -55,7 +57,7 @@ end
 ---@param file_path string Absolute file path
 ---@return neotest.Tree | nil
 function NeotestJavaAdapter.discover_positions(file_path)
-	return PositionsDiscoverer.discover_positions(file_path)
+	return position_discoverer.discover_positions(file_path)
 end
 
 ---@param args neotest.RunArgs
@@ -68,7 +70,7 @@ function NeotestJavaAdapter.build_spec(args)
 	if not ignore_wrapper then
 		ignore_wrapper = not there_is_wrapper_in(root)
 	end
-	return SpecBuilder.build_spec(args, NeotestJavaAdapter.project_type, ignore_wrapper)
+	return spec_builder.build_spec(args, NeotestJavaAdapter.project_type, ignore_wrapper)
 end
 
 ---@async
@@ -77,7 +79,7 @@ end
 ---@param tree neotest.Tree
 ---@return table<string, neotest.Result>
 function NeotestJavaAdapter.results(spec, result, tree)
-	return ResultBuilder.build_results(spec, result, tree)
+	return result_builder.build_results(spec, result, tree)
 end
 
 setmetatable(NeotestJavaAdapter, {
