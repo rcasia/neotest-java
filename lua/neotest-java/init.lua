@@ -6,6 +6,8 @@ local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
 local SpecBuilder = require("neotest-java.core.spec_builder")
 local ResultBuilder = require("neotest-java.core.result_builder")
 
+local detect_project_type = require("neotest-java.util.detect_project_type")
+
 local function there_is_wrapper_in(path)
 	local gradle_wrapper = path .. "/gradlew"
 	local maven_wrapper = path .. "/mvnw"
@@ -20,39 +22,7 @@ NeotestJavaAdapter = {
 	config = {
 		ignore_wrapper = false,
 	},
-	should_ignore_wrapper = function()
-		local config = NeotestJavaAdapter.config
-		local ignore_wrapper = config.ignore_wrapper
-		if ignore_wrapper ~= nil then
-			return ignore_wrapper
-		end
-
-		if NeotestJavaAdapter.project_type == "maven" then
-			ignore_wrapper = vim.fn.filereadable("mvnw") == 1
-		elseif NeotestJavaAdapter.project_type == "gradle" then
-			ignore_wrapper = vim.fn.filereadable("gradlew") == 1
-		end
-		return ignore_wrapper
-	end,
 }
-
-local function is_callable(obj)
-	return type(obj) == "function" or (type(obj) == "table" and type(getmetatable(obj).__call) == "function")
-end
-
-local function has_wrapper()
-	return vim.fn.filereadable("mvnw") == 1 or vim.fn.filereadable("gradlew") == 1
-end
-
-local function detect_project_type(root_path)
-	local gradle_build_file = root_path .. "/build.gradle"
-	local maven_build_file = root_path .. "/pom.xml"
-	if vim.fn.filereadable(gradle_build_file) == 1 then
-		return "gradle"
-	elseif vim.fn.filereadable(maven_build_file) == 1 then
-		return "maven"
-	end
-end
 
 ---Find the project root directory given a current directory to work from.
 ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
@@ -85,7 +55,7 @@ end
 ---@param file_path string Absolute file path
 ---@return neotest.Tree | nil
 function NeotestJavaAdapter.discover_positions(file_path)
-	return PositionsDiscoverer:discover_positions(file_path)
+	return PositionsDiscoverer.discover_positions(file_path)
 end
 
 ---@param args neotest.RunArgs
