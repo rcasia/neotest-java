@@ -8,12 +8,7 @@ local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
-
-local function there_is_wrapper_in(path)
-	local gradle_wrapper = path .. "/gradlew"
-	local maven_wrapper = path .. "/mvnw"
-	return vim.fn.filereadable(gradle_wrapper) == 1 or vim.fn.filereadable(maven_wrapper) == 1
-end
+local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
 
 ---@class neotest.Adapter
 ---@field name string
