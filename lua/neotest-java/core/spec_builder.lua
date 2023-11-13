@@ -2,11 +2,19 @@ local RootFinder = require("neotest-java.core.root_finder")
 
 SpecBuilder = {}
 
+-- TODO: refactor everything here
+
 ---@param args neotest.RunArgs
 ---@param project_type string
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	local position = args.tree:data()
+
+	-- TODO: this is a workaround until we handle namespaces properly
+	if position.type == "namespace" then
+		position = args.tree:parent():data()
+	end
+
 	local root = RootFinder.find_root(position.path)
 	local relative_path = position.path:sub(#root + 2)
 	local test_reference = find_java_reference(relative_path, position.name, project_type)

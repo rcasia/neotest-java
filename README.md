@@ -7,6 +7,8 @@
   <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using JUnit.</p>
 </section>
 
+## :construction_worker: There is still Work In Progress
+ :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon: :new_moon: :new_moon:
 
 ## :white_check_mark: Features
 
@@ -21,11 +23,10 @@ It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter
 
 >Make sure you have the java parser installed. Use `:TSInstall java`
 
-Using vim-plug:
+[vim-plug](https://github.com/junegunn/vim-plug):
 ```vim
-Plug 'rcasia/neotest-java', { 'tag': 'latest' }
+Plug 'rcasia/neotest-java'
 ```
-
 
 ## :gear: Configuration
 ```lua
