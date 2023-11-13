@@ -6,7 +6,7 @@ PositionsDiscoverer = {}
 ---@async
 ---@param file_path string Absolute file path
 ---@return neotest.Tree | nil
-function PositionsDiscoverer:discover_positions(file_path)
+function PositionsDiscoverer.discover_positions(file_path)
 	local query = [[
 
        ;; Test class
