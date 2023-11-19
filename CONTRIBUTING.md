@@ -11,7 +11,7 @@ For the PRs to succeed and be merged you are expected to:
 * have read this doc
 * run the formatter before every commit
 * add testcases for the feature or bugfix
-* let me know if it is a work in progress or is already finished to be reviewed
+* to avoid duplicated work, open a draft PR as soon as you get to work
 
 ### :electric_plug: Set up
 
