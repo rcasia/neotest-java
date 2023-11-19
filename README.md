@@ -43,4 +43,4 @@ Feel free to contribute to this project by creating issues for bug reports, feat
 
 You can also submit pull requests for any enhancements, bug fixes, or new features.
 
-Your contributions are greatly appreciated.
+Your contributions are greatly appreciated. See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
