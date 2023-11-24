@@ -27,6 +27,7 @@ describe("SpecBuilder", function()
 		local args = mock_args_tree({
 			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
 			name = "shouldNotFail",
+			type = "test",
 		})
 
 		-- when
@@ -50,6 +51,7 @@ describe("SpecBuilder", function()
 		local args = mock_args_tree({
 			path = current_dir .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 			name = "shouldNotFail",
+			type = "test",
 		})
 
 		-- when
@@ -58,7 +60,7 @@ describe("SpecBuilder", function()
 		-- then
 		local expected_command = "./gradlew test --tests com.example.ExampleTest.shouldNotFail"
 		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
-		local expeceted_context = {
+		local expected_context = {
 			project_type = "gradle",
 			test_class_path = "com.example.ExampleTest",
 			test_method_names = { "shouldNotFail" },
@@ -66,7 +68,7 @@ describe("SpecBuilder", function()
 
 		assert.are.equal(expected_command, actual.command)
 		assert.are.equal(expected_cwd, actual.cwd)
-		assert.are.same(expeceted_context, actual.context)
+		assert.are.same(expected_context, actual.context)
 	end)
 
 	async.it("builds the spec for unit test class with maven", function()
@@ -80,7 +82,7 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest#ExampleTest"
+		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
@@ -152,6 +154,7 @@ describe("SpecBuilder", function()
 		local args = mock_args_tree({
 			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java",
 			name = "shouldWorkProperly",
+			type = "test",
 		})
 
 		-- when
@@ -174,6 +177,7 @@ describe("SpecBuilder", function()
 		local args = mock_args_tree({
 			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
 			name = "ExampleTest",
+			type = "test",
 		})
 
 		-- config

@@ -18,8 +18,12 @@ local CommandBuilder = {
 		return self
 	end,
 
-	test_reference = function(self, test_reference)
-		self._test_reference = test_reference
+	test_reference = function(self, relative_path, node_name, node_type)
+		self._relative_path = relative_path
+		if node_type == "test" then
+			self._method_name = node_name
+		end
+
 		return self
 	end,
 
@@ -35,6 +39,20 @@ local CommandBuilder = {
 	ignore_wrapper = function(self, ignore_wrapper)
 		self._ignore_wrapper = ignore_wrapper
 		return self
+	end,
+
+	_create_test_reference = function(self)
+		local class_package = self._relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", "")
+
+		if self._method_name == nil then
+			return class_package
+		end
+
+		if self._project_type.name == "gradle" then
+			return class_package .. "." .. self._method_name
+		end
+
+		return class_package .. "#" .. self._method_name
 	end,
 
 	--- @return string @command to run
@@ -53,10 +71,11 @@ local CommandBuilder = {
 			table.insert(command, "test")
 		end
 
+		local test_reference = self:_create_test_reference()
 		if self._project_type.name == "maven" then
-			table.insert(command, "-Dtest=" .. self._test_reference)
+			table.insert(command, "-Dtest=" .. test_reference)
 		else
-			table.insert(command, "--tests " .. self._test_reference)
+			table.insert(command, "--tests " .. test_reference)
 		end
 
 		return table.concat(command, " ")
@@ -64,22 +83,6 @@ local CommandBuilder = {
 }
 
 SpecBuilder = {}
-
--- TODO: refactor everything here
-local function find_java_reference(relative_path, name, project_type)
-	local class_package = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", "")
-
-	-- if name contains java, then it's a class
-	if string.find(name, ".java", 1, true) then
-		return class_package
-	end
-
-	if project_type == "gradle" then
-		return class_package .. "." .. name
-	end
-
-	return class_package .. "#" .. name
-end
 
 ---@param args neotest.RunArgs
 ---@param project_type string
@@ -95,30 +98,28 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 
 	local root = RootFinder.find_root(position.path)
 	local relative_path = position.path:sub(#root + 2)
-	local test_reference = find_java_reference(relative_path, position.name, project_type)
-	local is_integration_test = string.find(position.path, "IT.java", 1, true)
 
-	local test_class_path = string.gsub(test_reference, "#.*", "")
+	-- TODO: refactor this
+	local test_class = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
+
+	-- TODO: find a better way to detect integration tests
+	local is_integration_test = string.find(position.path, "IT.java", 1, true)
 
 	command:project_type(project_type)
 	command:ignore_wrapper(ignore_wrapper)
-	command:test_reference(test_reference)
 	command:is_integration_test(is_integration_test)
-	command:test_reference(test_reference)
+	command:test_reference(relative_path, position.name, position.type)
 
 	local test_method_names = {}
-	if project_type == "gradle" then
+	if project_type == ProjectType.gradle.name then
 		if position.type == "file" then
-			local children = args.tree:children()
-
-			for i, child in ipairs(children) do
+			for i, child in ipairs(args.tree:children()) do
+				-- FIXME: this need to check also if the position is a test
 				local child_postion = child:data()
 				test_method_names[i] = child_postion.name
 			end
 		else
 			test_method_names[1] = position.name
-			-- com.example.ExampleTest.firstTest -> com.example.ExampleTest
-			test_class_path = string.gsub(test_class_path, "%.[^%.]*$", "")
 		end
 	end
 
@@ -131,7 +132,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		symbol = position.name,
 		context = {
 			project_type = project_type,
-			test_class_path = test_class_path,
+			test_class_path = test_class,
 			test_method_names = test_method_names,
 		},
 	}
