@@ -1,7 +1,11 @@
 local RootFinder = require("neotest-java.core.root_finder")
 
+local ProjectType = {
+	gradle = { name = "gradle", wrapper = "./gradlew", global_binary = "gradle" },
+	maven = { name = "maven", wrapper = "./mvnw", global_binary = "mvn" },
+}
+
 local CommandBuilder = {
-	_executable = "",
 
 	--- @return CommandBuilder
 	new = function(self)
@@ -21,7 +25,10 @@ local CommandBuilder = {
 
 	--- @param project_type string @project_type maven | gradle
 	project_type = function(self, project_type)
-		self._project_type = project_type
+		if ProjectType[project_type] == nil then
+			error(string.format("expected '%s' to be maven or gradle", project_type))
+		end
+		self._project_type = ProjectType[project_type]
 		return self
 	end,
 
@@ -34,15 +41,11 @@ local CommandBuilder = {
 	build = function(self)
 		local command = {}
 
-		local executable
-		if self._project_type == "gradle" then
-			executable = self._ignore_wrapper and "gradle" or "./gradlew"
-		elseif self._project_type == "maven" then
-			executable = self._ignore_wrapper and "mvn" or "./mvnw"
+		if self._ignore_wrapper then
+			table.insert(command, self._project_type.global_binary)
 		else
-			error(string.format("expected '%s' to be maven or gradle", self._project_type))
+			table.insert(command, self._project_type.wrapper)
 		end
-		table.insert(command, executable)
 
 		if self._is_integration_test then
 			table.insert(command, "verify")
@@ -50,9 +53,9 @@ local CommandBuilder = {
 			table.insert(command, "test")
 		end
 
-		if self._test_reference and self._project_type ~= "gradle" then
+		if self._project_type.name == "maven" then
 			table.insert(command, "-Dtest=" .. self._test_reference)
-		elseif self._test_reference and self._project_type == "gradle" then
+		else
 			table.insert(command, "--tests " .. self._test_reference)
 		end
 
