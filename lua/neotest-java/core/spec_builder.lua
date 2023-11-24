@@ -9,12 +9,6 @@ local CommandBuilder = {
 		return setmetatable({}, self)
 	end,
 
-	--- @param executable string @executable bashunit executable binary
-	executable = function(self, executable)
-		self._executable = executable
-		return self
-	end,
-
 	is_integration_test = function(self, is_integration_test)
 		self._is_integration_test = is_integration_test
 		return self
@@ -25,8 +19,14 @@ local CommandBuilder = {
 		return self
 	end,
 
+	--- @param project_type string @project_type maven | gradle
 	project_type = function(self, project_type)
 		self._project_type = project_type
+		return self
+	end,
+
+	ignore_wrapper = function(self, ignore_wrapper)
+		self._ignore_wrapper = ignore_wrapper
 		return self
 	end,
 
@@ -34,7 +34,15 @@ local CommandBuilder = {
 	build = function(self)
 		local command = {}
 
-		table.insert(command, self._executable)
+		local executable
+		if self._project_type == "gradle" then
+			executable = self._ignore_wrapper and "gradle" or "./gradlew"
+		elseif self._project_type == "maven" then
+			executable = self._ignore_wrapper and "mvn" or "./mvnw"
+		else
+			error(string.format("expected '%s' to be maven or gradle", self._project_type))
+		end
+		table.insert(command, executable)
 
 		if self._is_integration_test then
 			table.insert(command, "verify")
@@ -89,15 +97,14 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 
 	local test_class_path = string.gsub(test_reference, "#.*", "")
 
-	local command_table = {}
+	command:project_type(project_type)
+	command:ignore_wrapper(ignore_wrapper)
+	command:test_reference(test_reference)
+	command:is_integration_test(is_integration_test)
+	command:test_reference(test_reference)
+
 	local test_method_names = {}
 	if project_type == "gradle" then
-		local executable = ignore_wrapper and "gradle" or "./gradlew"
-
-		command:executable(executable)
-		command:project_type(project_type)
-		command:test_reference(test_reference)
-
 		if position.type == "file" then
 			local children = args.tree:children()
 
@@ -110,12 +117,6 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 			-- com.example.ExampleTest.firstTest -> com.example.ExampleTest
 			test_class_path = string.gsub(test_class_path, "%.[^%.]*$", "")
 		end
-	elseif project_type == "maven" then
-		local executable = ignore_wrapper and "mvn" or "./mvnw"
-
-		command:executable(executable)
-		command:is_integration_test(is_integration_test)
-		command:test_reference(test_reference)
 	end
 
 	-- TODO: add debug logger
