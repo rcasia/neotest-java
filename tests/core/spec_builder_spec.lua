@@ -1,9 +1,17 @@
 local async = require("plenary.async").tests
 local plugin = require("neotest-java")
-local Tree = require("neotest.types.tree")
 
-local function getCurrentDir()
-	return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
+local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
+
+local function mock_args_tree(data)
+	return {
+		tree = {
+			data = function()
+				return data
+			end,
+		},
+		extra_args = {},
+	}
 end
 
 describe("SpecBuilder", function()
@@ -16,28 +24,18 @@ describe("SpecBuilder", function()
 	end)
 
 	async.it("builds spec for one method in unit test class with maven", function()
-		local path = getCurrentDir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
-
-		local args = {
-			tree = {
-				data = function()
-					return {
-						path = path,
-						name = "shouldNotFail",
-					}
-				end,
-			},
-			extra_args = {},
-		}
+		local args = mock_args_tree({
+			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
+			name = "shouldNotFail",
+			type = "test",
+		})
 
 		-- when
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_position = "com.example.ExampleTest#shouldNotFail"
-
-		local expected_command = "./mvnw test -Dtest=" .. expected_position
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
+		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest#shouldNotFail"
+		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
 			test_class_path = "com.example.ExampleTest",
@@ -50,27 +48,19 @@ describe("SpecBuilder", function()
 	end)
 
 	async.it("builds spec for one method in unit test class with gradle", function()
-		local path = getCurrentDir() .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java"
-
-		local args = {
-			tree = {
-				data = function()
-					return {
-						path = path,
-						name = "shouldNotFail",
-					}
-				end,
-			},
-			extra_args = {},
-		}
+		local args = mock_args_tree({
+			path = current_dir .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+			name = "shouldNotFail",
+			type = "test",
+		})
 
 		-- when
 		local actual = plugin.build_spec(args)
 
 		-- then
 		local expected_command = "./gradlew test --tests com.example.ExampleTest.shouldNotFail"
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
-		local expeceted_context = {
+		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
+		local expected_context = {
 			project_type = "gradle",
 			test_class_path = "com.example.ExampleTest",
 			test_method_names = { "shouldNotFail" },
@@ -78,31 +68,22 @@ describe("SpecBuilder", function()
 
 		assert.are.equal(expected_command, actual.command)
 		assert.are.equal(expected_cwd, actual.cwd)
-		assert.are.same(expeceted_context, actual.context)
+		assert.are.same(expected_context, actual.context)
 	end)
 
 	async.it("builds the spec for unit test class with maven", function()
-		local args = {
-			tree = {
-				data = function()
-					return {
-						path = getCurrentDir()
-							.. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
-						name = "ExampleTest",
-					}
-				end,
-			},
-			extra_args = {},
-		}
+		local args = mock_args_tree({
+			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
+			name = "ExampleTest",
+			type = "file",
+		})
 
 		-- when
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_position = "com.example.ExampleTest#ExampleTest"
-
-		local expected_command = "./mvnw test -Dtest=" .. expected_position
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
+		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest"
+		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
 			test_class_path = "com.example.ExampleTest",
@@ -119,9 +100,9 @@ describe("SpecBuilder", function()
 			tree = {
 				data = function()
 					return {
-						path = getCurrentDir()
-							.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+						path = current_dir .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 						name = "ExampleTest.java",
+						type = "file",
 					}
 				end,
 				children = function()
@@ -129,18 +110,20 @@ describe("SpecBuilder", function()
 						{
 							data = function()
 								return {
-									path = getCurrentDir()
+									path = current_dir
 										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 									name = "firstTest",
+									type = "test",
 								}
 							end,
 						},
 						{
 							data = function()
 								return {
-									path = getCurrentDir()
+									path = current_dir
 										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 									name = "secondTest",
+									type = "test",
 								}
 							end,
 						},
@@ -155,7 +138,7 @@ describe("SpecBuilder", function()
 
 		-- then
 		local expected_command = "./gradlew test --tests com.example.ExampleTest"
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/gradle-demo"
+		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
 			test_class_path = "com.example.ExampleTest",
@@ -168,24 +151,17 @@ describe("SpecBuilder", function()
 	end)
 
 	async.it("builds the spec for method in integration test class with maven", function()
-		local args = {
-			tree = {
-				data = function()
-					return {
-						path = getCurrentDir()
-							.. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java",
-						name = "shouldWorkProperly",
-					}
-				end,
-			},
-			extra_args = {},
-		}
+		local args = mock_args_tree({
+			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java",
+			name = "shouldWorkProperly",
+			type = "test",
+		})
 
 		-- when
 		local actual = plugin.build_spec(args)
 
 		local expected_command = "./mvnw verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
+		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
 			test_class_path = "com.example.demo.RepositoryIT",
@@ -198,18 +174,11 @@ describe("SpecBuilder", function()
 	end)
 
 	async.it("should ignore the wrapper", function()
-		local args = {
-			tree = {
-				data = function()
-					return {
-						path = getCurrentDir()
-							.. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
-						name = "ExampleTest",
-					}
-				end,
-			},
-			extra_args = {},
-		}
+		local args = mock_args_tree({
+			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
+			name = "ExampleTest",
+			type = "test",
+		})
 
 		-- config
 		plugin.config.ignore_wrapper = true
@@ -218,10 +187,8 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_position = "com.example.ExampleTest#ExampleTest"
-
-		local expected_command = "mvn test -Dtest=" .. expected_position
-		local expected_cwd = getCurrentDir() .. "tests/fixtures/maven-demo"
+		local expected_command = "mvn test -Dtest=com.example.ExampleTest#ExampleTest"
+		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
 			test_class_path = "com.example.ExampleTest",
