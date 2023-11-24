@@ -73,6 +73,7 @@ describe("SpecBuilder", function()
 		local args = mock_args_tree({
 			path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java",
 			name = "ExampleTest",
+			type = "file",
 		})
 
 		-- when
@@ -99,6 +100,7 @@ describe("SpecBuilder", function()
 					return {
 						path = current_dir .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 						name = "ExampleTest.java",
+						type = "file",
 					}
 				end,
 				children = function()
@@ -109,6 +111,7 @@ describe("SpecBuilder", function()
 									path = current_dir
 										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 									name = "firstTest",
+									type = "test",
 								}
 							end,
 						},
@@ -118,6 +121,7 @@ describe("SpecBuilder", function()
 									path = current_dir
 										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
 									name = "secondTest",
+									type = "test",
 								}
 							end,
 						},
