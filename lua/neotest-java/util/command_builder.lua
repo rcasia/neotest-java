@@ -51,8 +51,34 @@ local CommandBuilder = {
 		return self
 	end,
 
+	get_referenced_classes = function(self)
+		local classes = {}
+		for _, v in ipairs(self._test_references) do
+			local class_package = self:_create_test_reference(v.relative_path)
+			classes[#classes + 1] = class_package
+		end
+		return classes
+	end,
+
+	get_referenced_methods = function(self)
+		local methods = {}
+		for _, v in ipairs(self._test_references) do
+			local method = self:_create_test_reference(v.relative_path, v.method_name)
+			methods[#methods + 1] = method
+		end
+		return methods
+	end,
+
+	get_referenced_method_names = function(self)
+		local method_names = {}
+		for _, v in ipairs(self._test_references) do
+			method_names[#method_names + 1] = v.method_name
+		end
+		return method_names
+	end,
+
 	_create_test_reference = function(self, relative_path, method_name)
-		local class_package = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", "")
+		local class_package = relative_path:gsub("(.-)src/test/java/", ""):gsub("/", "."):gsub(".java", "")
 
 		if method_name == nil then
 			return class_package

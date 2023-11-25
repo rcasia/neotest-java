@@ -52,7 +52,7 @@ describe("command_builder", function()
 		command:project_type("gradle")
 		command:ignore_wrapper(false)
 		command:is_integration_test(false)
-		command:test_reference("src/test/java/com/example/ExampleTest", nil, "file")
+		command:test_reference("project_root/src/test/java/com/example/ExampleTest", nil, "file")
 
 		assert.are.equal("./gradlew test --tests com.example.ExampleTest", command:build())
 	end)
@@ -82,5 +82,47 @@ describe("command_builder", function()
 		command:test_reference("src/test/java/com/example/SecondExampleTest.java", nil, "dir")
 
 		assert.are.equal("./mvnw test -Dtest=com.example.ExampleTest,com.example.SecondExampleTest", command:build())
+	end)
+
+	it("gives the referenced classes", function()
+		local command = command_builder:new()
+
+		command:project_type("maven")
+		command:ignore_wrapper(false)
+		command:is_integration_test(false)
+		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldPass", "test")
+		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+
+		assert.are.same(
+			{ "com.example.ExampleTest", "com.example.SecondExampleTest" },
+			command:get_referenced_classes()
+		)
+	end)
+
+	it("gives the referenced methods", function()
+		local command = command_builder:new()
+
+		command:project_type("maven")
+		command:ignore_wrapper(false)
+		command:is_integration_test(false)
+		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldPass", "test")
+		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+
+		assert.are.same(
+			{ "com.example.ExampleTest#shouldPass", "com.example.SecondExampleTest#shouldFail" },
+			command:get_referenced_methods()
+		)
+	end)
+
+	it("gives the refenced method names", function()
+		local command = command_builder:new()
+
+		command:project_type("maven")
+		command:ignore_wrapper(false)
+		command:is_integration_test(false)
+		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldPass", "test")
+		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+
+		assert.are.same({ "shouldPass", "shouldFail" }, command:get_referenced_method_names())
 	end)
 end)
