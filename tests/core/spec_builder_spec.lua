@@ -95,6 +95,58 @@ describe("SpecBuilder", function()
 		assert.are.same(expeceted_context, actual.context)
 	end)
 
+	async.pending("builds the spec for unit test class with maven")
+
+	async.it("builds the spec for dirs with gradle", function()
+		local path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/"
+		local args = mock_args_tree({
+			path = path,
+			type = "dir",
+		})
+
+		-- mock iter()
+		local positions = {
+			{
+				type = "file",
+				name = "SumTest.java",
+				path = path .. "SumTest.java",
+			},
+			{
+				type = "file",
+				name = "SecondTest.java",
+				path = path .. "SecondTest.java",
+			},
+		}
+
+		local i = 0
+		args.tree.iter = function()
+			return function()
+				i = i + 1
+				if positions[i] == nil then
+					return nil
+				end
+				return i, positions[i]
+			end
+		end
+
+		-- when
+		local actual = plugin.build_spec(args)
+
+		-- then
+		local expected_command = "./mvnw test -Dtest=com.example.SumTest,com.example.SecondTest"
+		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
+		local expeceted_context = {
+			project_type = "maven",
+			test_class_names = { "com.example.SumTest", "com.example.SecondTest" },
+			test_class_path = "com.example.SumTest",
+			test_method_names = {},
+		}
+
+		assert.are.equal(expected_command, actual.command)
+		assert.are.equal(expected_cwd, actual.cwd)
+		assert.are.same(expeceted_context, actual.context)
+	end)
+
 	async.it("builds the spec for unit test class with maven", function()
 		local args = {
 			tree = {
