@@ -12,7 +12,7 @@ local build_unique_key = function(classname, testname)
 	return classname .. "::" .. testname
 end
 
-function isIndexedTable(tbl)
+local function is_array(tbl)
 	local index = 1
 	for k, _ in pairs(tbl) do
 		if k ~= index then
@@ -23,7 +23,7 @@ function isIndexedTable(tbl)
 	return true
 end
 
-function is_parameterized_test(testcases, name)
+local function is_parameterized_test(testcases, name)
 	local count = 0
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
@@ -45,12 +45,12 @@ function is_parameterized_test(testcases, name)
 	return false
 end
 
-function extract_test_failures(testcases, name)
+local function extract_test_failures(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
 	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
 
-	failures = {}
+	local failures = {}
 	for k, v in pairs(testcases) do
 		if string.match(k, regex) then
 			if v.failure then
@@ -62,7 +62,7 @@ function extract_test_failures(testcases, name)
 	return failures
 end
 
-function read_testcases_from_html(test_method_names, cwd, test_file_name)
+local function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	local testcases = {}
 
 	local dir = cwd .. "/build/reports/tests/test/classes"
@@ -77,7 +77,7 @@ function read_testcases_from_html(test_method_names, cwd, test_file_name)
 
 	for _, test_method_name in ipairs(test_method_names) do
 		local unique_key = build_unique_key(test_file_name, test_method_name)
-		result = testcases_from_html[unique_key] or {}
+		local result = testcases_from_html[unique_key] or {}
 		if result.status == "failed" then
 			for _, res in ipairs(result) do
 				if res.status == "failed" then
@@ -110,12 +110,6 @@ end
 
 ResultBuilder = {}
 
----@class neotest.Result
----@field status "passed"|"failed"|"skipped"
----@field output? string Path to file containing full output data
----@field short? string Shortened output string
----@field errors? neotest.Error[]
-
 ---@async
 ---@param spec neotest.RunSpec
 ---@param result neotest.StrategyResult
@@ -125,10 +119,6 @@ function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
 	local project_type = spec.context.project_type
-
-	-- local test_file_name = spec.context.test_class_path
-	--FIXME: wip, this should not be
-	local test_file_name = spec.context.test_class_names[1]
 
 	local reports_dir = ""
 	if project_type == "maven" then
@@ -157,8 +147,7 @@ function ResultBuilder.build_results(spec, result, tree)
 
 		local testcases_in_xml = xml_data.testsuite.testcase
 
-		-- index table if not array
-		if not isIndexedTable(testcases_in_xml) then
+		if not is_array(testcases_in_xml) then
 			testcases_in_xml = { testcases_in_xml }
 		end
 
@@ -179,7 +168,6 @@ function ResultBuilder.build_results(spec, result, tree)
 				testcases[build_unique_key(class_name, name)] = testcase
 			end
 		end
-		-- end
 	end
 
 	for _, v in tree:iter_nodes() do
@@ -197,10 +185,10 @@ function ResultBuilder.build_results(spec, result, tree)
 
 				local short_failure_messages = {}
 				for _, failure in ipairs(test_failures) do
-					failure_message = failure.failure[1]
-					name = failure._attr.name
+					local failure_message = failure.failure[1]
+					local name = failure._attr.name
 					-- take just the first line of the failure message
-					short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
+					local short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
 					short_failure_messages[#short_failure_messages + 1] = short_failure_message
 				end
 
