@@ -8,7 +8,7 @@
 </section>
 
 ## :construction_worker: There is still Work In Progress
- :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon: :new_moon: :new_moon:
+ :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon: :new_moon:
 
 ## :white_check_mark: Features
 
