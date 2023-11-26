@@ -60,4 +60,32 @@ describe("RootFinder", function()
 			assert.are.same(expectedRoot, actualRoot)
 		end
 	end)
+
+	it("should find the root of a gradle kotlin project", function()
+		-- given
+		local relativeDirs = {
+			"tests/fixtures/gradle-kotlin-demo/src/main/java/com/example",
+			"tests/fixtures/gradle-kotlin-demo/src/test/java/com/example",
+			"tests/fixtures/gradle-kotlin-demo/src/main/resources",
+			"tests/fixtures/gradle-kotlin-demo/src/test/resources",
+			"tests/fixtures/gradle-kotlin-demo/src/main/java/com/example/Example.java",
+			"tests/fixtures/gradle-kotlin-demo/src/test/java/com/example/ExampleTest.java",
+			"tests/fixtures/gradle-kotlin-demo",
+		}
+
+		local absoluteDirs = {}
+		for i, dir in ipairs(relativeDirs) do
+			absoluteDirs[i] = getCurrentDir() .. dir
+		end
+
+		local expectedRoot = getCurrentDir() .. "tests/fixtures/gradle-kotlin-demo"
+
+		-- when
+		for _, dir in ipairs(absoluteDirs) do
+			local actualRoot = plugin.root(dir)
+
+			-- then
+			assert.are.same(expectedRoot, actualRoot)
+		end
+	end)
 end)
