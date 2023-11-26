@@ -13,16 +13,14 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	local relative_path = position.path:sub(#root + 2)
 
 	if position.type == "dir" then
-		-- find all test class names
-		local has_integration_tests = false
 		local test_class_names = {}
 		local test_method_names = {}
 		for _, child in args.tree:iter() do
 			if child.type == "file" then
-				-- add class name to test_class_names
-				test_class_names[#test_class_names + 1] = child.name
+				local name = child.name
 				command:test_reference(child.path, child.name, child.type)
-				-- TODO: tell if there are integration tests
+
+				test_class_names[#test_class_names + 1] = name
 			elseif child.type == "test" then
 				-- to be able to extract the method_names
 				test_method_names[#test_method_names + 1] = child.name
@@ -31,7 +29,6 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 
 		command:project_type(project_type)
 		command:ignore_wrapper(ignore_wrapper)
-		command:is_integration_test(has_integration_tests)
 
 		return {
 			command = command:build(),
@@ -53,12 +50,8 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	-- TODO: refactor this
 	local test_class = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
 
-	-- TODO: find a better way to detect integration tests
-	local is_integration_test = string.find(position.path, "IT.java", 1, true)
-
 	command:project_type(project_type)
 	command:ignore_wrapper(ignore_wrapper)
-	command:is_integration_test(is_integration_test)
 	command:test_reference(relative_path, position.name, position.type)
 
 	local test_method_names = {}

@@ -5,17 +5,16 @@ local ProjectType = {
 
 local MAVEN = ProjectType.maven.name
 
+local function is_integration_test(file_name)
+	return file_name:find("IT.java") ~= nil
+end
+
 local CommandBuilder = {
 
 	--- @return CommandBuilder
 	new = function(self)
 		self.__index = self
 		return setmetatable({}, self)
-	end,
-
-	is_integration_test = function(self, is_integration_test)
-		self._is_integration_test = is_integration_test
-		return self
 	end,
 
 	---@param relative_path string example: src/test/java/com/example/ExampleTest.java
@@ -91,6 +90,16 @@ local CommandBuilder = {
 		return class_package .. "#" .. method_name
 	end,
 
+	contains_integration_tests = function(self)
+		for _, v in ipairs(self._test_references) do
+			if is_integration_test(v.relative_path) then
+				return true
+			end
+		end
+
+		return false
+	end,
+
 	--- @return string @command to run
 	build = function(self)
 		local command = {}
@@ -101,7 +110,7 @@ local CommandBuilder = {
 			table.insert(command, self._project_type.wrapper)
 		end
 
-		if MAVEN == self._project_type.name and self._is_integration_test then
+		if MAVEN == self._project_type.name and self:contains_integration_tests() then
 			table.insert(command, "verify")
 		else
 			table.insert(command, "test")
