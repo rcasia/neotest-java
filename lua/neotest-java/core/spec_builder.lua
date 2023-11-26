@@ -16,12 +16,16 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		-- find all test class names
 		local has_integration_tests = false
 		local test_class_names = {}
+		local test_method_names = {}
 		for _, child in args.tree:iter() do
 			if child.type == "file" then
 				-- add class name to test_class_names
 				test_class_names[#test_class_names + 1] = child.name
 				command:test_reference(child.path, child.name, child.type)
 				-- TODO: tell if there are integration tests
+			elseif child.type == "test" then
+				-- to be able to extract the method_names
+				test_method_names[#test_method_names + 1] = child.name
 			end
 		end
 
@@ -35,10 +39,8 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 			symbol = position.name,
 			context = {
 				project_type = project_type,
-				-- TODO: change this to test_class_names
-				test_class_path = command:get_referenced_classes()[1],
 				test_class_names = command:get_referenced_classes(),
-				test_method_names = {},
+				test_method_names = test_method_names,
 			},
 		}
 	end
@@ -81,7 +83,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		symbol = position.name,
 		context = {
 			project_type = project_type,
-			test_class_path = test_class,
+			test_class_names = command:get_referenced_classes(),
 			test_method_names = test_method_names,
 		},
 	}

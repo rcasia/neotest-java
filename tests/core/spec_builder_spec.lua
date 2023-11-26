@@ -38,7 +38,7 @@ describe("SpecBuilder", function()
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
-			test_class_path = "com.example.ExampleTest",
+			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = {},
 		}
 
@@ -62,7 +62,7 @@ describe("SpecBuilder", function()
 		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
 		local expected_context = {
 			project_type = "gradle",
-			test_class_path = "com.example.ExampleTest",
+			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = { "shouldNotFail" },
 		}
 
@@ -86,7 +86,7 @@ describe("SpecBuilder", function()
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
-			test_class_path = "com.example.ExampleTest",
+			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = {},
 		}
 
@@ -138,7 +138,6 @@ describe("SpecBuilder", function()
 		local expeceted_context = {
 			project_type = "maven",
 			test_class_names = { "com.example.SumTest", "com.example.SecondTest" },
-			test_class_path = "com.example.SumTest",
 			test_method_names = {},
 		}
 
@@ -193,7 +192,7 @@ describe("SpecBuilder", function()
 		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
 		local expeceted_context = {
 			project_type = "gradle",
-			test_class_path = "com.example.ExampleTest",
+			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = { "firstTest", "secondTest" },
 		}
 
@@ -216,7 +215,7 @@ describe("SpecBuilder", function()
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
-			test_class_path = "com.example.demo.RepositoryIT",
+			test_class_names = { "com.example.demo.RepositoryIT" },
 			test_method_names = {},
 		}
 
@@ -243,7 +242,7 @@ describe("SpecBuilder", function()
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
-			test_class_path = "com.example.ExampleTest",
+			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = {},
 		}
 
