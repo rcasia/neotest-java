@@ -97,7 +97,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for gradle", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
+			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
 			context = {
 				project_type = "gradle",
 				test_class_names = { "com.example.ExampleTest" },
@@ -109,7 +109,8 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir() .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java"
+		local file_path = get_current_dir()
+			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -119,12 +120,12 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
+        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
 	        errors = {{ line=14,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
           short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status = "failed"
         },
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
           status = "passed"
         }
       }
@@ -138,7 +139,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results when the is a single test method and it fails for gradle", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
+			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
 			context = {
 				project_type = "gradle",
 				test_class_names = { "com.example.SingleMethodFailingTest" },
@@ -151,7 +152,7 @@ describe("ResultBuilder", function()
 		}
 
 		local file_path = get_current_dir()
-			.. "tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java"
+			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -161,7 +162,7 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
     {
-      ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] 
+      ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] 
       = { 
 	      errors = {{ line=9,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
         short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
@@ -302,7 +303,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for parameterized with @CsvSource test for gradle", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
+			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
 			context = {
 				project_type = "gradle",
 				test_class_names = { "com.example.ParameterizedTests" },
@@ -321,7 +322,7 @@ describe("ResultBuilder", function()
 		}
 
 		local file_path = get_current_dir()
-			.. "tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java"
+			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ParameterizedTests.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -331,24 +332,24 @@ describe("ResultBuilder", function()
 		local actual = table_to_string(results)
 		local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldFail"]
+        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldFail"]
           = {
         errors= {{message="shouldFail(int,int,int)[1]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>"}},
           short="shouldFail(int,int,int)[1]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldFail2"]
+        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldFail2"]
           = {
         errors= {{message="shouldFail2(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail2(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>"}},
           short="shouldFail2(int,int,int)[2]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>\nshouldFail2(int,int,int)[3]->org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldPass"]
+        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldPass"]
           = {status="passed"}
         ,
-        ["{{current_dir}}tests/fixtures/gradle-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldPass2"]
+        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ParameterizedTests.java::ParameterizedTests::shouldPass2"]
           = {status="passed"}
       }
     ]]
@@ -361,8 +362,9 @@ describe("ResultBuilder", function()
 	for _, project_type in ipairs({ "maven", "gradle" }) do
 		async.it("builds the results for parameterized with @EmptySource test for " .. project_type, function()
 			--given
+			local project_dir = project_type == "maven" and "maven-demo" or "gradle-groovy-demo"
 			local runSpec = {
-				cwd = get_current_dir() .. "tests/fixtures/" .. project_type .. "-demo",
+				cwd = get_current_dir() .. "tests/fixtures/" .. project_dir,
 				context = {
 					project_type = project_type,
 					test_class_names = { "com.example.EmptySourceTest" },
@@ -380,8 +382,8 @@ describe("ResultBuilder", function()
 
 			local file_path = get_current_dir()
 				.. "tests/fixtures/"
-				.. project_type
-				.. "-demo/src/test/java/com/example/EmptySourceTest.java"
+				.. project_dir
+				.. "/src/test/java/com/example/EmptySourceTest.java"
 			local tree = plugin.discover_positions(file_path)
 
 			--when
@@ -392,20 +394,20 @@ describe("ResultBuilder", function()
 
 			local expected = [[
       {
-        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"]
+        ["{{current_dir}}tests/fixtures/{{project_dir}}/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"]
           = {
           errors={{message="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>"}},
           short="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
           status="failed"
           }
         ,
-        ["{{current_dir}}tests/fixtures/{{project_type}}-demo/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"]
+        ["{{current_dir}}tests/fixtures/{{project_dir}}/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"]
           = {status="passed"}
       }
     ]]
 
 			expected = expected:gsub("{{current_dir}}", get_current_dir())
-			expected = expected:gsub("{{project_type}}", project_type)
+			expected = expected:gsub("{{project_dir}}", project_dir)
 
 			assert_equal_ignoring_whitespaces(expected, actual)
 		end)

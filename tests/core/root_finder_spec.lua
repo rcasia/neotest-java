@@ -33,16 +33,16 @@ describe("RootFinder", function()
 		end
 	end)
 
-	it("should find the root of a gradle project", function()
+	it("should find the root of a gradle gradle project", function()
 		-- given
 		local relativeDirs = {
-			"tests/fixtures/gradle-demo/src/main/java/com/example",
-			"tests/fixtures/gradle-demo/src/test/java/com/example",
-			"tests/fixtures/gradle-demo/src/main/resources",
-			"tests/fixtures/gradle-demo/src/test/resources",
-			"tests/fixtures/gradle-demo/src/main/java/com/example/Example.java",
-			"tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
-			"tests/fixtures/gradle-demo",
+			"tests/fixtures/gradle-groovy-demo/src/main/java/com/example",
+			"tests/fixtures/gradle-groovy-demo/src/test/java/com/example",
+			"tests/fixtures/gradle-groovy-demo/src/main/resources",
+			"tests/fixtures/gradle-groovy-demo/src/test/resources",
+			"tests/fixtures/gradle-groovy-demo/src/main/java/com/example/Example.java",
+			"tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java",
+			"tests/fixtures/gradle-groovy-demo",
 		}
 
 		local absoluteDirs = {}
@@ -50,7 +50,7 @@ describe("RootFinder", function()
 			absoluteDirs[i] = getCurrentDir() .. dir
 		end
 
-		local expectedRoot = getCurrentDir() .. "tests/fixtures/gradle-demo"
+		local expectedRoot = getCurrentDir() .. "tests/fixtures/gradle-groovy-demo"
 
 		-- when
 		for _, dir in ipairs(absoluteDirs) do
