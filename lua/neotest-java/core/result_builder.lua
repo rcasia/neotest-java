@@ -12,7 +12,7 @@ local build_unique_key = function(classname, testname)
 	return classname .. "::" .. testname
 end
 
-function isIndexedTable(tbl)
+local function is_array(tbl)
 	local index = 1
 	for k, _ in pairs(tbl) do
 		if k ~= index then
@@ -23,7 +23,7 @@ function isIndexedTable(tbl)
 	return true
 end
 
-function is_parameterized_test(testcases, name)
+local function is_parameterized_test(testcases, name)
 	local count = 0
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
@@ -45,12 +45,12 @@ function is_parameterized_test(testcases, name)
 	return false
 end
 
-function extract_test_failures(testcases, name)
+local function extract_test_failures(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
 	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
 
-	failures = {}
+	local failures = {}
 	for k, v in pairs(testcases) do
 		if string.match(k, regex) then
 			if v.failure then
@@ -62,7 +62,7 @@ function extract_test_failures(testcases, name)
 	return failures
 end
 
-function read_testcases_from_html(test_method_names, cwd, test_file_name)
+local function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	local testcases = {}
 
 	local dir = cwd .. "/build/reports/tests/test/classes"
@@ -77,7 +77,7 @@ function read_testcases_from_html(test_method_names, cwd, test_file_name)
 
 	for _, test_method_name in ipairs(test_method_names) do
 		local unique_key = build_unique_key(test_file_name, test_method_name)
-		result = testcases_from_html[unique_key] or {}
+		local result = testcases_from_html[unique_key] or {}
 		if result.status == "failed" then
 			for _, res in ipairs(result) do
 				if res.status == "failed" then
@@ -103,13 +103,12 @@ function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	return testcases
 end
 
-ResultBuilder = {}
+-- TODO: extract to a diffrent file
+local function qualified_class_name_from_path(path)
+	return path:gsub("(.-)src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
+end
 
----@class neotest.Result
----@field status "passed"|"failed"|"skipped"
----@field output? string Path to file containing full output data
----@field short? string Shortened output string
----@field errors? neotest.Error[]
+ResultBuilder = {}
 
 ---@async
 ---@param spec neotest.RunSpec
@@ -120,7 +119,6 @@ function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
 	local project_type = spec.context.project_type
-	local test_file_name = spec.context.test_class_path
 
 	local reports_dir = ""
 	if project_type == "maven" then
@@ -131,46 +129,43 @@ function ResultBuilder.build_results(spec, result, tree)
 
 	local testcases = {}
 
-	local test_method_names = spec.context.test_method_names
-	if project_type == "gradle" and test_method_names and #test_method_names > 0 then
-		testcases_from_html = read_testcases_from_html(spec.context.test_method_names, spec.cwd, test_file_name)
-		testcases = testcases_from_html
-	end
+	for _, class_name in ipairs(spec.context.test_class_names) do
+		local test_method_names = spec.context.test_method_names
 
-	local files = scan.scan_dir(reports_dir, { depth = 1 })
+		if project_type == "gradle" and test_method_names and #test_method_names > 0 then
+			local testcases_from_html = read_testcases_from_html(spec.context.test_method_names, spec.cwd, class_name)
+			testcases = vim.tbl_extend("force", testcases, testcases_from_html)
+		end
 
-	for _, file in ipairs(files) do
-		if string.find(file, test_file_name .. ".xml", 1, true) then
-			local data
-			with(open(file, "r"), function(reader)
-				data = reader:read("*a")
-			end)
+		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
+		local data
+		with(open(filename, "r"), function(reader)
+			data = reader:read("*a")
+		end)
 
-			local xml_data = xml.parse(data)
+		local xml_data = xml.parse(data)
 
-			local testcases_in_xml = xml_data.testsuite.testcase
+		local testcases_in_xml = xml_data.testsuite.testcase
 
-			-- index table if not array
-			if not isIndexedTable(testcases_in_xml) then
-				testcases_in_xml = { testcases_in_xml }
-			end
+		if not is_array(testcases_in_xml) then
+			testcases_in_xml = { testcases_in_xml }
+		end
 
-			if not testcases_in_xml then
-				-- TODO: use an actual logger
-				print("[neotest-java] No test cases found")
-				break
-			else
-				-- testcases_in_xml is an array
-				for _, testcase in ipairs(testcases_in_xml) do
-					local name = testcase._attr.name
+		if not testcases_in_xml then
+			-- TODO: use an actual logger
+			print("[neotest-java] No test cases found")
+			break
+		else
+			-- testcases_in_xml is an array
+			for _, testcase in ipairs(testcases_in_xml) do
+				local name = testcase._attr.name
 
-					if project_type == "gradle" then
-						-- remove parameters
-						name = name:gsub("%(.*%)", "")
-					end
-
-					testcases[build_unique_key(test_file_name, name)] = testcase
+				if project_type == "gradle" then
+					-- remove parameters
+					name = name:gsub("%(.*%)", "")
 				end
+
+				testcases[build_unique_key(class_name, name)] = testcase
 			end
 		end
 	end
@@ -178,7 +173,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
 		local is_test = node_data.type == "test"
-		local unique_key = build_unique_key(test_file_name, node_data.name)
+		local unique_key = build_unique_key(qualified_class_name_from_path(node_data.path), node_data.name)
 		local is_parameterized = is_parameterized_test(testcases, node_data.name)
 
 		if is_test then
@@ -190,10 +185,10 @@ function ResultBuilder.build_results(spec, result, tree)
 
 				local short_failure_messages = {}
 				for _, failure in ipairs(test_failures) do
-					failure_message = failure.failure[1]
-					name = failure._attr.name
+					local failure_message = failure.failure[1]
+					local name = failure._attr.name
 					-- take just the first line of the failure message
-					short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
+					local short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
 					short_failure_messages[#short_failure_messages + 1] = short_failure_message
 				end
 

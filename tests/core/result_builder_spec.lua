@@ -21,7 +21,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
-				test_class_path = "com.example.ExampleTest",
+				test_class_names = { "com.example.ExampleTest" },
 			},
 		}
 
@@ -62,7 +62,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
-				test_class_path = "com.example.ErroneousTest",
+				test_class_names = { "com.example.ErroneousTest" },
 			},
 		}
 
@@ -100,7 +100,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
 			context = {
 				project_type = "gradle",
-				test_class_path = "com.example.ExampleTest",
+				test_class_names = { "com.example.ExampleTest" },
 			},
 		}
 
@@ -141,7 +141,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
 			context = {
 				project_type = "gradle",
-				test_class_path = "com.example.SingleMethodFailingTest",
+				test_class_names = { "com.example.SingleMethodFailingTest" },
 			},
 		}
 
@@ -180,7 +180,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
-				test_class_path = "com.example.SingleMethodFailingTest",
+				test_class_names = { "com.example.SingleMethodFailingTest" },
 			},
 		}
 
@@ -219,7 +219,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
-				test_class_path = "com.example.demo.RepositoryIT",
+				test_class_names = { "com.example.demo.RepositoryIT" },
 			},
 		}
 
@@ -256,7 +256,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = "maven",
-				test_class_path = "com.example.ParameterizedMethodTest",
+				test_class_names = { "com.example.ParameterizedMethodTest" },
 			},
 		}
 
@@ -305,7 +305,7 @@ describe("ResultBuilder", function()
 			cwd = get_current_dir() .. "tests/fixtures/gradle-demo",
 			context = {
 				project_type = "gradle",
-				test_class_path = "com.example.ParameterizedTests",
+				test_class_names = { "com.example.ParameterizedTests" },
 				test_method_names = {
 					"shouldFail",
 					"shouldFail2",
@@ -365,7 +365,7 @@ describe("ResultBuilder", function()
 				cwd = get_current_dir() .. "tests/fixtures/" .. project_type .. "-demo",
 				context = {
 					project_type = project_type,
-					test_class_path = "com.example.EmptySourceTest",
+					test_class_names = { "com.example.EmptySourceTest" },
 					test_method_names = {
 						"emptySourceShouldFail",
 						"emptySourceShouldPass",

@@ -3,6 +3,12 @@ local ProjectType = {
 	maven = { name = "maven", wrapper = "./mvnw", global_binary = "mvn" },
 }
 
+local MAVEN = ProjectType.maven.name
+
+local function is_integration_test(file_name)
+	return file_name:find("IT.java") ~= nil
+end
+
 local CommandBuilder = {
 
 	--- @return CommandBuilder
@@ -11,16 +17,21 @@ local CommandBuilder = {
 		return setmetatable({}, self)
 	end,
 
-	is_integration_test = function(self, is_integration_test)
-		self._is_integration_test = is_integration_test
-		return self
-	end,
+	---@param relative_path string example: src/test/java/com/example/ExampleTest.java
+	---@param node_name? string example: shouldNotFail
+	---@return CommandBuilder
+	test_reference = function(self, relative_path, node_name, type)
+		self._test_references = self._test_references or {}
 
-	test_reference = function(self, relative_path, node_name, node_type)
-		self._relative_path = relative_path
-		if node_type == "test" then
-			self._method_name = node_name
+		local method_name
+		if type == "test" then
+			method_name = node_name
 		end
+
+		self._test_references[#self._test_references + 1] = {
+			relative_path = relative_path,
+			method_name = method_name,
+		}
 
 		return self
 	end,
@@ -39,18 +50,54 @@ local CommandBuilder = {
 		return self
 	end,
 
-	_create_test_reference = function(self)
-		local class_package = self._relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", "")
+	get_referenced_classes = function(self)
+		local classes = {}
+		for _, v in ipairs(self._test_references) do
+			local class_package = self:_create_test_reference(v.relative_path)
+			classes[#classes + 1] = class_package
+		end
+		return classes
+	end,
 
-		if self._method_name == nil then
+	get_referenced_methods = function(self)
+		local methods = {}
+		for _, v in ipairs(self._test_references) do
+			local method = self:_create_test_reference(v.relative_path, v.method_name)
+			methods[#methods + 1] = method
+		end
+		return methods
+	end,
+
+	get_referenced_method_names = function(self)
+		local method_names = {}
+		for _, v in ipairs(self._test_references) do
+			method_names[#method_names + 1] = v.method_name
+		end
+		return method_names
+	end,
+
+	_create_test_reference = function(self, relative_path, method_name)
+		local class_package = relative_path:gsub("(.-)src/test/java/", ""):gsub("/", "."):gsub(".java", "")
+
+		if method_name == nil then
 			return class_package
 		end
 
 		if self._project_type.name == "gradle" then
-			return class_package .. "." .. self._method_name
+			return class_package .. "." .. method_name
 		end
 
-		return class_package .. "#" .. self._method_name
+		return class_package .. "#" .. method_name
+	end,
+
+	contains_integration_tests = function(self)
+		for _, v in ipairs(self._test_references) do
+			if is_integration_test(v.relative_path) then
+				return true
+			end
+		end
+
+		return false
 	end,
 
 	--- @return string @command to run
@@ -63,17 +110,28 @@ local CommandBuilder = {
 			table.insert(command, self._project_type.wrapper)
 		end
 
-		if self._is_integration_test then
+		if MAVEN == self._project_type.name and self:contains_integration_tests() then
 			table.insert(command, "verify")
 		else
 			table.insert(command, "test")
 		end
 
-		local test_reference = self:_create_test_reference()
-		if self._project_type.name == "maven" then
-			table.insert(command, "-Dtest=" .. test_reference)
+		if self._project_type.name == "gradle" then
+			for _, v in ipairs(self._test_references) do
+				local test_reference = self:_create_test_reference(v.relative_path, v.method_name)
+				if self._project_type.name == "maven" then
+					table.insert(command, "-Dtest=" .. test_reference)
+				else
+					table.insert(command, "--tests " .. test_reference)
+				end
+			end
 		else
-			table.insert(command, "--tests " .. test_reference)
+			local references = {}
+			for _, v in ipairs(self._test_references) do
+				local test_reference = self:_create_test_reference(v.relative_path, v.method_name)
+				table.insert(references, test_reference)
+			end
+			table.insert(command, "-Dtest=" .. table.concat(references, ","))
 		end
 
 		return table.concat(command, " ")

@@ -9,24 +9,49 @@ SpecBuilder = {}
 function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	local command = CommandBuilder:new()
 	local position = args.tree:data()
+	local root = root_finder.find_root(position.path)
+	local relative_path = position.path:sub(#root + 2)
+
+	if position.type == "dir" then
+		local test_class_names = {}
+		local test_method_names = {}
+		for _, child in args.tree:iter() do
+			if child.type == "file" then
+				local name = child.name
+				command:test_reference(child.path, child.name, child.type)
+
+				test_class_names[#test_class_names + 1] = name
+			elseif child.type == "test" then
+				-- to be able to extract the method_names
+				test_method_names[#test_method_names + 1] = child.name
+			end
+		end
+
+		command:project_type(project_type)
+		command:ignore_wrapper(ignore_wrapper)
+
+		return {
+			command = command:build(),
+			cwd = root,
+			symbol = position.name,
+			context = {
+				project_type = project_type,
+				test_class_names = command:get_referenced_classes(),
+				test_method_names = test_method_names,
+			},
+		}
+	end
 
 	-- TODO: this is a workaround until we handle namespaces properly
 	if position.type == "namespace" then
 		position = args.tree:parent():data()
 	end
 
-	local root = root_finder.find_root(position.path)
-	local relative_path = position.path:sub(#root + 2)
-
 	-- TODO: refactor this
 	local test_class = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
 
-	-- TODO: find a better way to detect integration tests
-	local is_integration_test = string.find(position.path, "IT.java", 1, true)
-
 	command:project_type(project_type)
 	command:ignore_wrapper(ignore_wrapper)
-	command:is_integration_test(is_integration_test)
 	command:test_reference(relative_path, position.name, position.type)
 
 	local test_method_names = {}
@@ -51,7 +76,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		symbol = position.name,
 		context = {
 			project_type = project_type,
-			test_class_path = test_class,
+			test_class_names = command:get_referenced_classes(),
 			test_method_names = test_method_names,
 		},
 	}
