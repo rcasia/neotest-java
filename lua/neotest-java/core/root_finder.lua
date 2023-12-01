@@ -10,6 +10,7 @@ function RootFinder.find_root(dir)
 	matchers = {
 		"pom.xml",
 		"build.gradle",
+		"build.gradle.kts",
 	}
 
 	for _, matcher in ipairs(matchers) do

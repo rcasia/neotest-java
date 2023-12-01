@@ -49,7 +49,7 @@ describe("SpecBuilder", function()
 
 	async.it("builds spec for one method in unit test class with gradle", function()
 		local args = mock_args_tree({
-			path = current_dir .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+			path = current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java",
 			name = "shouldNotFail",
 			type = "test",
 		})
@@ -59,7 +59,7 @@ describe("SpecBuilder", function()
 
 		-- then
 		local expected_command = "./gradlew test --tests com.example.ExampleTest.shouldNotFail"
-		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
+		local expected_cwd = current_dir .. "tests/fixtures/gradle-groovy-demo"
 		local expected_context = {
 			project_type = "gradle",
 			test_class_names = { "com.example.ExampleTest" },
@@ -151,7 +151,8 @@ describe("SpecBuilder", function()
 			tree = {
 				data = function()
 					return {
-						path = current_dir .. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+						path = current_dir
+							.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java",
 						name = "ExampleTest.java",
 						type = "file",
 					}
@@ -162,7 +163,7 @@ describe("SpecBuilder", function()
 							data = function()
 								return {
 									path = current_dir
-										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+										.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java",
 									name = "firstTest",
 									type = "test",
 								}
@@ -172,7 +173,7 @@ describe("SpecBuilder", function()
 							data = function()
 								return {
 									path = current_dir
-										.. "tests/fixtures/gradle-demo/src/test/java/com/example/ExampleTest.java",
+										.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java",
 									name = "secondTest",
 									type = "test",
 								}
@@ -189,7 +190,7 @@ describe("SpecBuilder", function()
 
 		-- then
 		local expected_command = "./gradlew test --tests com.example.ExampleTest"
-		local expected_cwd = current_dir .. "tests/fixtures/gradle-demo"
+		local expected_cwd = current_dir .. "tests/fixtures/gradle-groovy-demo"
 		local expeceted_context = {
 			project_type = "gradle",
 			test_class_names = { "com.example.ExampleTest" },
