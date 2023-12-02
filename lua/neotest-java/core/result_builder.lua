@@ -4,6 +4,7 @@ local context_manager = require("plenary.context_manager")
 local with = context_manager.with
 local open = context_manager.open
 local test_parser = require("neotest-java.util.test_parser")
+local logger = require("neotest.logging")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -103,9 +104,11 @@ local function read_testcases_from_html(test_method_names, cwd, test_file_name)
 	return testcases
 end
 
--- TODO: extract to a diffrent file
-local function qualified_class_name_from_path(path)
-	return path:gsub("(.-)src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
+---@param project_type neotest-java.BuildTool
+---@param path string
+---@return string
+local function qualified_class_name_from_path(project_type, path)
+	return path:gsub("(.-)" .. project_type.test_src, ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
 end
 
 ResultBuilder = {}
@@ -120,24 +123,20 @@ function ResultBuilder.build_results(spec, result, tree)
 
 	local project_type = spec.context.project_type
 
-	local reports_dir = ""
-	if project_type == "maven" then
-		reports_dir = spec.cwd .. "/target/surefire-reports"
-	elseif project_type == "gradle" then
-		reports_dir = spec.cwd .. "/build/test-results/test"
-	end
+	local reports_dir = spec.cwd .. project_type.reports_dir
 
 	local testcases = {}
 
 	for _, class_name in ipairs(spec.context.test_class_names) do
 		local test_method_names = spec.context.test_method_names
 
-		if project_type == "gradle" and test_method_names and #test_method_names > 0 then
+		if project_type.name == "gradle" and test_method_names and #test_method_names > 0 then
 			local testcases_from_html = read_testcases_from_html(spec.context.test_method_names, spec.cwd, class_name)
 			testcases = vim.tbl_extend("force", testcases, testcases_from_html)
 		end
 
 		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
+		logger.debug("looking for filename: " .. filename)
 		local data
 		with(open(filename, "r"), function(reader)
 			data = reader:read("*a")
@@ -152,15 +151,17 @@ function ResultBuilder.build_results(spec, result, tree)
 		end
 
 		if not testcases_in_xml then
+			logger.debug("no testcases in xml")
 			-- TODO: use an actual logger
 			print("[neotest-java] No test cases found")
 			break
 		else
+			logger.debug("found testcases in xml")
 			-- testcases_in_xml is an array
 			for _, testcase in ipairs(testcases_in_xml) do
 				local name = testcase._attr.name
 
-				if project_type == "gradle" then
+				if project_type.name == "gradle" then
 					-- remove parameters
 					name = name:gsub("%(.*%)", "")
 				end
@@ -173,7 +174,8 @@ function ResultBuilder.build_results(spec, result, tree)
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
 		local is_test = node_data.type == "test"
-		local unique_key = build_unique_key(qualified_class_name_from_path(node_data.path), node_data.name)
+		local unique_key =
+			build_unique_key(qualified_class_name_from_path(project_type, node_data.path), node_data.name)
 		local is_parameterized = is_parameterized_test(testcases, node_data.name)
 
 		if is_test then

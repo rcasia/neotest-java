@@ -1,14 +1,16 @@
-local ProjectType = {
-	gradle = { name = "gradle", wrapper = "./gradlew", global_binary = "gradle" },
-	maven = { name = "maven", wrapper = "./mvnw", global_binary = "mvn" },
-}
-
-local MAVEN = ProjectType.maven.name
-
 local function is_integration_test(file_name)
 	return file_name:find("IT.java") ~= nil
 end
 
+---@class neotest-java.TestReference
+---@field relative_path string
+---@field method_name string
+local TestReference
+
+---@class CommandBuilder
+---@field _project_type neotest-java.BuildTool
+---@field _ignore_wrapper boolean
+---@field _test_references table<neotest-java.TestReference>
 local CommandBuilder = {
 
 	--- @return CommandBuilder
@@ -36,12 +38,12 @@ local CommandBuilder = {
 		return self
 	end,
 
-	--- @param project_type string @project_type maven | gradle
+	--- @param project_type neotest-java.BuildTool
 	project_type = function(self, project_type)
-		if ProjectType[project_type] == nil then
+		if project_type == nil then
 			error(string.format("expected '%s' to be maven or gradle", project_type))
 		end
-		self._project_type = ProjectType[project_type]
+		self._project_type = project_type
 		return self
 	end,
 
@@ -110,28 +112,8 @@ local CommandBuilder = {
 			table.insert(command, self._project_type.wrapper)
 		end
 
-		if MAVEN == self._project_type.name and self:contains_integration_tests() then
-			table.insert(command, "verify")
-		else
-			table.insert(command, "test")
-		end
-
-		if self._project_type.name == "gradle" then
-			for _, v in ipairs(self._test_references) do
-				local test_reference = self:_create_test_reference(v.relative_path, v.method_name)
-				if self._project_type.name == "maven" then
-					table.insert(command, "-Dtest=" .. test_reference)
-				else
-					table.insert(command, "--tests " .. test_reference)
-				end
-			end
-		else
-			local references = {}
-			for _, v in ipairs(self._test_references) do
-				local test_reference = self:_create_test_reference(v.relative_path, v.method_name)
-				table.insert(references, test_reference)
-			end
-			table.insert(command, "-Dtest=" .. table.concat(references, ","))
+		for _, item in ipairs(self._project_type.build_command(self)) do
+			table.insert(command, item)
 		end
 
 		return table.concat(command, " ")

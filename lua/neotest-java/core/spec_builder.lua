@@ -4,12 +4,13 @@ local CommandBuilder = require("neotest-java.util.command_builder")
 SpecBuilder = {}
 
 ---@param args neotest.RunArgs
----@param project_type string
+---@param project_type neotest-java.BuildTool
+---@config config neotest-java.Config
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
+function SpecBuilder.build_spec(args, project_type, config)
 	local command = CommandBuilder:new()
 	local position = args.tree:data()
-	local root = root_finder.find_root(position.path)
+	local root = root_finder.find_root(config.buildtools, position.path)
 	local relative_path = position.path:sub(#root + 2)
 
 	if position.type == "dir" then
@@ -28,7 +29,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		end
 
 		command:project_type(project_type)
-		command:ignore_wrapper(ignore_wrapper)
+		command:ignore_wrapper(config.ignore_wrapper)
 
 		return {
 			command = command:build(),
@@ -48,14 +49,14 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	end
 
 	-- TODO: refactor this
-	local test_class = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
+	local test_class = relative_path:gsub(project_type.test_src, ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
 
 	command:project_type(project_type)
-	command:ignore_wrapper(ignore_wrapper)
+	command:ignore_wrapper(config.ignore_wrapper)
 	command:test_reference(relative_path, position.name, position.type)
 
 	local test_method_names = {}
-	if project_type == "gradle" then
+	if project_type.name == "gradle" then
 		if position.type == "file" then
 			for i, child in ipairs(args.tree:children()) do
 				-- FIXME: this need to check also if the position is a test

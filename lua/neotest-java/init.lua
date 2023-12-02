@@ -10,13 +10,25 @@ local result_builder = require("neotest-java.core.result_builder")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
 
+local buildtools = require("neotest-java.buildtools")
+
+---@class neotest-java.Config
+---@field ignore_wrapper boolean
+---@field buildtools table<neotest-java.BuildTool>
+
 ---@class neotest.Adapter
 ---@field name string
+---@field project_type neotest-java.BuildTool | nil
+---@field config neotest-java.Config
 NeotestJavaAdapter = {
 	name = "neotest-java",
-	project_type = "maven", -- default to maven
+	project_type = buildtools.maven,
 	config = {
 		ignore_wrapper = false,
+		buildtools = {
+			buildtools.gradle,
+			buildtools.maven,
+		},
 	},
 }
 
@@ -26,7 +38,8 @@ NeotestJavaAdapter = {
 ---@param dir string @Directory to treat as cwd
 ---@return string | nil @Absolute root dir of test suite
 function NeotestJavaAdapter.root(dir)
-	return root_finder.find_root(dir)
+	local self = NeotestJavaAdapter
+	return root_finder.find_root(self.config.buildtools, dir)
 end
 
 ---Filter directories when searching for test files
@@ -64,7 +77,7 @@ function NeotestJavaAdapter.build_spec(args)
 	local root = self.root(args.tree:data().path)
 
 	-- detect project type
-	self.project_type = detect_project_type(root)
+	self.project_type = detect_project_type(self.config.buildtools, root)
 
 	-- decide to ignore wrapper or not
 	local ignore_wrapper = self.config.ignore_wrapper
@@ -73,7 +86,7 @@ function NeotestJavaAdapter.build_spec(args)
 	end
 
 	-- build spec
-	return spec_builder.build_spec(args, self.project_type, ignore_wrapper)
+	return spec_builder.build_spec(args, self.project_type, self.config)
 end
 
 ---@async

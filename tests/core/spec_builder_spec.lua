@@ -1,5 +1,6 @@
 local async = require("plenary.async").tests
 local plugin = require("neotest-java")
+local buildtools = require("neotest-java.buildtools")
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 
@@ -17,8 +18,13 @@ end
 describe("SpecBuilder", function()
 	before_each(function()
 		-- set config
+		---@class neotest-java.Config
 		local config = {
 			ignore_wrapper = false,
+			buildtools = {
+				buildtools.gradle,
+				buildtools.maven,
+			},
 		}
 		plugin.config = config
 	end)
@@ -37,7 +43,7 @@ describe("SpecBuilder", function()
 		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest#shouldNotFail"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
-			project_type = "maven",
+			project_type = buildtools.maven,
 			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = {},
 		}
@@ -61,7 +67,7 @@ describe("SpecBuilder", function()
 		local expected_command = "./gradlew test --tests com.example.ExampleTest.shouldNotFail"
 		local expected_cwd = current_dir .. "tests/fixtures/gradle-groovy-demo"
 		local expected_context = {
-			project_type = "gradle",
+			project_type = buildtools.gradle,
 			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = { "shouldNotFail" },
 		}
@@ -85,7 +91,7 @@ describe("SpecBuilder", function()
 		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
-			project_type = "maven",
+			project_type = buildtools.maven,
 			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = {},
 		}
@@ -136,7 +142,7 @@ describe("SpecBuilder", function()
 		local expected_command = "./mvnw test -Dtest=com.example.SumTest,com.example.SecondTest"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
-			project_type = "maven",
+			project_type = buildtools.maven,
 			test_class_names = { "com.example.SumTest", "com.example.SecondTest" },
 			test_method_names = {},
 		}
@@ -192,7 +198,7 @@ describe("SpecBuilder", function()
 		local expected_command = "./gradlew test --tests com.example.ExampleTest"
 		local expected_cwd = current_dir .. "tests/fixtures/gradle-groovy-demo"
 		local expeceted_context = {
-			project_type = "gradle",
+			project_type = buildtools.gradle,
 			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = { "firstTest", "secondTest" },
 		}
@@ -215,7 +221,7 @@ describe("SpecBuilder", function()
 		local expected_command = "./mvnw verify -Dtest=com.example.demo.RepositoryIT#shouldWorkProperly"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
-			project_type = "maven",
+			project_type = buildtools.maven,
 			test_class_names = { "com.example.demo.RepositoryIT" },
 			test_method_names = {},
 		}
@@ -242,7 +248,7 @@ describe("SpecBuilder", function()
 		local expected_command = "mvn test -Dtest=com.example.ExampleTest#ExampleTest"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
-			project_type = "maven",
+			project_type = buildtools.maven,
 			test_class_names = { "com.example.ExampleTest" },
 			test_method_names = {},
 		}

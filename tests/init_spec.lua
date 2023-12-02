@@ -1,8 +1,14 @@
+local buildtools = require("neotest-java.buildtools")
+
 describe("NeotestJava plugin", function()
 	it("should init default configuration", function()
 		-- given
 		local expected_config = {
 			ignore_wrapper = false,
+			buildtools = {
+				buildtools.gradle,
+				buildtools.maven,
+			},
 		}
 
 		-- when
@@ -16,6 +22,10 @@ describe("NeotestJava plugin", function()
 		-- given
 		local expected_config = {
 			ignore_wrapper = false,
+			buildtools = {
+				buildtools.gradle,
+				buildtools.maven,
+			},
 		}
 
 		-- when

@@ -1,17 +1,16 @@
+--- @param buildtools table<neotest-java.BuildTool>
 --- @param project_root_path string
---- @return string "gradle" | "maven" | "unknown"
-local function detect_project_type(project_root_path)
-	local gradle_kotlin_build_file = project_root_path .. "/build.gradle.kts"
-	local gradle_groovy_build_file = project_root_path .. "/build.gradle"
-	local maven_build_file = project_root_path .. "/pom.xml"
-
-	if vim.fn.filereadable(gradle_groovy_build_file) == 1 or vim.fn.filereadable(gradle_kotlin_build_file) == 1 then
-		return "gradle"
-	elseif vim.fn.filereadable(maven_build_file) == 1 then
-		return "maven"
+--- @return neotest-java.BuildTool | nil
+local function detect_project_type(buildtools, project_root_path)
+	for _, buildtool in ipairs(buildtools) do
+		for _, project_file in ipairs(buildtool.project_files) do
+			if vim.fn.filereadable(project_root_path .. "/" .. project_file) == 1 then
+				return buildtool
+			end
+		end
 	end
 
-	return "unknown"
+	return nil
 end
 
 return detect_project_type

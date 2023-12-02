@@ -1,5 +1,6 @@
 local async = require("nio").tests
 local plugin = require("neotest-java")
+local buildtools = require("neotest-java.buildtools")
 
 local function get_current_dir()
 	return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
@@ -20,7 +21,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
-				project_type = "maven",
+				project_type = buildtools.maven,
 				test_class_names = { "com.example.ExampleTest" },
 			},
 		}
@@ -61,7 +62,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
-				project_type = "maven",
+				project_type = buildtools.maven,
 				test_class_names = { "com.example.ErroneousTest" },
 			},
 		}
@@ -99,7 +100,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
 			context = {
-				project_type = "gradle",
+				project_type = buildtools.gradle,
 				test_class_names = { "com.example.ExampleTest" },
 			},
 		}
@@ -141,7 +142,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
 			context = {
-				project_type = "gradle",
+				project_type = buildtools.gradle,
 				test_class_names = { "com.example.SingleMethodFailingTest" },
 			},
 		}
@@ -180,7 +181,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
-				project_type = "maven",
+				project_type = buildtools.maven,
 				test_class_names = { "com.example.SingleMethodFailingTest" },
 			},
 		}
@@ -219,7 +220,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
-				project_type = "maven",
+				project_type = buildtools.maven,
 				test_class_names = { "com.example.demo.RepositoryIT" },
 			},
 		}
@@ -256,7 +257,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
 			context = {
-				project_type = "maven",
+				project_type = buildtools.maven,
 				test_class_names = { "com.example.ParameterizedMethodTest" },
 			},
 		}
@@ -305,7 +306,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
 			context = {
-				project_type = "gradle",
+				project_type = buildtools.gradle,
 				test_class_names = { "com.example.ParameterizedTests" },
 				test_method_names = {
 					"shouldFail",
@@ -359,10 +360,10 @@ describe("ResultBuilder", function()
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
 
-	for _, project_type in ipairs({ "maven", "gradle" }) do
-		async.it("builds the results for parameterized with @EmptySource test for " .. project_type, function()
+	for _, project_type in ipairs({ buildtools.maven, buildtools.gradle }) do
+		async.it("builds the results for parameterized with @EmptySource test for " .. project_type.name, function()
 			--given
-			local project_dir = project_type == "maven" and "maven-demo" or "gradle-groovy-demo"
+			local project_dir = project_type == buildtools.maven and "maven-demo" or "gradle-groovy-demo"
 			local runSpec = {
 				cwd = get_current_dir() .. "tests/fixtures/" .. project_dir,
 				context = {
