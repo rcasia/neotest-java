@@ -12,7 +12,7 @@ end
 
 TestParser = {}
 
-function is_array(tbl)
+local function is_array(tbl)
 	local index = 1
 	for k, _ in pairs(tbl) do
 		if k ~= index then
@@ -41,37 +41,43 @@ function TestParser.parse_html_gradle_report(filename)
 		data = reader:read("*a")
 	end)
 
-	local xml_data = xml.parse(data).html.body.div.div[3]
+	local xml_data = xml.parse(data).html.body.div
 
-	-- /html/body/div/div[3]/div/table/tbody/tr[1]/td[2]
-	-- /html/body/div/div[3]/div[2]/table/tbody/tr[5]/td[2]
-	-- /html/body/div/div[3]/div[2]/table/tbody/tr[1]/td[2]
-	-- /html/body/div/div[3]/div/table/tbody/tr/td[1]
-	-- /html/body/div/div[3]/div[2]/table/tbody/tr/td[2]
-	local names
-	if #xml_data.div == 0 then
-		names = xml_data.div.table.tr
-	else
-		names = xml_data.div[2].table.tr
+	local summary = {}
+	for _, div in ipairs(xml_data.div) do
+		if div._attr.id == "tabs" then
+			summary = div
+		end
 	end
 
-	if not is_array(names) then
-		names = { names }
+	-- /html/body/div/div[id=tabs]/div[h2=Tests]/table/tbody/tr
+	local table_rows = {}
+	if not is_array(summary.div) then
+		table_rows = summary.div.table.tr
+	else
+		for _, div in ipairs(summary.div) do
+			if div.h2 == "Tests" then
+				table_rows = div.table.tr
+			end
+		end
+	end
+
+	if not is_array(table_rows) then
+		table_rows = { table_rows }
 	end
 
 	local testcases = {}
-	for k, v in pairs(names) do
-		if #v.td == 4 then
-			-- /html/body/div/div[3]/div[2]/table/tbody/tr[4]/td[2]
-			-- /html/body/div/div[3]/div[2]/table/tbody/tr[5]/td[2]
-			local name = v.td[2][1]
-			-- local name = v.td[2][1]
-			local status = v.td[4][1]
+	for _, row in pairs(table_rows) do
+		local columns = row.td
+		if #columns == 4 then
+			-- /html/body/div/div[id=tabs]/div[h2=Tests]/table/tbody/tr/td
+			local name = columns[2][1]
+			local status = columns[4][1]
 
 			-- take out the parameterized part
 			-- example: subtractAMinusBEqualsC(int, int, int)[1]
 			-- becomes: subtractAMinusBEqualsC
-			short_name = string.match(name, "([^%(%[]+)")
+			local short_name = string.match(name, "([^%(%[]+)")
 			local unique_key = build_unique_key(test_classname, short_name)
 
 			if testcases[unique_key] == nil then
@@ -85,12 +91,14 @@ function TestParser.parse_html_gradle_report(filename)
 		end
 	end
 
-	-- /html/body/div/div[3]/div[1]
-	local failures
-	if #xml_data.div == 0 then
-		failures = {}
-	else
-		failures = xml_data.div[1].div
+	-- /html/body/div/div[id=tabs]/div[h2=Failed tests]
+	local failures = {}
+	if is_array(summary.div) then
+		for k, v in pairs(summary.div) do
+			if v.h2 == "Failed tests" then
+				failures = v.div
+			end
+		end
 	end
 
 	if not is_array(failures) then
@@ -117,20 +125,6 @@ function TestParser.parse_html_gradle_report(filename)
 	end
 
 	return testcases
-end
-
-TestResults = {}
-
-function TestResults.get_status()
-	local status = "passed"
-	for k, v in pairs(TestResults.testcases) do
-		for k2, v2 in pairs(v) do
-			if v2.status == "failed" then
-				status = "failed"
-			end
-		end
-	end
-	return status
 end
 
 return TestParser

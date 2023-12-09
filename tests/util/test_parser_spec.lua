@@ -1,6 +1,19 @@
 local test_parser = require("neotest-java.util.test_parser")
 
 describe("test_parser", function()
+	describe("should not have errors while reading html reports generated in gradle projects", function()
+		local cwd = vim.fn.getcwd()
+		local _test_reports =
+			vim.fn.globpath(cwd .. "/tests/fixtures", "gradle*/build/reports/tests/test/classes/*.html", true)
+
+		local test_reports = vim.split(_test_reports, "\n")
+		for _, test_report in ipairs(test_reports) do
+			it("should be able to read test report: " .. test_report, function()
+				test_parser.parse_html_gradle_report(test_report)
+			end)
+		end
+	end)
+
 	it("should parse a parameterized test result from html from gradle", function()
 		-- given
 		local filename = vim.fn.getcwd() .. "/tests/fixtures/com.example.ParameterizedTests.html"
