@@ -51,8 +51,14 @@ function TestParser.parse_html_gradle_report(filename)
 	local names
 	if #xml_data.div == 0 then
 		names = xml_data.div.table.tr
-	else
+	elseif xml_data.div[2].table then
 		names = xml_data.div[2].table.tr
+	else
+		for i, div in ipairs(xml_data.div) do
+			if div.h2 == "Tests" then
+				names = div.table.tr
+			end
+		end
 	end
 
 	if not is_array(names) then
@@ -90,7 +96,7 @@ function TestParser.parse_html_gradle_report(filename)
 	if #xml_data.div == 0 then
 		failures = {}
 	else
-		failures = xml_data.div[1].div
+		failures = xml_data.div[1].div or {}
 	end
 
 	if not is_array(failures) then
