@@ -201,18 +201,18 @@ function ResultBuilder.build_results(spec, result, tree)
                                         status = "passed",
                                 }
 
-                                -- local message = table.concat(short_failure_messages, "\n")
-                                -- if #test_failures > 0 then
-                                -- 	results[node_data.id] = {
-                                -- 		status = "failed",
-                                -- 		short = message,
-                                -- 		errors = { { message = message } },
-                                -- 	}
-                                -- else
-                                -- 	results[node_data.id] = {
-                                -- 		status = "passed",
-                                -- 	}
-                                -- end
+                                local message = table.concat(short_failure_messages, "\n")
+                                if #test_failures > 0 then
+                                	results[node_data.id] = {
+                                		status = "failed",
+                                		short = message,
+                                		errors = { { message = message } },
+                                	}
+                                else
+                                	results[node_data.id] = {
+                                		status = "passed",
+                                	}
+                                end
                         else
                                 print('parameterized tests')
                                 local test_case = testcases[unique_key]
