@@ -78,25 +78,23 @@ local function read_testcases_from_html(test_method_names, cwd, test_file_name)
         for _, test_method_name in ipairs(test_method_names) do
                 local unique_key = build_unique_key(test_file_name, test_method_name)
                 local result = testcases_from_html[unique_key] or {}
-                if result.status == "failed" then
-                        for _, res in ipairs(result) do
-                                if res.status == "failed" then
-                                        testcases[build_unique_key(res.classname, res.name)] = {
-                                                failure = { res.message },
-                                                _attr = {
-                                                        name = res.name,
-                                                },
-                                        }
-                                end
+
+                for _, res in ipairs(result) do
+                        local testInformation = {
+                                name = res.name,
+                                displayName = res.displayName
+                        }
+
+                        if result.status == "failed" then
+                                testInformation['failure'] = { res.message }
+                                testInformation['name'] = res.name
                         end
-                else
-                        for _, res in ipairs(result) do
-                                testcases[build_unique_key(res.classname, res.name)] = {
-                                        _attr = {
-                                                name = res.message,
-                                        },
-                                }
+
+                        if not testcases[res.classname] then
+                                testcases[res.classname] = {}
                         end
+
+                        testcases[res.classname][res.name] = testInformation
                 end
         end
 
@@ -128,6 +126,7 @@ function ResultBuilder.build_results(spec, result, tree)
         end
 
         local testcases = {}
+        local mapped_tests = {}
 
         for _, class_name in ipairs(spec.context.test_class_names) do
                 local test_method_names = spec.context.test_method_names
@@ -135,17 +134,14 @@ function ResultBuilder.build_results(spec, result, tree)
                 if project_type == "gradle" and test_method_names and #test_method_names > 0 then
                         local testcases_from_html = read_testcases_from_html(spec.context.test_method_names, spec.cwd,
                                 class_name)
-                        testcases = vim.tbl_extend("force", testcases, testcases_from_html)
+                        mapped_tests  = vim.tbl_extend("force", mapped_tests , testcases_from_html)
                 end
 
                 local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
                 local data
-                with(open(filename, "r"), function(reader)
-                        data = reader:read("*a")
-                end)
+                with(open(filename, "r"), function(reader) data = reader:read("*a") end)
 
                 local xml_data = xml.parse(data)
-
                 local testcases_in_xml = xml_data.testsuite.testcase
 
                 if not is_array(testcases_in_xml) then
@@ -158,15 +154,33 @@ function ResultBuilder.build_results(spec, result, tree)
                         break
                 else
                         -- testcases_in_xml is an array
-                        for _, testcase in ipairs(testcases_in_xml) do
-                                local name = testcase._attr.name
 
-                                if project_type == "gradle" then
-                                        -- remove parameters
-                                        name = name:gsub("%(.*%)", "")
+                        local class_tests = mapped_tests [class_name]
+                        local function findTestInfo(displayName)
+                                for _, value in pairs(class_tests) do
+                                        if value.displayName == displayName then
+                                                return value
+                                        end
                                 end
 
-                                testcases[build_unique_key(class_name, name)] = testcase
+                                return nil
+                        end
+
+
+                        for _, testcase in ipairs(testcases_in_xml) do
+
+                                local test_info = findTestInfo(testcase._attr.name)
+                                if test_info then
+                                        local name = test_info.name
+                                        if project_type == "gradle" then
+                                                -- remove parameters
+                                                name = name:gsub("%(.*%)", "")
+                                        end
+
+                                        local key = build_unique_key(class_name, name)
+                                        testcases[key] = testcase
+
+                                end
                         end
                 end
         end
@@ -203,22 +217,20 @@ function ResultBuilder.build_results(spec, result, tree)
 
                                 local message = table.concat(short_failure_messages, "\n")
                                 if #test_failures > 0 then
-                                	results[node_data.id] = {
-                                		status = "failed",
-                                		short = message,
-                                		errors = { { message = message } },
-                                	}
+                                        results[node_data.id] = {
+                                                status = "failed",
+                                                short = message,
+                                                errors = { { message = message } },
+                                        }
                                 else
-                                	results[node_data.id] = {
-                                		status = "passed",
-                                	}
+                                        results[node_data.id] = {
+                                                status = "passed",
+                                        }
                                 end
                         else
-                                print('parameterized tests')
                                 local test_case = testcases[unique_key]
 
                                 if not test_case then
-                                        print('skipped')
                                         results[node_data.id] = {
                                                 status = "skipped",
                                         }
