@@ -214,42 +214,41 @@ function ResultBuilder.build_results(spec, result, tree)
                                 -- 	}
                                 -- end
                         else
-                                results[node_data.id] = {
-                                        status = "passed",
-                                }
-                                -- local test_case = testcases[unique_key]
-                                --
-                                -- if not test_case then
-                                --         results[node_data.id] = {
-                                --                 status = "skipped",
-                                --         }
-                                -- elseif test_case.error then
-                                --         local message = test_case.error._attr.message
-                                --         results[node_data.id] = {
-                                --                 status = "failed",
-                                --                 short = message,
-                                --                 errors = { { message = message } },
-                                --         }
-                                -- elseif test_case.failure then
-                                --         local message = test_case.failure._attr.message
-                                --         local filename = string.match(test_case._attr.classname,
-                                --                 "[%.]?([%a%$_][%a%d%$_]+)$") .. ".java"
-                                --         local line_searchpattern = string.gsub(filename, "%.", "%%.") .. ":(%d+)%)"
-                                --         local line = string.match(test_case.failure[1], line_searchpattern)
-                                --         -- NOTE: errors array is expecting lines properties to be 0 index based
-                                --         if line ~= nil then
-                                --                 line = line - 1
-                                --         end
-                                --         results[node_data.id] = {
-                                --                 status = "failed",
-                                --                 short = message,
-                                --                 errors = { { message = message, line = line } },
-                                --         }
-                                -- else
-                                --         results[node_data.id] = {
-                                --                 status = "passed",
-                                --         }
-                                -- end
+                                print('parameterized tests')
+                                local test_case = testcases[unique_key]
+
+                                if not test_case then
+                                        print('skipped')
+                                        results[node_data.id] = {
+                                                status = "skipped",
+                                        }
+                                elseif test_case.error then
+                                        local message = test_case.error._attr.message
+                                        results[node_data.id] = {
+                                                status = "failed",
+                                                short = message,
+                                                errors = { { message = message } },
+                                        }
+                                elseif test_case.failure then
+                                        local message = test_case.failure._attr.message
+                                        local filename = string.match(test_case._attr.classname,
+                                                "[%.]?([%a%$_][%a%d%$_]+)$") .. ".java"
+                                        local line_searchpattern = string.gsub(filename, "%.", "%%.") .. ":(%d+)%)"
+                                        local line = string.match(test_case.failure[1], line_searchpattern)
+                                        -- NOTE: errors array is expecting lines properties to be 0 index based
+                                        if line ~= nil then
+                                                line = line - 1
+                                        end
+                                        results[node_data.id] = {
+                                                status = "failed",
+                                                short = message,
+                                                errors = { { message = message, line = line } },
+                                        }
+                                else
+                                        results[node_data.id] = {
+                                                status = "passed",
+                                        }
+                                end
                         end
                 end
         end
