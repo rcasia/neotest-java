@@ -137,37 +137,37 @@ function ResultBuilder.build_results(spec, result, tree)
 			testcases = vim.tbl_extend("force", testcases, testcases_from_html)
 		end
 
-		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
-		local data
-		with(open(filename, "r"), function(reader)
-			data = reader:read("*a")
-		end)
-
-		local xml_data = xml.parse(data)
-
-		local testcases_in_xml = xml_data.testsuite.testcase
-
-		if not is_array(testcases_in_xml) then
-			testcases_in_xml = { testcases_in_xml }
-		end
-
-		if not testcases_in_xml then
-			-- TODO: use an actual logger
-			print("[neotest-java] No test cases found")
-			break
-		else
-			-- testcases_in_xml is an array
-			for _, testcase in ipairs(testcases_in_xml) do
-				local name = testcase._attr.name
-
-				if project_type == "gradle" then
-					-- remove parameters
-					name = name:gsub("%(.*%)", "")
-				end
-
-				testcases[build_unique_key(class_name, name)] = testcase
-			end
-		end
+		-- local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
+		-- local data
+		-- with(open(filename, "r"), function(reader)
+		-- 	data = reader:read("*a")
+		-- end)
+		--
+		-- local xml_data = xml.parse(data)
+		--
+		-- local testcases_in_xml = xml_data.testsuite.testcase
+		--
+		-- if not is_array(testcases_in_xml) then
+		-- 	testcases_in_xml = { testcases_in_xml }
+		-- end
+		--
+		-- if not testcases_in_xml then
+		-- 	-- TODO: use an actual logger
+		-- 	print("[neotest-java] No test cases found")
+		-- 	break
+		-- else
+		-- 	-- testcases_in_xml is an array
+		-- 	for _, testcase in ipairs(testcases_in_xml) do
+		-- 		local name = testcase._attr.name
+		--
+		-- 		if project_type == "gradle" then
+		-- 			-- remove parameters
+		-- 			name = name:gsub("%(.*%)", "")
+		-- 		end
+		--
+		-- 		testcases[build_unique_key(class_name, name)] = testcase
+		-- 	end
+		-- end
 	end
 
 	for _, v in tree:iter_nodes() do
