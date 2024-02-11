@@ -47,9 +47,6 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		position = args.tree:parent():data()
 	end
 
-	-- TODO: refactor this
-	local test_class = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
-
 	command:project_type(project_type)
 	command:ignore_wrapper(ignore_wrapper)
 	command:test_reference(relative_path, position.name, position.type)
