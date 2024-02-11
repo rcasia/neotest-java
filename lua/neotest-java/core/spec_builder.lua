@@ -1,5 +1,6 @@
 local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.util.command_builder")
+local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 
 SpecBuilder = {}
 
@@ -10,7 +11,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 	local command = CommandBuilder:new()
 	local position = args.tree:data()
 	local root = root_finder.find_root(position.path)
-	local relative_path = position.path:sub(#root + 2)
+	local absolute_path = position.path
 
 	if position.type == "dir" then
 		local test_class_names = {}
@@ -18,7 +19,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		for _, child in args.tree:iter() do
 			if child.type == "file" then
 				local name = child.name
-				command:test_reference(child.path, child.name, child.type)
+				command:test_reference(resolve_qualfied_name(child.path), child.name, child.type)
 
 				test_class_names[#test_class_names + 1] = name
 			elseif child.type == "test" then
@@ -47,12 +48,9 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper)
 		position = args.tree:parent():data()
 	end
 
-	-- TODO: refactor this
-	local test_class = relative_path:gsub("src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
-
 	command:project_type(project_type)
 	command:ignore_wrapper(ignore_wrapper)
-	command:test_reference(relative_path, position.name, position.type)
+	command:test_reference(resolve_qualfied_name(absolute_path), position.name, position.type)
 
 	local test_method_names = {}
 	if project_type == "gradle" then

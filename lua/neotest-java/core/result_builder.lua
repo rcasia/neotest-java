@@ -1,9 +1,7 @@
 local xml = require("neotest.lib.xml")
 local scan = require("plenary.scandir")
-local context_manager = require("plenary.context_manager")
-local with = context_manager.with
-local open = context_manager.open
 local test_parser = require("neotest-java.util.test_parser")
+local read_file = require("neotest-java.util.read_file")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -138,34 +136,38 @@ function ResultBuilder.build_results(spec, result, tree)
 		end
 
 		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
-		local data
-		with(open(filename, "r"), function(reader)
-			data = reader:read("*a")
+		local ok, data = pcall(function()
+			return read_file(filename)
 		end)
 
-		local xml_data = xml.parse(data)
-
-		local testcases_in_xml = xml_data.testsuite.testcase
-
-		if not is_array(testcases_in_xml) then
-			testcases_in_xml = { testcases_in_xml }
-		end
-
-		if not testcases_in_xml then
+		if not ok then
 			-- TODO: use an actual logger
-			print("[neotest-java] No test cases found")
-			break
+			print("Error reading file: " .. filename)
 		else
-			-- testcases_in_xml is an array
-			for _, testcase in ipairs(testcases_in_xml) do
-				local name = testcase._attr.name
+			local xml_data = xml.parse(data)
 
-				if project_type == "gradle" then
-					-- remove parameters
-					name = name:gsub("%(.*%)", "")
+			local testcases_in_xml = xml_data.testsuite.testcase
+
+			if not is_array(testcases_in_xml) then
+				testcases_in_xml = { testcases_in_xml }
+			end
+
+			if not testcases_in_xml then
+				-- TODO: use an actual logger
+				print("[neotest-java] No test cases found")
+				break
+			else
+				-- testcases_in_xml is an array
+				for _, testcase in ipairs(testcases_in_xml) do
+					local name = testcase._attr.name
+
+					if project_type == "gradle" then
+						-- remove parameters
+						name = name:gsub("%(.*%)", "")
+					end
+
+					testcases[build_unique_key(class_name, name)] = testcase
 				end
-
-				testcases[build_unique_key(class_name, name)] = testcase
 			end
 		end
 	end

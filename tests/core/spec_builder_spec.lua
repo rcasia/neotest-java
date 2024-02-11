@@ -1,4 +1,4 @@
-local async = require("plenary.async").tests
+local async = require("nio").tests
 local plugin = require("neotest-java")
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
@@ -95,8 +95,6 @@ describe("SpecBuilder", function()
 		assert.are.same(expeceted_context, actual.context)
 	end)
 
-	async.pending("builds the spec for unit test class with maven")
-
 	async.it("builds the spec for dirs with gradle", function()
 		local path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/"
 		local args = mock_args_tree({
@@ -108,13 +106,13 @@ describe("SpecBuilder", function()
 		local positions = {
 			{
 				type = "file",
-				name = "SumTest.java",
-				path = path .. "SumTest.java",
+				name = "ExampleTest.java",
+				path = path .. "ExampleTest.java",
 			},
 			{
 				type = "file",
-				name = "SecondTest.java",
-				path = path .. "SecondTest.java",
+				name = "NestedTests.java",
+				path = path .. "NestedTests.java",
 			},
 		}
 
@@ -133,11 +131,11 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "./mvnw test -Dtest=com.example.SumTest,com.example.SecondTest"
+		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest,com.example.NestedTests"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
-			test_class_names = { "com.example.SumTest", "com.example.SecondTest" },
+			test_class_names = { "com.example.ExampleTest", "com.example.NestedTests" },
 			test_method_names = {},
 		}
 
