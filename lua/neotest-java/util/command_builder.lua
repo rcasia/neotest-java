@@ -9,6 +9,7 @@ local function is_integration_test(file_name)
 	return file_name:find("IT.java") ~= nil
 end
 
+--- @class CommandBuilder
 local CommandBuilder = {
 
 	--- @return CommandBuilder
