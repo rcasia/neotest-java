@@ -108,13 +108,13 @@ describe("SpecBuilder", function()
 		local positions = {
 			{
 				type = "file",
-				name = "SumTest.java",
-				path = path .. "SumTest.java",
+				name = "ExampleTest.java",
+				path = path .. "ExampleTest.java",
 			},
 			{
 				type = "file",
-				name = "SecondTest.java",
-				path = path .. "SecondTest.java",
+				name = "NestedTests.java",
+				path = path .. "NestedTests.java",
 			},
 		}
 
@@ -133,11 +133,11 @@ describe("SpecBuilder", function()
 		local actual = plugin.build_spec(args)
 
 		-- then
-		local expected_command = "./mvnw test -Dtest=com.example.SumTest,com.example.SecondTest"
+		local expected_command = "./mvnw test -Dtest=com.example.ExampleTest,com.example.NestedTests"
 		local expected_cwd = current_dir .. "tests/fixtures/maven-demo"
 		local expeceted_context = {
 			project_type = "maven",
-			test_class_names = { "com.example.SumTest", "com.example.SecondTest" },
+			test_class_names = { "com.example.ExampleTest", "com.example.NestedTests" },
 			test_method_names = {},
 		}
 
