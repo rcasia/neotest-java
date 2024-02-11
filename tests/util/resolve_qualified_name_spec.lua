@@ -1,13 +1,13 @@
 ---@diagnostic disable: undefined-field
 local async = require("nio").tests
-local resolve_qualified_name = require("neotest-java.util.package_resolver")
+local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 
 local cwd = vim.fn.getcwd()
 local EXAMPLE_FILEPATH = cwd .. "/tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 local EXAMPLE_PACKAGE = "com.example.ExampleTest"
 local BAD_EXAMPLE_FILEPATH = cwd .. "/tests/fixtures/maven-demo/src/test/java/com/example/NonExistentTest.java"
 
-describe("package_resolver", function()
+describe("resolve_qualified_name function", function()
 	async.it("it should resolve package from filename", function()
 		assert.are.equal(EXAMPLE_PACKAGE, resolve_qualified_name(EXAMPLE_FILEPATH))
 	end)
