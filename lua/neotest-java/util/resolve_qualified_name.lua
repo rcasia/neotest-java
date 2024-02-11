@@ -1,3 +1,5 @@
+local read_file = require("neotest-java.util.read_file")
+
 local function resolve_qualified_name(filename)
 	local function find_in_text(raw_query, content)
 		local query = vim.treesitter.query.parse("java", raw_query)
@@ -14,13 +16,12 @@ local function resolve_qualified_name(filename)
 	end
 
 	-- read the file
-	local ok, lines = pcall(vim.fn.readfile, filename)
+	local ok, content = pcall(function()
+		return read_file(filename)
+	end)
 	if not ok then
 		error(string.format("file does not exist: %s", filename))
 	end
-
-	-- transform the lines into a string
-	local content = table.concat(lines, "\n")
 
 	-- get the package name
 	local package_query = [[

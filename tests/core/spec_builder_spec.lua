@@ -1,4 +1,4 @@
-local async = require("plenary.async").tests
+local async = require("nio").tests
 local plugin = require("neotest-java")
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
@@ -94,8 +94,6 @@ describe("SpecBuilder", function()
 		assert.are.equal(expected_cwd, actual.cwd)
 		assert.are.same(expeceted_context, actual.context)
 	end)
-
-	async.pending("builds the spec for unit test class with maven")
 
 	async.it("builds the spec for dirs with gradle", function()
 		local path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/"

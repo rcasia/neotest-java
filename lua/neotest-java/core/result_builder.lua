@@ -1,6 +1,7 @@
 local xml = require("neotest.lib.xml")
 local scan = require("plenary.scandir")
 local test_parser = require("neotest-java.util.test_parser")
+local read_file = require("neotest-java.util.read_file")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -136,7 +137,7 @@ function ResultBuilder.build_results(spec, result, tree)
 
 		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
 		local ok, data = pcall(function()
-			return io.open(filename, "r"):read("*a")
+			return read_file(filename)
 		end)
 
 		if not ok then
