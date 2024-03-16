@@ -1,5 +1,6 @@
 local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.util.command_builder")
+local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 
 SpecBuilder = {}
 
@@ -10,8 +11,13 @@ SpecBuilder = {}
 function SpecBuilder.build_spec(args, project_type, config)
 	local command = CommandBuilder:new()
 	local position = args.tree:data()
+	-- <<<<<<< HEAD
 	local root = root_finder.find_root(config.buildtools, position.path)
-	local relative_path = position.path:sub(#root + 2)
+	-- local relative_path = position.path:sub(#root + 2)
+	-- =======
+	-- local root = root_finder.find_root(position.path)
+	local absolute_path = position.path
+	-- >>>>>>> main
 
 	if position.type == "dir" then
 		local test_class_names = {}
@@ -19,7 +25,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 		for _, child in args.tree:iter() do
 			if child.type == "file" then
 				local name = child.name
-				command:test_reference(child.path, child.name, child.type)
+				command:test_reference(resolve_qualfied_name(child.path), child.name, child.type)
 
 				test_class_names[#test_class_names + 1] = name
 			elseif child.type == "test" then
@@ -48,12 +54,18 @@ function SpecBuilder.build_spec(args, project_type, config)
 		position = args.tree:parent():data()
 	end
 
+	-- <<<<<<< HEAD
 	-- TODO: refactor this
-	local test_class = relative_path:gsub(project_type.test_src, ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
+	-- local test_class = relative_path:gsub(project_type.test_src, ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
 
-	command:project_type(project_type)
+	-- command:project_type(project_type)
 	command:ignore_wrapper(config.ignore_wrapper)
 	command:test_reference(relative_path, position.name, position.type)
+	-- =======
+	command:project_type(project_type)
+	-- command:ignore_wrapper(ignore_wrapper)
+	command:test_reference(resolve_qualfied_name(absolute_path), position.name, position.type)
+	-- >>>>>>> main
 
 	local test_method_names = {}
 	if project_type.name == "gradle" then

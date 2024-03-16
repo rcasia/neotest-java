@@ -8,7 +8,7 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldNotFail", "test")
+		command:test_reference("com.example.ExampleTest", "shouldNotFail", "test")
 
 		assert.are.equal("./mvnw test -Dtest=com.example.ExampleTest#shouldNotFail", command:build())
 	end)
@@ -18,7 +18,7 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleIT.java", "shouldNotFail", "test")
+		command:test_reference("com.example.ExampleIT", "shouldNotFail", "test")
 
 		assert.are.equal("./mvnw verify -Dtest=com.example.ExampleIT#shouldNotFail", command:build())
 	end)
@@ -28,7 +28,7 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.gradle)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldNotFail", "test")
+		command:test_reference("com.example.ExampleTest", "shouldNotFail", "test")
 
 		assert.are.equal("./gradlew test --tests com.example.ExampleTest.shouldNotFail", command:build())
 	end)
@@ -38,7 +38,7 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.gradle)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleIT.java", "shouldNotFail", "test")
+		command:test_reference("com.example.ExampleIT", "shouldNotFail", "test")
 
 		assert.are.equal("./gradlew test --tests com.example.ExampleIT.shouldNotFail", command:build())
 	end)
@@ -48,7 +48,7 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.gradle)
 		command:ignore_wrapper(false)
-		command:test_reference("project_root/src/test/java/com/example/ExampleTest", nil, "file")
+		command:test_reference("com.example.ExampleTest", nil, "file")
 
 		assert.are.equal("./gradlew test --tests com.example.ExampleTest", command:build())
 	end)
@@ -58,8 +58,8 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.gradle)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", nil, "dir")
-		command:test_reference("src/test/java/com/example/SecondExampleTest.java", nil, "dir")
+		command:test_reference("com.example.ExampleTest", nil, "dir")
+		command:test_reference("com.example.SecondExampleTest", nil, "dir")
 
 		assert.are.equal(
 			"./gradlew test --tests com.example.ExampleTest --tests com.example.SecondExampleTest",
@@ -72,8 +72,8 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", nil, "dir")
-		command:test_reference("src/test/java/com/example/SecondExampleTest.java", nil, "dir")
+		command:test_reference("com.example.ExampleTest", nil, "dir")
+		command:test_reference("com.example.SecondExampleTest", nil, "dir")
 
 		assert.are.equal("./mvnw test -Dtest=com.example.ExampleTest,com.example.SecondExampleTest", command:build())
 	end)
@@ -83,8 +83,8 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldPass", "test")
-		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+		command:test_reference("com.example.ExampleTest", "shouldPass", "test")
+		command:test_reference("com.example.SecondExampleTest", "shouldFail", "test")
 
 		assert.are.same(
 			{ "com.example.ExampleTest", "com.example.SecondExampleTest" },
@@ -97,8 +97,8 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldPass", "test")
-		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+		command:test_reference("com.example.ExampleTest", "shouldPass", "test")
+		command:test_reference("com.example.SecondExampleTest", "shouldFail", "test")
 
 		assert.are.same(
 			{ "com.example.ExampleTest#shouldPass", "com.example.SecondExampleTest#shouldFail" },
@@ -111,8 +111,8 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTest.java", "shouldPass", "test")
-		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+		command:test_reference("com.example.ExampleTest", "shouldPass", "test")
+		command:test_reference("com.example.SecondExampleTest", "shouldFail", "test")
 
 		assert.are.same({ "shouldPass", "shouldFail" }, command:get_referenced_method_names())
 	end)
@@ -122,8 +122,8 @@ describe("command_builder", function()
 
 		command:project_type(buildtools.maven)
 		command:ignore_wrapper(false)
-		command:test_reference("src/test/java/com/example/ExampleTestIT.java", "shouldPass", "test")
-		command:test_reference("src/test/java/com/example/SecondExampleTest.java", "shouldFail", "test")
+		command:test_reference("com.example.ExampleTestIT", "shouldPass", "test")
+		command:test_reference("com.example.SecondExampleTest", "shouldFail", "test")
 
 		assert.are.same(true, command:contains_integration_tests())
 	end)

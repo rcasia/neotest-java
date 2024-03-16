@@ -2,9 +2,7 @@ local async = require("nio").tests
 local plugin = require("neotest-java")
 local buildtools = require("neotest-java.buildtools")
 
-local function get_current_dir()
-	return vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
-end
+local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 
 -- Function to convert a Lua table to a string
 function table_to_string(tbl)
@@ -19,7 +17,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for maven", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = buildtools.maven,
 				test_class_names = { "com.example.ExampleTest" },
@@ -31,7 +29,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
+		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -52,7 +50,7 @@ describe("ResultBuilder", function()
       }
     ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -60,7 +58,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for a maven test that has an error at start", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = buildtools.maven,
 				test_class_names = { "com.example.ErroneousTest" },
@@ -72,7 +70,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir() .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java"
+		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -90,7 +88,7 @@ describe("ResultBuilder", function()
       }
     ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -98,7 +96,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for gradle", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
+			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
 			context = {
 				project_type = buildtools.gradle,
 				test_class_names = { "com.example.ExampleTest" },
@@ -110,8 +108,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir()
-			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java"
+		local file_path = current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -132,7 +129,7 @@ describe("ResultBuilder", function()
       }
     ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -140,7 +137,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results when the is a single test method and it fails for gradle", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
+			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
 			context = {
 				project_type = buildtools.gradle,
 				test_class_names = { "com.example.SingleMethodFailingTest" },
@@ -152,7 +149,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir()
+		local file_path = current_dir
 			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java"
 		local tree = plugin.discover_positions(file_path)
 
@@ -171,7 +168,7 @@ describe("ResultBuilder", function()
       }
     }
     ]]
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -179,7 +176,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results when the is a single test method and it fails for maven", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = buildtools.maven,
 				test_class_names = { "com.example.SingleMethodFailingTest" },
@@ -191,7 +188,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir()
+		local file_path = current_dir
 			.. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java"
 		local tree = plugin.discover_positions(file_path)
 
@@ -210,7 +207,7 @@ describe("ResultBuilder", function()
       }
     }
     ]]
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -218,7 +215,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for integrations tests", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = buildtools.maven,
 				test_class_names = { "com.example.demo.RepositoryIT" },
@@ -230,8 +227,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir()
-			.. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java"
+		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
@@ -247,7 +243,7 @@ describe("ResultBuilder", function()
       }
     ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -255,7 +251,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for parameterized test with @CsvSource for maven", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/maven-demo",
+			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
 				project_type = buildtools.maven,
 				test_class_names = { "com.example.ParameterizedMethodTest" },
@@ -267,7 +263,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir()
+		local file_path = current_dir
 			.. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java"
 		local tree = plugin.discover_positions(file_path)
 
@@ -296,7 +292,7 @@ describe("ResultBuilder", function()
 	      }
 	    ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -304,7 +300,7 @@ describe("ResultBuilder", function()
 	async.it("builds the results for parameterized with @CsvSource test for gradle", function()
 		--given
 		local runSpec = {
-			cwd = get_current_dir() .. "tests/fixtures/gradle-groovy-demo",
+			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
 			context = {
 				project_type = buildtools.gradle,
 				test_class_names = { "com.example.ParameterizedTests" },
@@ -322,7 +318,7 @@ describe("ResultBuilder", function()
 			output = "output",
 		}
 
-		local file_path = get_current_dir()
+		local file_path = current_dir
 			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ParameterizedTests.java"
 		local tree = plugin.discover_positions(file_path)
 
@@ -355,7 +351,7 @@ describe("ResultBuilder", function()
       }
     ]]
 
-		expected = expected:gsub("{{current_dir}}", get_current_dir())
+		expected = expected:gsub("{{current_dir}}", current_dir)
 
 		assert_equal_ignoring_whitespaces(expected, actual)
 	end)
@@ -365,7 +361,7 @@ describe("ResultBuilder", function()
 			--given
 			local project_dir = project_type == buildtools.maven and "maven-demo" or "gradle-groovy-demo"
 			local runSpec = {
-				cwd = get_current_dir() .. "tests/fixtures/" .. project_dir,
+				cwd = current_dir .. "tests/fixtures/" .. project_dir,
 				context = {
 					project_type = project_type,
 					test_class_names = { "com.example.EmptySourceTest" },
@@ -381,7 +377,7 @@ describe("ResultBuilder", function()
 				output = "output",
 			}
 
-			local file_path = get_current_dir()
+			local file_path = current_dir
 				.. "tests/fixtures/"
 				.. project_dir
 				.. "/src/test/java/com/example/EmptySourceTest.java"
@@ -407,7 +403,7 @@ describe("ResultBuilder", function()
       }
     ]]
 
-			expected = expected:gsub("{{current_dir}}", get_current_dir())
+			expected = expected:gsub("{{current_dir}}", current_dir)
 			expected = expected:gsub("{{project_dir}}", project_dir)
 
 			assert_equal_ignoring_whitespaces(expected, actual)

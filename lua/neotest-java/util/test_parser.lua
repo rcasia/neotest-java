@@ -1,6 +1,4 @@
-local context_manager = require("plenary.context_manager")
-local with = context_manager.with
-local open = context_manager.open
+local read_file = require("neotest-java.util.read_file")
 local xml = require("neotest.lib.xml")
 
 --- @param classname string name of class
@@ -36,10 +34,12 @@ end
 function TestParser.parse_html_gradle_report(filename)
 	local test_classname = string.match(filename, "([^/]+)%.html")
 
-	local data
-	with(open(filename, "r"), function(reader)
-		data = reader:read("*a")
+	local ok, data = pcall(function()
+		return read_file(filename)
 	end)
+	if not ok then
+		return {}
+	end
 
 	local xml_data = xml.parse(data).html.body.div
 

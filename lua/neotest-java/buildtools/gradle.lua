@@ -4,8 +4,13 @@ local function build_gradle(self)
 	table.insert(command, "test")
 
 	for _, v in ipairs(self._test_references) do
-		local test_reference = self:_create_test_reference(v.relative_path, v.method_name)
-		table.insert(command, "--tests " .. test_reference)
+		-- for some reason this sometimes is nil
+		if v.qualified_name == nil then
+		-- do nothing
+		else
+			local test_reference = self:_create_method_qualified_reference(v.qualified_name, v.method_name)
+			table.insert(command, "--tests " .. test_reference)
+		end
 	end
 
 	return command

@@ -1,10 +1,8 @@
 local xml = require("neotest.lib.xml")
 local scan = require("plenary.scandir")
-local context_manager = require("plenary.context_manager")
-local with = context_manager.with
-local open = context_manager.open
 local test_parser = require("neotest-java.util.test_parser")
 local logger = require("neotest.logging")
+local read_file = require("neotest-java.util.read_file")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -136,37 +134,70 @@ function ResultBuilder.build_results(spec, result, tree)
 		end
 
 		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
+		-- <<<<<<< HEAD
 		logger.debug("looking for filename: " .. filename)
-		local data
-		with(open(filename, "r"), function(reader)
-			data = reader:read("*a")
+		-- local data
+		-- with(open(filename, "r"), function(reader)
+		-- data = reader:read("*a")
+		-- end)
+		--
+		local ok, data = pcall(function()
+			return read_file(filename)
 		end)
 
-		local xml_data = xml.parse(data)
+		-- local xml_data = xml.parse(data)
+		--
+		-- local testcases_in_xml = xml_data.testsuite.testcase
+		--
+		-- if not is_array(testcases_in_xml) then
+		-- 	testcases_in_xml = { testcases_in_xml }
+		-- end
 
-		local testcases_in_xml = xml_data.testsuite.testcase
-
-		if not is_array(testcases_in_xml) then
-			testcases_in_xml = { testcases_in_xml }
-		end
-
-		if not testcases_in_xml then
+		-- if not testcases_in_xml then
+		if not ok then
 			logger.debug("no testcases in xml")
-			-- TODO: use an actual logger
-			print("[neotest-java] No test cases found")
-			break
+		-- =======
+
+		-- if not ok then
+		-- >>>>>>> main
+		-- 			-- TODO: use an actual logger
+		-- 			print("Error reading file: " .. filename)
 		else
+			-- <<<<<<< HEAD
 			logger.debug("found testcases in xml")
 			-- testcases_in_xml is an array
-			for _, testcase in ipairs(testcases_in_xml) do
-				local name = testcase._attr.name
+			-- for _, testcase in ipairs(testcases_in_xml) do
+			-- 	local name = testcase._attr.name
+			--
+			-- 	if project_type.name == "gradle" then
+			-- 		-- remove parameters
+			-- 		name = name:gsub("%(.*%)", "")
+			-- =======
+			local xml_data = xml.parse(data)
 
-				if project_type.name == "gradle" then
-					-- remove parameters
-					name = name:gsub("%(.*%)", "")
+			local testcases_in_xml = xml_data.testsuite.testcase
+
+			if not is_array(testcases_in_xml) then
+				testcases_in_xml = { testcases_in_xml }
+			end
+
+			if not testcases_in_xml then
+				-- TODO: use an actual logger
+				print("[neotest-java] No test cases found")
+				break
+			else
+				-- testcases_in_xml is an array
+				for _, testcase in ipairs(testcases_in_xml) do
+					local name = testcase._attr.name
+
+					if project_type.name == "gradle" then
+						-- remove parameters
+						name = name:gsub("%(.*%)", "")
+					end
+
+					testcases[build_unique_key(class_name, name)] = testcase
+					-- >>>>>>> main
 				end
-
-				testcases[build_unique_key(class_name, name)] = testcase
 			end
 		end
 	end

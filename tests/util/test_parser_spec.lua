@@ -1,4 +1,5 @@
 local test_parser = require("neotest-java.util.test_parser")
+local async = require("nio").tests
 
 describe("test_parser", function()
 	describe("should not have errors while reading html reports generated in gradle projects", function()
@@ -8,13 +9,13 @@ describe("test_parser", function()
 
 		local test_reports = vim.split(_test_reports, "\n")
 		for _, test_report in ipairs(test_reports) do
-			it("should be able to read test report: " .. test_report, function()
+			async.it("should be able to read test report: " .. test_report, function()
 				test_parser.parse_html_gradle_report(test_report)
 			end)
 		end
 	end)
 
-	it("should parse a parameterized test result from html from gradle", function()
+	async.it("should parse a parameterized test result from html from gradle", function()
 		-- given
 		local filename = vim.fn.getcwd() .. "/tests/fixtures/com.example.ParameterizedTests.html"
 
@@ -70,7 +71,7 @@ describe("test_parser", function()
 		assert.are.same(expected, actual)
 	end)
 
-	it("should parse a parameterized test result from html from gradle 2", function()
+	async.it("should parse a parameterized test result from html from gradle 2", function()
 		-- given
 		local filename = vim.fn.getcwd() .. "/tests/fixtures/com.example.SimpleTest.html"
 
@@ -105,7 +106,7 @@ describe("test_parser", function()
 		assert.are.same(expected, actual)
 	end)
 
-	it("should parse a parameterized test result from html with one single failing test", function()
+	async.it("should parse a parameterized test result from html with one single failing test", function()
 		-- given
 		local filename = vim.fn.getcwd() .. "/tests/fixtures/com.example.SimpleTest3.html"
 
@@ -132,7 +133,7 @@ describe("test_parser", function()
 		"tests/fixtures/report-with-no-parameterized-test-1.html",
 		"tests/fixtures/report-with-no-parameterized-test-2.html",
 	}) do
-		it("should return empty object when it has no parameterized test: " .. filepath, function()
+		async.it("should return empty object when it has no parameterized test: " .. filepath, function()
 			-- given
 			local absolute_filepath = vim.fn.getcwd() .. "/" .. filepath
 

@@ -1,9 +1,13 @@
 local function is_integration_test(file_name)
-	return file_name:find("IT.java") ~= nil
+	if file_name == nil then
+		return false
+	end
+	return file_name:find("IT") ~= nil
 end
 
+-- <<<<<<< HEAD
 ---@class neotest-java.TestReference
----@field relative_path string
+---@field qualified_name string
 ---@field method_name string
 local TestReference
 
@@ -11,6 +15,9 @@ local TestReference
 ---@field _project_type neotest-java.BuildTool
 ---@field _ignore_wrapper boolean
 ---@field _test_references table<neotest-java.TestReference>
+-- =======
+-- - @class CommandBuilder
+-- >>>>>>> main
 local CommandBuilder = {
 
 	--- @return CommandBuilder
@@ -19,10 +26,10 @@ local CommandBuilder = {
 		return setmetatable({}, self)
 	end,
 
-	---@param relative_path string example: src/test/java/com/example/ExampleTest.java
+	---@param qualified_name string example: com.example.ExampleTest
 	---@param node_name? string example: shouldNotFail
 	---@return CommandBuilder
-	test_reference = function(self, relative_path, node_name, type)
+	test_reference = function(self, qualified_name, node_name, type)
 		self._test_references = self._test_references or {}
 
 		local method_name
@@ -31,7 +38,7 @@ local CommandBuilder = {
 		end
 
 		self._test_references[#self._test_references + 1] = {
-			relative_path = relative_path,
+			qualified_name = qualified_name,
 			method_name = method_name,
 		}
 
@@ -55,7 +62,7 @@ local CommandBuilder = {
 	get_referenced_classes = function(self)
 		local classes = {}
 		for _, v in ipairs(self._test_references) do
-			local class_package = self:_create_test_reference(v.relative_path)
+			local class_package = self:_create_method_qualified_reference(v.qualified_name)
 			classes[#classes + 1] = class_package
 		end
 		return classes
@@ -64,7 +71,7 @@ local CommandBuilder = {
 	get_referenced_methods = function(self)
 		local methods = {}
 		for _, v in ipairs(self._test_references) do
-			local method = self:_create_test_reference(v.relative_path, v.method_name)
+			local method = self:_create_method_qualified_reference(v.qualified_name, v.method_name)
 			methods[#methods + 1] = method
 		end
 		return methods
@@ -78,23 +85,21 @@ local CommandBuilder = {
 		return method_names
 	end,
 
-	_create_test_reference = function(self, relative_path, method_name)
-		local class_package = relative_path:gsub("(.-)src/test/java/", ""):gsub("/", "."):gsub(".java", "")
-
+	_create_method_qualified_reference = function(self, qualified_name, method_name)
 		if method_name == nil then
-			return class_package
+			return qualified_name
 		end
 
 		if self._project_type.name == "gradle" then
-			return class_package .. "." .. method_name
+			return qualified_name .. "." .. method_name
 		end
 
-		return class_package .. "#" .. method_name
+		return qualified_name .. "#" .. method_name
 	end,
 
 	contains_integration_tests = function(self)
 		for _, v in ipairs(self._test_references) do
-			if is_integration_test(v.relative_path) then
+			if is_integration_test(v.qualified_name) then
 				return true
 			end
 		end
@@ -112,8 +117,33 @@ local CommandBuilder = {
 			table.insert(command, self._project_type.wrapper)
 		end
 
+		-- <<<<<<< HEAD
 		for _, item in ipairs(self._project_type.build_command(self)) do
 			table.insert(command, item)
+			-- =======
+			-- -- if MAVEN == self._project_type.name and self:contains_integration_tests() then
+			-- -- 	table.insert(command, "verify")
+			-- else
+			-- 	table.insert(command, "test")
+			-- end
+			--
+			-- if self._project_type.name == "gradle" then
+			-- 	for _, v in ipairs(self._test_references) do
+			-- 		local test_reference = self:_create_method_qualified_reference(v.qualified_name, v.method_name)
+			-- 		if self._project_type.name == "maven" then
+			-- 			table.insert(command, "-Dtest=" .. test_reference)
+			-- 		else
+			-- 			table.insert(command, "--tests " .. test_reference)
+			-- 		end
+			-- 	end
+			-- else
+			-- 	local references = {}
+			-- 	for _, v in ipairs(self._test_references) do
+			-- 		local test_reference = self:_create_method_qualified_reference(v.qualified_name, v.method_name)
+			-- 		table.insert(references, test_reference)
+			-- 	end
+			-- 	table.insert(command, "-Dtest=" .. table.concat(references, ","))
+			-- >>>>>>> main
 		end
 
 		return table.concat(command, " ")
