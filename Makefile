@@ -18,7 +18,7 @@ prepare-demo:
 	-$(gradle_groovy) -p tests/fixtures/gradle-groovy-demo clean test --continue
 	-$(gradle_kotlin) -p tests/fixtures/gradle-kotlin-demo clean test --continue
 
-install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest
+install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
 
 deps/plenary.nvim:
 	mkdir -p deps
@@ -31,6 +31,10 @@ deps/nvim-treesitter:
 deps/neotest:
 	mkdir -p deps
 	git clone --depth 1 https://github.com/nvim-neotest/neotest $@
+
+deps/nvim-nio:
+	mkdir -p deps
+	git clone --depth 1 https://github.com/nvim-neotest/nvim-nio $@
 
 deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 	nvim --headless -u tests/minimal_init.vim -c "TSInstallSync java | quit"
