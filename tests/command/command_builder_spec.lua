@@ -1,5 +1,5 @@
 ---@diagnostic disable: undefined-field
-local command_builder = require("neotest-java.util.command_builder")
+local command_builder = require("neotest-java.command.command_builder")
 
 describe("command_builder", function()
 	it("builds command for unit test", function()

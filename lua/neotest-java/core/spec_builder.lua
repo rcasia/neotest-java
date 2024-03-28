@@ -1,5 +1,5 @@
 local root_finder = require("neotest-java.core.root_finder")
-local CommandBuilder = require("neotest-java.util.command_builder")
+local CommandBuilder = require("neotest-java.command.command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 
 SpecBuilder = {}
