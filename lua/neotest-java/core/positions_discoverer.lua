@@ -19,7 +19,7 @@ function PositionsDiscoverer.discover_positions(file_path)
         (modifiers
           (marker_annotation
             name: (identifier) @annotation 
-              (#any-of? @annotation "Test" "ParameterizedTest")
+              (#any-of? @annotation "Test" "ParameterizedTest" "CartesianTest")
             )
         )
         name: (identifier) @test.name
