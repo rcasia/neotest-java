@@ -22,20 +22,13 @@ local function is_array(tbl)
 end
 
 local function is_parameterized_test(testcases, name)
-	local count = 0
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
-	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
+	-- local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
+	local regex = name .. "[%(%{].*%[%d+%]$"
 
-	-- TODO: indeed if the regex match just one time,
-	-- it is a parameterized test of one test case
-	-- so this for loop is not necessary
 	for k, _ in pairs(testcases) do
 		if string.match(k, regex) then
-			count = count + 1
-		end
-
-		if count >= 1 then
 			return true
 		end
 	end
@@ -46,7 +39,7 @@ end
 local function extract_test_failures(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
-	local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
+	local regex = name .. "[%(%{].*%[%d+%]$"
 
 	local failures = {}
 	for k, v in pairs(testcases) do
