@@ -11,6 +11,9 @@ local build_unique_key = function(classname, testname)
 end
 
 local function is_array(tbl)
+	if not tbl then
+		return false
+	end
 	local index = 1
 	for k, _ in pairs(tbl) do
 		if k ~= index then
@@ -24,8 +27,7 @@ end
 local function is_parameterized_test(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
-	-- local regex = name .. "%(([^%)]+)%)%[([%d]+)%]"
-	local regex = name .. "[%(%{].*%[%d+%]$"
+	local regex = name .. "[%(%.%{]?.*%[%d+%]$"
 
 	for k, _ in pairs(testcases) do
 		if string.match(k, regex) then
@@ -39,7 +41,7 @@ end
 local function extract_test_failures(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
-	local regex = name .. "[%(%{].*%[%d+%]$"
+	local regex = name .. "[%(%.%{]?.*%[%d+%]$"
 
 	local failures = {}
 	for k, v in pairs(testcases) do
@@ -51,47 +53,6 @@ local function extract_test_failures(testcases, name)
 	end
 
 	return failures
-end
-
-local function read_testcases_from_html(test_method_names, cwd, test_file_name)
-	local testcases = {}
-
-	local dir = cwd .. "/build/reports/tests/test/classes"
-	local filenames = scan.scan_dir(dir, { depth = 1 })
-
-	local testcases_from_html = {}
-	for _, filename in ipairs(filenames) do
-		if string.find(filename, test_file_name .. ".html", 1, true) then
-			testcases_from_html = test_parser.parse_html_gradle_report(filename)
-		end
-	end
-
-	for _, test_method_name in ipairs(test_method_names) do
-		local unique_key = build_unique_key(test_file_name, test_method_name)
-		local result = testcases_from_html[unique_key] or {}
-		if result.status == "failed" then
-			for _, res in ipairs(result) do
-				if res.status == "failed" then
-					testcases[build_unique_key(res.classname, res.name)] = {
-						failure = { res.message },
-						_attr = {
-							name = res.name,
-						},
-					}
-				end
-			end
-		else
-			for _, res in ipairs(result) do
-				testcases[build_unique_key(res.classname, res.name)] = {
-					_attr = {
-						name = res.message,
-					},
-				}
-			end
-		end
-	end
-
-	return testcases
 end
 
 -- TODO: extract to a diffrent file
@@ -109,59 +70,30 @@ ResultBuilder = {}
 function ResultBuilder.build_results(spec, result, tree)
 	local results = {}
 
-	local project_type = spec.context.project_type
-
-	local reports_dir = ""
-	if project_type == "maven" then
-		reports_dir = spec.cwd .. "/target/surefire-reports"
-	elseif project_type == "gradle" then
-		reports_dir = spec.cwd .. "/build/test-results/test"
-	end
-
 	local testcases = {}
 
-	for _, class_name in ipairs(spec.context.test_class_names) do
-		local test_method_names = spec.context.test_method_names
+	local filename = spec.context.report_file or "/tmp/neotest-java/TEST-junit-jupiter.xml"
+	local ok, data = pcall(function()
+		return read_file(filename)
+	end)
 
-		if project_type == "gradle" and test_method_names and #test_method_names > 0 then
-			local testcases_from_html = read_testcases_from_html(spec.context.test_method_names, spec.cwd, class_name)
-			testcases = vim.tbl_extend("force", testcases, testcases_from_html)
+	if not ok then
+		-- TODO: use an actual logger
+		print("Error reading file: " .. filename)
+	else
+		local xml_data = xml.parse(data)
+
+		local testcases_in_xml = xml_data.testsuite.testcase
+		if not is_array(testcases_in_xml) then
+			testcases_in_xml = { testcases_in_xml }
 		end
 
-		local filename = string.format("%s/TEST-%s.xml", reports_dir, class_name)
-		local ok, data = pcall(function()
-			return read_file(filename)
-		end)
+		for _, testcase in ipairs(testcases_in_xml) do
+			local name = testcase._attr.name
+			local classname = testcase._attr.classname
 
-		if not ok then
-			-- TODO: use an actual logger
-			print("Error reading file: " .. filename)
-		else
-			local xml_data = xml.parse(data)
-
-			local testcases_in_xml = xml_data.testsuite.testcase
-
-			if not is_array(testcases_in_xml) then
-				testcases_in_xml = { testcases_in_xml }
-			end
-
-			if not testcases_in_xml then
-				-- TODO: use an actual logger
-				print("[neotest-java] No test cases found")
-				break
-			else
-				-- testcases_in_xml is an array
-				for _, testcase in ipairs(testcases_in_xml) do
-					local name = testcase._attr.name
-
-					if project_type == "gradle" then
-						-- remove parameters
-						name = name:gsub("%(.*%)", "")
-					end
-
-					testcases[build_unique_key(class_name, name)] = testcase
-				end
-			end
+			name = name:gsub("%(.*%)", "")
+			testcases[build_unique_key(classname, name)] = testcase
 		end
 	end
 
