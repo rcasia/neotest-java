@@ -108,15 +108,16 @@ local CommandBuilder = {
 			ref = "-p=" .. reference.qualified_name
 		end
 
+		local output_dir = "target/neotest-java/test-classes"
 		local classpath = table.concat({
-			"./target/classes/:./target/test-classes/",
+			output_dir,
 			get_dependencies(),
 			self._junit_jar,
 		}, ":")
 
 		local command = {
 			"javac",
-			"-d target",
+			"-d " .. output_dir,
 			"-cp " .. classpath,
 			self._test_file,
 			"&&",
