@@ -91,6 +91,10 @@ local CommandBuilder = {
 		self._test_file = test_file
 	end,
 
+	reports_dir = function(self, reports_dir)
+		self._reports_dir = reports_dir
+	end,
+
 	--- @return string @command to run
 	build = function(self)
 		local reference = self._test_references[1]
@@ -122,7 +126,7 @@ local CommandBuilder = {
 			"-cp " .. classpath,
 			ref,
 			"--fail-if-no-tests",
-			"--reports-dir=/tmp/neotest-java",
+			"--reports-dir=" .. self._reports_dir,
 		}
 
 		return table.concat(command, " ")

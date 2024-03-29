@@ -15,6 +15,9 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
 
 	command:set_test_file(absolute_path)
 
+	local reports_dir = "/tmp/neotest-java/" .. vim.fn.strftime("%d%m%y%H%M%S")
+	command:reports_dir(reports_dir)
+
 	if position.type == "dir" then
 		for _, child in args.tree:iter() do
 			if child.type == "file" then
@@ -26,7 +29,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
 			command = command:build(),
 			cwd = root,
 			symbol = position.name,
-			context = {},
+			context = { report_file = reports_dir .. "/TEST-junit-jupiter.xml" },
 		}
 	end
 
@@ -45,7 +48,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
 		command = command:build(),
 		cwd = root,
 		symbol = position.name,
-		context = {},
+		context = { report_file = reports_dir .. "/TEST-junit-jupiter.xml" },
 	}
 end
 
