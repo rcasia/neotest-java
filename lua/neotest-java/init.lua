@@ -11,12 +11,12 @@ local detect_project_type = require("neotest-java.util.detect_project_type")
 local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
 
 ---@class neotest.Adapter
----@field name string
 NeotestJavaAdapter = {
 	name = "neotest-java",
 	project_type = "maven", -- default to maven
 	config = {
 		ignore_wrapper = false,
+		junit_jar = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar",
 	},
 }
 
@@ -73,7 +73,7 @@ function NeotestJavaAdapter.build_spec(args)
 	end
 
 	-- build spec
-	return spec_builder.build_spec(args, self.project_type, ignore_wrapper)
+	return spec_builder.build_spec(args, self.project_type, ignore_wrapper, self.config)
 end
 
 ---@async

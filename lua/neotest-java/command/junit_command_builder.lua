@@ -20,8 +20,9 @@ end
 local CommandBuilder = {
 
 	--- @return CommandBuilder
-	new = function(self)
+	new = function(self, config)
 		self.__index = self
+		self._junit_jar = config.junit_jar
 		return setmetatable({}, self)
 	end,
 
@@ -103,11 +104,10 @@ local CommandBuilder = {
 			ref = "-p=" .. reference.qualified_name
 		end
 
-		local junit_jar = "/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar"
 		local classpath = table.concat({
 			"./target/classes/:./target/test-classes/",
 			get_dependencies(),
-			junit_jar,
+			self._junit_jar,
 		}, ":")
 
 		local command = {
@@ -117,7 +117,7 @@ local CommandBuilder = {
 			self._test_file,
 			"&&",
 			"java",
-			"-jar " .. junit_jar,
+			"-jar " .. self._junit_jar,
 			"execute",
 			"-cp " .. classpath,
 			ref,

@@ -14,7 +14,7 @@ describe("junit command_builder", function()
 	end
 
 	it("builds command for unit test", function()
-		local command = command_builder:new()
+		local command = command_builder:new({ junit_jar = "junit-jar-filepath" })
 
 		command:ignore_wrapper(false)
 		command:test_reference("com.example.ExampleTest", "shouldNotFail", "test")
@@ -23,13 +23,13 @@ describe("junit command_builder", function()
 		assert.are.equal(
 			"javac "
 				.. "-d target "
-				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:junit-jar-filepath "
 				.. "./src/test/java/com/example/ExampleApplicationTests.java "
 				.. "&& "
 				.. "java "
-				.. "-jar /home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-jar junit-jar-filepath "
 				.. "execute "
-				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:junit-jar-filepath "
 				.. "-m=com.example.ExampleTest#shouldNotFail "
 				.. "--fail-if-no-tests "
 				.. "--reports-dir=/tmp/neotest-java",
@@ -38,7 +38,7 @@ describe("junit command_builder", function()
 	end)
 
 	it("builds command for dir", function()
-		local command = command_builder:new()
+		local command = command_builder:new({ junit_jar = "junit-jar-filepath" })
 
 		command:ignore_wrapper(false)
 		command:test_reference("com.example.ExampleTest", "shouldNotFail", "dir")
@@ -47,13 +47,13 @@ describe("junit command_builder", function()
 		assert.are.equal(
 			"javac "
 				.. "-d target "
-				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:junit-jar-filepath "
 				.. "./src/test/java/com/example/ExampleApplicationTests.java "
 				.. "&& "
 				.. "java "
-				.. "-jar /home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-jar junit-jar-filepath "
 				.. "execute "
-				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:junit-jar-filepath "
 				.. "-p=com.example "
 				.. "--fail-if-no-tests "
 				.. "--reports-dir=/tmp/neotest-java",
@@ -62,7 +62,7 @@ describe("junit command_builder", function()
 	end)
 
 	it("builds command for file", function()
-		local command = command_builder:new()
+		local command = command_builder:new({ junit_jar = "junit-jar-filepath" })
 
 		command:ignore_wrapper(false)
 		command:test_reference("com.example.ExampleTest", "shouldNotFail", "file")
@@ -71,13 +71,13 @@ describe("junit command_builder", function()
 		assert.are.equal(
 			"javac "
 				.. "-d target "
-				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:junit-jar-filepath "
 				.. "./src/test/java/com/example/ExampleApplicationTests.java "
 				.. "&& "
 				.. "java "
-				.. "-jar /home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-jar junit-jar-filepath "
 				.. "execute "
-				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:/home/rico/Downloads/junit-platform-console-standalone-1.10.1.jar "
+				.. "-cp ./target/classes/:./target/test-classes/:[classpath-mock]:junit-jar-filepath "
 				.. "-c=com.example.ExampleTest "
 				.. "--fail-if-no-tests "
 				.. "--reports-dir=/tmp/neotest-java",
