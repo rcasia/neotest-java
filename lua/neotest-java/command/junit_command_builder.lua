@@ -1,20 +1,4 @@
-local function is_integration_test(file_name)
-	return file_name:find("IT") ~= nil
-end
-
-local memoized_result
-local get_dependencies = function()
-	if memoized_result then
-		return memoized_result
-	end
-
-	local handle = io.popen("mvn -q dependency:build-classpath -Dmdep.outputFile=/dev/stdout")
-	local dependency_classpath = handle:read("*a")
-	handle:close()
-
-	memoized_result = dependency_classpath
-	return dependency_classpath
-end
+local maven = require("neotest-java.build_tool.maven")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -111,9 +95,11 @@ local CommandBuilder = {
 		local output_dir = "target/neotest-java/test-classes"
 		local classpath = table.concat({
 			output_dir,
-			get_dependencies(),
+			maven.get_dependencies_classpath(),
 			self._junit_jar,
 		}, ":")
+
+		print("ref: " .. ref)
 
 		local command = {
 			"javac",
