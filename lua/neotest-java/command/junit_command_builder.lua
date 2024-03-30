@@ -105,7 +105,7 @@ local CommandBuilder = {
 			"javac",
 			"-d " .. output_dir,
 			"-cp " .. classpath,
-			self._test_file,
+			"-sourcepath src/**/*.java",
 			"&&",
 			"java",
 			"-jar " .. self._junit_jar,
@@ -115,6 +115,8 @@ local CommandBuilder = {
 			"--fail-if-no-tests",
 			"--reports-dir=" .. self._reports_dir,
 		}
+
+		print(table.concat(command, " "))
 
 		return table.concat(command, " ")
 	end,
