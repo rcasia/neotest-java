@@ -1,6 +1,4 @@
 local xml = require("neotest.lib.xml")
-local scan = require("plenary.scandir")
-local test_parser = require("neotest-java.util.test_parser")
 local read_file = require("neotest-java.util.read_file")
 
 --- @param classname string name of class
@@ -76,25 +74,21 @@ function ResultBuilder.build_results(spec, result, tree)
 	local ok, data = pcall(function()
 		return read_file(filename)
 	end)
+	assert(ok, "Error reading file: " .. filename)
 
-	if not ok then
-		-- TODO: use an actual logger
-		print("Error reading file: " .. filename)
-	else
-		local xml_data = xml.parse(data)
+	local xml_data = xml.parse(data)
 
-		local testcases_in_xml = xml_data.testsuite.testcase
-		if not is_array(testcases_in_xml) then
-			testcases_in_xml = { testcases_in_xml }
-		end
+	local testcases_in_xml = xml_data.testsuite.testcase
+	if not is_array(testcases_in_xml) then
+		testcases_in_xml = { testcases_in_xml }
+	end
 
-		for _, testcase in ipairs(testcases_in_xml) do
-			local name = testcase._attr.name
-			local classname = testcase._attr.classname
+	for _, testcase in ipairs(testcases_in_xml) do
+		local name = testcase._attr.name
+		local classname = testcase._attr.classname
 
-			name = name:gsub("%(.*%)", "")
-			testcases[build_unique_key(classname, name)] = testcase
-		end
+		name = name:gsub("%(.*%)", "")
+		testcases[build_unique_key(classname, name)] = testcase
 	end
 
 	for _, v in tree:iter_nodes() do
@@ -105,9 +99,6 @@ function ResultBuilder.build_results(spec, result, tree)
 
 		if is_test then
 			if is_parameterized then
-				-- TODO: use an actual logger
-				-- print("[neotest-java] parameterized test: " .. node_data.name)
-
 				local test_failures = extract_test_failures(testcases, unique_key)
 
 				local short_failure_messages = {}
