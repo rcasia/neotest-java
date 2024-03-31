@@ -1,4 +1,5 @@
 local maven = require("neotest-java.build_tool.maven")
+local gradle = require("neotest-java.build_tool.gradle")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -93,32 +94,32 @@ local CommandBuilder = {
 		end
 
 		local output_dir = "target/neotest-java/test-classes"
-		local classpath = table.concat({
-			output_dir,
-			maven.get_dependencies_classpath(),
-			self._junit_jar,
-		}, ":")
+		-- local classpath = table.concat({
+		-- 	output_dir,
+		-- 	gradle.get_dependencies_classpath(),
+		-- 	self._junit_jar,
+		-- }, ":")
 
 		print("ref: " .. ref)
 
 		local command = {
 			"javac",
 			"-d " .. output_dir,
-			"-cp " .. classpath,
+			"-cp $(cat /tmp/classpath.txt)",
 			"-sourcepath src/**/*.java",
 			"&&",
 			"java",
 			"-jar " .. self._junit_jar,
 			"execute",
-			"-cp " .. classpath,
+			"-cp $(cat /tmp/classpath.txt):" .. output_dir,
 			ref,
 			"--fail-if-no-tests",
 			"--reports-dir=" .. self._reports_dir,
 		}
 
-		print(table.concat(command, " "))
+		local command_string = table.concat(command, " ")
 
-		return table.concat(command, " ")
+		return command_string
 	end,
 }
 
