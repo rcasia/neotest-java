@@ -28,6 +28,17 @@ local function to_gradle_path(dependency)
 end
 
 local function take_just_the_dependency(line)
+	--
+	-- Example of line with a standard dependency line
+	-- | +--- org.springframework.boot:spring-boot-starter:3.1.0
+	-- Expected:
+	-- org.springframework.boot:spring-boot-starter:3.1.0", dependency1)
+
+	-- Example of line with a dependency line that shows a version update
+	-- | +--- org.junit.platform:junit-platform-launcher:1.9.2 -> 1.9.3
+	-- Expected:
+	-- org.junit.platform:junit-platform-launcher:1.9.3
+	--
 	local dependency = line:match("[%w.-]+:[%w.-]+:[%w.-]+")
 	local old_version, new_version = line:match("(%d+%.%d+%.%d+) %-+> (%d+%.%d+%.%d+)")
 
