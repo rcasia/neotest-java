@@ -14,7 +14,7 @@ describe("junit command_builder", function()
 	end
 
 	it("builds command for unit test", function()
-		local command = command_builder:new({ junit_jar = "junit-jar-filepath" })
+		local command = command_builder:new({ junit_jar = "junit-jar-filepath" }, "maven")
 
 		command:ignore_wrapper(false)
 		command:test_reference("com.example.ExampleTest", "shouldNotFail", "test")
@@ -22,24 +22,29 @@ describe("junit command_builder", function()
 		command:reports_dir("/reports/dir")
 
 		assert.are.equal(
-			"javac "
-				.. "-d target/neotest-java/test-classes "
-				.. "-cp target/neotest-java/test-classes:[classpath-mock]:junit-jar-filepath "
-				.. "-sourcepath src/**/*.java "
-				.. "&& "
-				.. "java "
-				.. "-jar junit-jar-filepath "
-				.. "execute "
-				.. "-cp target/neotest-java/test-classes:[classpath-mock]:junit-jar-filepath "
-				.. "-m=com.example.ExampleTest#shouldNotFail "
-				.. "--fail-if-no-tests "
-				.. "--reports-dir=/reports/dir",
+			([[javac 
+      -d target/neotest-java/classes
+      -cp $(cat target/neotest-java/classpath.txt)
+      src/main/**/*.java 
+      &&
+      javac 
+      -d target/neotest-java/classes
+      -cp $(cat target/neotest-java/classpath.txt):target/neotest-java/classes 
+      src/test/**/*.java
+      && 
+      java 
+      -jar junit-jar-filepath 
+      execute 
+      -cp $(cat target/neotest-java/classpath.txt):target/neotest-java/classes
+      -m=com.example.ExampleTest#shouldNotFail
+      --fail-if-no-tests 
+      --reports-dir=/reports/dir]]):gsub("\n", ""):gsub("%s+", " "),
 			command:build()
 		)
 	end)
 
 	it("builds command for dir", function()
-		local command = command_builder:new({ junit_jar = "junit-jar-filepath" })
+		local command = command_builder:new({ junit_jar = "junit-jar-filepath" }, "maven")
 
 		command:ignore_wrapper(false)
 		command:test_reference("com.example.ExampleTest", "shouldNotFail", "dir")
@@ -47,24 +52,29 @@ describe("junit command_builder", function()
 		command:reports_dir("/reports/dir")
 
 		assert.are.equal(
-			"javac "
-				.. "-d target/neotest-java/test-classes "
-				.. "-cp target/neotest-java/test-classes:[classpath-mock]:junit-jar-filepath "
-				.. "-sourcepath src/**/*.java "
-				.. "&& "
-				.. "java "
-				.. "-jar junit-jar-filepath "
-				.. "execute "
-				.. "-cp target/neotest-java/test-classes:[classpath-mock]:junit-jar-filepath "
-				.. "-p=com.example "
-				.. "--fail-if-no-tests "
-				.. "--reports-dir=/reports/dir",
+			([[javac 
+      -d target/neotest-java/classes
+      -cp $(cat target/neotest-java/classpath.txt)
+      src/main/**/*.java 
+      &&
+      javac 
+      -d target/neotest-java/classes
+      -cp $(cat target/neotest-java/classpath.txt):target/neotest-java/classes 
+      src/test/**/*.java
+      && 
+      java 
+      -jar junit-jar-filepath 
+      execute 
+      -cp $(cat target/neotest-java/classpath.txt):target/neotest-java/classes
+		  -p=com.example
+      --fail-if-no-tests 
+      --reports-dir=/reports/dir]]):gsub("\n", ""):gsub("%s+", " "),
 			command:build()
 		)
 	end)
 
 	it("builds command for file", function()
-		local command = command_builder:new({ junit_jar = "junit-jar-filepath" })
+		local command = command_builder:new({ junit_jar = "junit-jar-filepath" }, "maven")
 
 		command:ignore_wrapper(false)
 		command:test_reference("com.example.ExampleTest", "shouldNotFail", "file")
@@ -72,18 +82,23 @@ describe("junit command_builder", function()
 		command:reports_dir("/reports/dir")
 
 		assert.are.equal(
-			"javac "
-				.. "-d target/neotest-java/test-classes "
-				.. "-cp target/neotest-java/test-classes:[classpath-mock]:junit-jar-filepath "
-				.. "-sourcepath src/**/*.java "
-				.. "&& "
-				.. "java "
-				.. "-jar junit-jar-filepath "
-				.. "execute "
-				.. "-cp target/neotest-java/test-classes:[classpath-mock]:junit-jar-filepath "
-				.. "-c=com.example.ExampleTest "
-				.. "--fail-if-no-tests "
-				.. "--reports-dir=/reports/dir",
+			([[javac 
+      -d target/neotest-java/classes
+      -cp $(cat target/neotest-java/classpath.txt)
+      src/main/**/*.java 
+      &&
+      javac 
+      -d target/neotest-java/classes
+      -cp $(cat target/neotest-java/classpath.txt):target/neotest-java/classes 
+      src/test/**/*.java
+      && 
+      java 
+      -jar junit-jar-filepath 
+      execute 
+      -cp $(cat target/neotest-java/classpath.txt):target/neotest-java/classes
+      -c=com.example.ExampleTest 
+      --fail-if-no-tests 
+      --reports-dir=/reports/dir]]):gsub("\n", ""):gsub("%s+", " "),
 			command:build()
 		)
 	end)
