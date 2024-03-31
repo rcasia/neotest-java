@@ -8,7 +8,7 @@ SpecBuilder = {}
 ---@param project_type string
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
-	local command = CommandBuilder:new(config)
+	local command = CommandBuilder:new(config, project_type)
 	local position = args.tree:data()
 	local root = root_finder.find_root(position.path)
 	local absolute_path = position.path

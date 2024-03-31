@@ -38,48 +38,40 @@ local function take_just_the_dependency(line)
 	return dependency
 end
 
-local function remove_duplicates(t)
-	local seen = {}
-	local result = {}
-
-	for _, value in ipairs(t) do
-		if not seen[value] then
-			table.insert(result, value)
-			seen[value] = true
-		end
-	end
-
-	return result
-end
-
 local function run(command)
-	-- io.popen(command)
-	os.execute(command)
+	local success = os.execute(command)
+	assert(success, "error while running command " .. command)
 end
 
 ---@class neotest-java.BuildTool
 local gradle = {}
 
----@return string
 gradle.get_dependencies_classpath = function()
-	local dependencies_output = "/tmp/dependencies.txt"
-	run("gradle dependencies -p /home/rico/REPOS/reactor-playground >> " .. dependencies_output)
+	-- create dir if not exists
+	run("mkdir -p " .. gradle.get_output_dir())
 
-	local classpath_output = "/tmp/classpath.txt"
-	run("echo > " .. classpath_output)
-	local jars = iter(File.read_lines(dependencies_output))
+	-- '< /dev/null' is necessary
+	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
+	run(
+		"gradle dependencies --console plain -p /home/rico/REPOS/reactor-playground > "
+			.. "build/neotest-java"
+			.. "/dependencies.txt < /dev/null"
+	)
+
+	local classpath_output = gradle.get_output_dir() .. "/classpath.txt"
+	-- run("echo > " .. classpath_output)
+	-- borrar el archivo si existe
+	run("rm -f " .. classpath_output)
+
+	local jars = iter(File.read_lines(gradle.get_output_dir() .. "/dependencies.txt"))
 		--
 		:map(take_just_the_dependency)
 		--
 		:map(to_gradle_path)
 		--
+		-- filter nil
 		:filter(function(x)
 			return x ~= nil
-		end)
-		--
-		:map(function(x)
-			print(x)
-			return x
 		end)
 		-- distinct
 		:reduce(function(acc, curr)
@@ -90,11 +82,19 @@ gradle.get_dependencies_classpath = function()
 		end, {})
 
 	iter(jars):foreach(function(jar)
-		print(jar)
 		run("echo -n :" .. jar .. " >> " .. classpath_output)
 	end)
 
 	return result
+end
+
+gradle.write_classpath = function(classpath_filename)
+	gradle.get_dependencies_classpath()
+	-- todo
+end
+
+gradle.get_output_dir = function()
+	return "build/neotest-java"
 end
 
 return gradle

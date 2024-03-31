@@ -1,13 +1,15 @@
 local maven = require("neotest-java.build_tool.maven")
 local gradle = require("neotest-java.build_tool.gradle")
+local build_tools = require("neotest-java.build_tool")
 
 --- @class CommandBuilder
 local CommandBuilder = {
 
 	--- @return CommandBuilder
-	new = function(self, config)
+	new = function(self, config, project_type)
 		self.__index = self
 		self._junit_jar = config.junit_jar
+    self._project_type = project_type
 		return setmetatable({}, self)
 	end,
 
@@ -82,6 +84,10 @@ local CommandBuilder = {
 
 	--- @return string @command to run
 	build = function(self)
+		local build_tool = build_tools.get(self._project_type)
+		local build_dir = build_tool.get_output_dir()
+		local output_dir = build_dir .. "/classes"
+		local classpath_filename = build_dir .. "/classpath.txt"
 		local reference = self._test_references[1]
 
 		local ref
@@ -92,31 +98,25 @@ local CommandBuilder = {
 		elseif reference.type == "dir" then
 			ref = "-p=" .. reference.qualified_name
 		end
+		assert(ref, "ref is nil")
 
-		local output_dir = "target/neotest-java/test-classes"
-		-- local classpath = table.concat({
-		-- 	output_dir,
-		-- 	gradle.get_dependencies_classpath(),
-		-- 	self._junit_jar,
-		-- }, ":")
-
-		print("ref: " .. ref)
+		build_tool.write_classpath(classpath_filename)
 
 		local command = {
 			"javac",
 			"-d " .. output_dir,
-			"-cp $(cat /tmp/classpath.txt)",
+			string.format("-cp $(cat %s)", classpath_filename),
 			"src/main/**/*.java",
 			"&&",
 			"javac",
 			"-d " .. output_dir,
-			"-cp $(cat /tmp/classpath.txt):" .. output_dir,
+			string.format("-cp $(cat %s):%s", classpath_filename, output_dir),
 			"src/test/**/*.java",
 			"&&",
 			"java",
 			"-jar " .. self._junit_jar,
 			"execute",
-			"-cp $(cat /tmp/classpath.txt):" .. output_dir,
+			string.format("-cp $(cat %s):%s", classpath_filename, output_dir),
 			ref,
 			"--fail-if-no-tests",
 			"--reports-dir=" .. self._reports_dir,
