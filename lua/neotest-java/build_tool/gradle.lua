@@ -3,6 +3,7 @@ local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
 local File = require("neotest.lib.file")
+local run = require("neotest-java.command.run")
 
 local function find_file_in_dir(filename, dir)
 	return totable(
@@ -47,11 +48,6 @@ local function take_just_the_dependency(line)
 	end
 
 	return dependency
-end
-
-local function run(command)
-	local success = os.execute(command)
-	assert(success, "error while running command " .. command)
 end
 
 ---@class neotest-java.BuildTool

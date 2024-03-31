@@ -3,14 +3,18 @@ local command_builder = require("neotest-java.command.junit_command_builder")
 
 describe("junit command_builder", function()
 	-- mock
-	local handle = {
-		read = function(self, string)
-			return "[classpath-mock]"
-		end,
-		close = function(self) end,
-	}
-	io.popen = function(str)
-		return handle
+	require("neotest.lib.process").run = function(str)
+		return 0, { stdout = "stdout", stderr = "stderr" }
+		-- do nothing
+	end
+
+	io.open = function(filepath, mode)
+		return {
+			write = function(self, content)
+				-- do nothing
+			end,
+			close = function(self) end,
+		}
 	end
 
 	it("builds command for unit test", function()

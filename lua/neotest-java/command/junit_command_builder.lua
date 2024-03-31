@@ -9,7 +9,7 @@ local CommandBuilder = {
 	new = function(self, config, project_type)
 		self.__index = self
 		self._junit_jar = config.junit_jar
-    self._project_type = project_type
+		self._project_type = project_type
 		return setmetatable({}, self)
 	end,
 
