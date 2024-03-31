@@ -1,4 +1,6 @@
----@diagnostic disable: undefined-doc-name
+---@diagnostic disable: undefined-doc-name, duplicate-doc-field, duplicate-set-field
+
+local File = require("neotest.lib.file")
 
 local file_checker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
@@ -9,6 +11,18 @@ local result_builder = require("neotest-java.core.result_builder")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
+
+local check_junit_jar = function(filepath)
+	local exists, err = File.exists(filepath)
+	assert(
+		exists,
+		([[
+    Junit Platform Console Standalone jar not found at %s
+    Please run the following command to download it: NeotestJava setup
+    Or alternatively, download it from https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.1/junit-platform-console-standalone-1.10.1.jar
+  ]]):format(filepath)
+	)
+end
 
 ---@class neotest.Adapter
 NeotestJavaAdapter = {
@@ -57,8 +71,10 @@ end
 ---@param args neotest.RunArgs
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function NeotestJavaAdapter.build_spec(args)
-	-- TODO: find a way to avoid to make this steps every time
 	local self = NeotestJavaAdapter
+	check_junit_jar(self.config.junit_jar)
+
+	-- TODO: find a way to avoid to make this steps every time
 
 	-- find root
 	local root = self.root(args.tree:data().path)
