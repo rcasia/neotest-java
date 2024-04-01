@@ -74,7 +74,10 @@ function ResultBuilder.build_results(spec, result, tree)
 	local ok, data = pcall(function()
 		return read_file(filename)
 	end)
-	assert(ok, "Error reading file: " .. filename)
+	if not ok then
+		print("Error reading file: " .. filename)
+		return {}
+	end
 
 	local xml_data = xml.parse(data)
 
