@@ -4,7 +4,10 @@ mvn = ./tests/fixtures/maven-demo/mvnw
 gradle_groovy = ./tests/fixtures/gradle-groovy-demo/gradlew
 gradle_kotlin = ./tests/fixtures/gradle-kotlin-demo/gradlew
 
-all: prepare-demo test
+all: hooks prepare-demo test
+
+hooks:
+	cp -f ./git-hooks/* .git/hooks/
 
 test: install
 	./scripts/test
