@@ -106,7 +106,7 @@ local CommandBuilder = {
 			"javac",
 			"-d " .. output_dir,
 			string.format("-cp $(cat %s)", classpath_filename),
-			"src/main/**/*.java",
+			"src/main/**/*.java target/**/*.java",
 			"&&",
 			"javac",
 			"-d " .. output_dir,
