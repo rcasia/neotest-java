@@ -39,7 +39,7 @@ This command will:
 A. Using [neotest-plenary](https://github.com/nvim-neotest/neotest-plenary).
 
 
-> Note: For the moment, you will need to specify the path to `.../neotest-java/tests/minimal_init.vim`
+> Note: For the moment, you will need to specify the path to `.../neotest-java/tests/testrc.vim`
 in the neotest-plenary configuration. See nvim-neotest/neotest-plenary#13
 
 B. From terminal

@@ -40,7 +40,7 @@ deps/nvim-nio:
 	git clone --depth 1 https://github.com/nvim-neotest/nvim-nio $@
 
 deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
-	nvim --headless -u tests/minimal_init.vim -c "TSInstallSync java | quit"
+	nvim --headless -u tests/testrc.vim -c "TSInstallSync java | quit"
 
 clean:
 	rm -rf deps/plenary.nvim deps/nvim-treesitter deps/neotest
