@@ -53,24 +53,52 @@ end
 ---@class neotest-java.BuildTool
 local gradle = {}
 
+gradle.get_output_dir = function()
+	return "build/neotest-java"
+end
+
+gradle.get_sources_glob = function()
+	-- check if there are generated sources
+	local generated_sources = scan.scan_dir("build", {
+		search_pattern = "*.java",
+	})
+	if #generated_sources > 0 then
+		return "src/main/**/*.java build/**/*.java"
+	end
+	return "src/main/**/*.java"
+end
+
+gradle.get_test_sources_glob = function()
+	return "src/test/**/*.java"
+end
+
+gradle.get_resources = function()
+	return { "src/main/resources", "src/test/resources" }
+end
+
 gradle.get_dependencies_classpath = function()
 	-- create dir if not exists
 	run("mkdir -p " .. gradle.get_output_dir())
 
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	run(
-		"gradle dependencies --console plain -p /home/rico/REPOS/reactor-playground > "
-			.. "build/neotest-java"
-			.. "/dependencies.txt < /dev/null"
+	local suc = os.execute(
+		"gradle dependencies -p /home/rico/REPOS/reactor-playground > build/neotest-java"
+			.. "/dependencies.txt "
+			.. "< /dev/null"
 	)
+	assert(suc, "failed to run")
 
 	local classpath_output = gradle.get_output_dir() .. "/classpath.txt"
 	-- run("echo > " .. classpath_output)
 	-- borrar el archivo si existe
 	run("rm -f " .. classpath_output)
 
-	local jars = iter(File.read_lines(gradle.get_output_dir() .. "/dependencies.txt"))
+	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
+	local output_lines = vim.split(output, "\n")
+
+	-- local jars = iter(File.read_lines(gradle.get_output_dir() .. "/dependencies.txt"))
+	local jars = iter(output_lines)
 		--
 		:map(take_just_the_dependency)
 		--
@@ -88,9 +116,12 @@ gradle.get_dependencies_classpath = function()
 			return acc
 		end, {})
 
+	local f = io.open(classpath_output, "a") or error("could not open to write: " .. classpath_output)
 	iter(jars):foreach(function(jar)
-		run("echo -n :" .. jar .. " >> " .. classpath_output)
+		-- run("echo -n :" .. jar .. " >> " .. classpath_output)
+		f:write(":" .. jar)
 	end)
+	io.close(f)
 
 	return result
 end
@@ -98,10 +129,6 @@ end
 gradle.write_classpath = function(classpath_filename)
 	gradle.get_dependencies_classpath()
 	-- todo
-end
-
-gradle.get_output_dir = function()
-	return "build/neotest-java"
 end
 
 return gradle

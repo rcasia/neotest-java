@@ -1,7 +1,36 @@
 local run = require("neotest-java.command.run")
+local scan = require("plenary.scandir")
 
 ---@type neotest-java.BuildTool
 local maven = {}
+
+maven.get_output_dir = function()
+	-- TODO: read from pom.xml <build><directory>
+	return "target/neotest-java"
+end
+
+maven.get_sources_glob = function()
+	-- TODO: read from pom.xml <sourceDirectory>
+
+	-- check if there are generated sources
+	local generated_sources = scan.scan_dir("target", {
+		search_pattern = "*.java",
+	})
+	if #generated_sources > 0 then
+		return "src/main/**/*.java target/**/*.java"
+	end
+	return "src/main/**/*.java"
+end
+
+maven.get_test_sources_glob = function()
+	-- TODO: read from pom.xml <testSourceDirectory>
+	return "src/test/**/*.java"
+end
+
+maven.get_resources = function()
+	-- TODO: read from pom.xml <resources>
+	return { "src/main/resources", "src/test/resources" }
+end
 
 local memoized_result
 ---@return string
@@ -47,10 +76,6 @@ maven.write_classpath = function(filepath)
 	end
 
 	file:close()
-end
-
-maven.get_output_dir = function()
-	return "target/neotest-java"
 end
 
 return maven

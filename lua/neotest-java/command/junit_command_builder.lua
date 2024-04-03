@@ -1,6 +1,19 @@
-local maven = require("neotest-java.build_tool.maven")
-local gradle = require("neotest-java.build_tool.gradle")
+local iter = require("fun").iter
 local build_tools = require("neotest-java.build_tool")
+
+local stop_command_when_line_containing = function(command, word)
+	return ([=[
+  { %s | while IFS= read -r line; do 
+        echo "$line" 
+        if [[ "$line" == *"%s"* ]]; then
+            pkill -9 -P $$
+            exit
+        fi
+    done
+  } & 
+  wait $!
+  ]=]):format(command, word)
+end
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -89,6 +102,9 @@ local CommandBuilder = {
 		local output_dir = build_dir .. "/classes"
 		local classpath_filename = build_dir .. "/classpath.txt"
 		local reference = self._test_references[1]
+		local resources = table.concat(build_tool.get_resources(), ":")
+		local source_classes_glob = build_tool.get_sources_glob()
+		local test_classes_glob = build_tool.get_test_sources_glob()
 
 		local ref
 		if reference.type == "test" then
@@ -102,29 +118,46 @@ local CommandBuilder = {
 
 		build_tool.write_classpath(classpath_filename)
 
-		local command = {
-			"javac",
-			"-d " .. output_dir,
-			string.format("-cp $(cat %s)", classpath_filename),
-			"src/main/**/*.java target/**/*.java",
-			"&&",
-			"javac",
-			"-d " .. output_dir,
-			string.format("-cp $(cat %s):%s", classpath_filename, output_dir),
-			"src/test/**/*.java",
-			"&&",
-			"java",
-			"-jar " .. self._junit_jar,
-			"execute",
-			string.format("-cp $(cat %s):%s", classpath_filename, output_dir),
-			ref,
-			"--fail-if-no-tests",
-			"--reports-dir=" .. self._reports_dir,
+		local source_compilation_command = [[
+      javac -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}) {{source_classes_glob}}
+    ]]
+		local test_compilation_command = [[
+      javac -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}):{{output_dir}} {{test_classes_glob}}
+    ]]
+
+		local test_execution_command = [[
+      java -jar {{junit_jar}} execute -cp {{resources}}:$(cat {{classpath_filename}}):{{output_dir}} {{selectors}}
+      --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner
+    ]]
+
+		-- combine commands sequentially
+		local command = table.concat({
+			source_compilation_command,
+			test_compilation_command,
+			test_execution_command,
+		}, " && ")
+
+		-- replace placeholders
+		local placeholders = {
+			["{{junit_jar}}"] = self._junit_jar,
+			["{{resources}}"] = resources,
+			["{{output_dir}}"] = output_dir,
+			["{{classpath_filename}}"] = classpath_filename,
+			["{{reports_dir}}"] = self._reports_dir,
+			["{{selectors}}"] = ref,
+			["{{source_classes_glob}}"] = source_classes_glob,
+			["{{test_classes_glob}}"] = test_classes_glob,
 		}
+		iter(placeholders):each(function(k, v)
+			command = command:gsub(k, v)
+		end)
 
-		local command_string = table.concat(command, " ")
+		-- remove extra spaces
+		command = command:gsub("%s+", " ")
 
-		return command_string
+		command = stop_command_when_line_containing(command, "Test run finished")
+
+		return command
 	end,
 }
 
