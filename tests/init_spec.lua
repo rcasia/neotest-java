@@ -1,27 +1,22 @@
 describe("NeotestJava plugin", function()
-	it("should init default configuration", function()
-		-- given
-		local expected_config = {
-			ignore_wrapper = false,
-		}
+	local default_config = {
+		ignore_wrapper = false,
+		junit_jar = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar",
+	}
 
+	it("should init default configuration", function()
 		-- when
 		local plugin = require("neotest-java")
 
 		-- then
-		assert.are.same(expected_config, plugin.config)
+		assert.are.same(default_config, plugin.config)
 	end)
 
 	it("should init with empty configuration", function()
-		-- given
-		local expected_config = {
-			ignore_wrapper = false,
-		}
-
 		-- when
 		local plugin = require("neotest-java")({})
 
 		-- then
-		assert.are.same(expected_config, plugin.config)
+		assert.are.same(default_config, plugin.config)
 	end)
 end)

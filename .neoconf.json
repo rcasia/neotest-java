@@ -5,7 +5,8 @@
       "plugins": [
         "neotest",
         "nvim-treesitter",
-        "plenary.nvim"
+        "plenary.nvim",
+        "nvim-nio"
       ]
     }
   },

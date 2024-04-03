@@ -20,7 +20,7 @@
 ## :wrench: Installation
 
 It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
-
+> [!WARNING]
 >Make sure you have the java parser installed. Use `:TSInstall java`
 
 [vim-plug](https://github.com/junegunn/vim-plug):
@@ -28,12 +28,18 @@ It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter
 Plug 'rcasia/neotest-java'
 ```
 
+* Run `:NeotestJava setup`
+> [!NOTE]
+> It will download the JUnit standalone jar from https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone and place it in the default directory
+
 ## :gear: Configuration
 ```lua
 require("neotest").setup({
   adapters = {
     require("neotest-java")({
         ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
+        junit_jar = "path/to/junit-standalone.jar",
+        -- default: .local/share/nvim/neotest-java/junit-platform-console-standalone-[version].jar
     })
   }
 })
