@@ -1,5 +1,6 @@
 local run = require("neotest-java.command.run")
 local scan = require("plenary.scandir")
+local mvn = require("neotest-java.command.binaries").mvn
 
 ---@type neotest-java.BuildTool
 local maven = {}
@@ -39,7 +40,7 @@ maven.get_dependencies_classpath = function()
 		return memoized_result
 	end
 
-	local command = "mvn -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
+	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
 	run(command)
 	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
 

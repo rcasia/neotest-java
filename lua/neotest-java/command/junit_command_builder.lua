@@ -1,5 +1,8 @@
 local iter = require("fun").iter
 local build_tools = require("neotest-java.build_tool")
+local binaries = require("neotest-java.command.binaries")
+local javac = binaries.javac
+local java = binaries.java
 
 local stop_command_when_line_containing = function(command, word)
 	return ([=[
@@ -119,14 +122,14 @@ local CommandBuilder = {
 		build_tool.write_classpath(classpath_filename)
 
 		local source_compilation_command = [[
-      javac -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}) {{source_classes_glob}}
+      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}) {{source_classes_glob}}
     ]]
 		local test_compilation_command = [[
-      javac -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}):{{output_dir}} {{test_classes_glob}}
+      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}):{{output_dir}} {{test_classes_glob}}
     ]]
 
 		local test_execution_command = [[
-      java -jar {{junit_jar}} execute -cp {{resources}}:$(cat {{classpath_filename}}):{{output_dir}} {{selectors}}
+      {{java}} -jar {{junit_jar}} execute -cp {{resources}}:$(cat {{classpath_filename}}):{{output_dir}} {{selectors}}
       --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner
     ]]
 
@@ -139,6 +142,8 @@ local CommandBuilder = {
 
 		-- replace placeholders
 		local placeholders = {
+			["{{javac}}"] = javac(),
+			["{{java}}"] = java(),
 			["{{junit_jar}}"] = self._junit_jar,
 			["{{resources}}"] = resources,
 			["{{output_dir}}"] = output_dir,

@@ -4,6 +4,7 @@ local totable = fun.totable
 local scan = require("plenary.scandir")
 local File = require("neotest.lib.file")
 local run = require("neotest-java.command.run")
+local binaries = require("neotest-java.command.binaries")
 
 local function find_file_in_dir(filename, dir)
 	return totable(
@@ -83,7 +84,8 @@ gradle.get_dependencies_classpath = function()
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
 	local suc = os.execute(
-		"gradle dependencies -p /home/rico/REPOS/reactor-playground > build/neotest-java"
+		binaries.gradle()
+			.. " dependencies -p /home/rico/REPOS/reactor-playground > build/neotest-java"
 			.. "/dependencies.txt "
 			.. "< /dev/null"
 	)
