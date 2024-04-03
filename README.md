@@ -8,14 +8,7 @@
 </section>
 
 ## :construction_worker: There is still Work In Progress
- :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon: :new_moon:
-
-## :white_check_mark: Features
-
-* Support for both [Maven](https://maven.apache.org/) and [Gradle](https://gradle.org/) projects
-* Support for [@ParameterizedTest](https://junit.org/junit5/docs/5.0.2/api/org/junit/jupiter/params/ParameterizedTest.html) annotation
-* It works with multi-module projects too!
-
+ :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon:
 
 ## :wrench: Installation
 
