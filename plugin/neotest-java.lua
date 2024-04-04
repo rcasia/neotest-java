@@ -5,7 +5,8 @@ local lib = require("neotest.lib")
 
 local options = {
 	setup = function()
-		if exists(vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar") then
+		local filepath = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar"
+		if exists(filepath) then
 			lib.notify("Already setup!")
 			return
 		end
@@ -17,7 +18,7 @@ local options = {
 				command = "curl",
 				args = {
 					"--output",
-					vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar",
+					filepath,
 					"https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.1/junit-platform-console-standalone-1.10.1.jar",
 				},
 				on_stderr = function(_, data)
