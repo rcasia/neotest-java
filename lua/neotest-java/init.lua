@@ -11,6 +11,7 @@ local result_builder = require("neotest-java.core.result_builder")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
+local run = require("neotest-java.command.run")
 
 local check_junit_jar = function(filepath)
 	local exists, err = File.exists(filepath)
@@ -100,6 +101,13 @@ end
 function NeotestJavaAdapter.results(spec, result, tree)
 	return result_builder.build_results(spec, result, tree)
 end
+
+-- on init
+(function()
+	-- create data directory if it doesn't exist
+	local data_dir = vim.fn.stdpath("data") .. "/neotest-java"
+	os.execute("mkdir -p " .. data_dir)
+end)()
 
 setmetatable(NeotestJavaAdapter, {
 	__call = function(_, opts)
