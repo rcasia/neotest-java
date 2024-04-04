@@ -15,7 +15,7 @@ maven.get_sources_glob = function()
 
 	-- check if there are generated sources
 	local generated_sources = scan.scan_dir("target", {
-		search_pattern = "*.java",
+		search_pattern = ".+%.java",
 	})
 	if #generated_sources > 0 then
 		return "src/main/**/*.java target/**/*.java"
