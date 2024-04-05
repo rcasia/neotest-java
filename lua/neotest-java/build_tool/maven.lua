@@ -1,9 +1,31 @@
 local run = require("neotest-java.command.run")
+local read_xml_tag = require("neotest-java.util.read_xml_tag")
 local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
+local logger = require("neotest.logging")
 
 ---@type neotest-java.BuildTool
 local maven = {}
+
+maven.source_directory = function()
+	local tag_content = read_xml_tag("pom.xml", "project.build.sourceDirectory")
+
+	if tag_content then
+		logger.debug("Found sourceDirectory in pom.xml: " .. tag_content)
+		return tag_content
+	end
+
+	return "src/main/java"
+end
+
+maven.test_source_directory = function()
+	local tag_content = read_xml_tag("pom.xml", "project.build.testSourceDirectory")
+	if tag_content then
+		logger.debug("Found testSourceDirectory in pom.xml: " .. tag_content)
+		return tag_content
+	end
+	return "src/test/java"
+end
 
 maven.get_output_dir = function()
 	-- TODO: read from pom.xml <build><directory>
@@ -18,13 +40,18 @@ maven.get_sources_glob = function()
 		search_pattern = ".+%.java",
 	})
 	if #generated_sources > 0 then
-		return "src/main/**/*.java target/**/*.java"
+		return ("%s/**/*.java target/**/*.java"):format(maven.source_directory())
 	end
-	return "src/main/**/*.java"
+	return ("%s/**/*.java"):format(maven.source_directory())
 end
 
 maven.get_test_sources_glob = function()
 	-- TODO: read from pom.xml <testSourceDirectory>
+
+	if tag then
+		return tag
+	end
+
 	return "src/test/**/*.java"
 end
 
