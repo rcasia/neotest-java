@@ -51,8 +51,12 @@ local function take_just_the_dependency(line)
 	return dependency
 end
 
----@class neotest-java.BuildTool
+---@type neotest-java.BuildTool
 local gradle = {}
+
+gradle.source_dir = function()
+	return "src/main/java"
+end
 
 gradle.get_output_dir = function()
 	return "build/neotest-java"
