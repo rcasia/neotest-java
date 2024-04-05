@@ -41,9 +41,6 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
 	-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
 	command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 
-	-- TODO: add debug logger
-	print(command:build())
-
 	return {
 		command = command:build(),
 		cwd = root,

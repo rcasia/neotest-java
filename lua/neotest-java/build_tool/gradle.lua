@@ -24,7 +24,13 @@ local function to_gradle_path(dependency)
 	local group_id, artifact_id, version = dependency:match("([^:]+):([^:]+):([^:]+)")
 
 	local filename = string.format("%s-%s.jar", artifact_id, version)
-	local dir = string.format("/home/rico/.gradle/caches/modules-2/files-2.1/%s/%s/%s", group_id, artifact_id, version)
+	local dir = string.format(
+		"%s/.gradle/caches/modules-2/files-2.1/%s/%s/%s",
+		os.getenv("HOME"),
+		group_id,
+		artifact_id,
+		version
+	)
 	local result = find_file_in_dir(filename, dir)
 	return result
 end
@@ -83,23 +89,17 @@ gradle.get_dependencies_classpath = function()
 
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	local suc = os.execute(
-		binaries.gradle()
-			.. " dependencies -p /home/rico/REPOS/reactor-playground > build/neotest-java"
-			.. "/dependencies.txt "
-			.. "< /dev/null"
-	)
+	local suc =
+		os.execute(binaries.gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
 	assert(suc, "failed to run")
 
 	local classpath_output = gradle.get_output_dir() .. "/classpath.txt"
-	-- run("echo > " .. classpath_output)
 	-- borrar el archivo si existe
 	run("rm -f " .. classpath_output)
 
 	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
 	local output_lines = vim.split(output, "\n")
 
-	-- local jars = iter(File.read_lines(gradle.get_output_dir() .. "/dependencies.txt"))
 	local jars = iter(output_lines)
 		--
 		:map(take_just_the_dependency)
@@ -120,7 +120,6 @@ gradle.get_dependencies_classpath = function()
 
 	local f = io.open(classpath_output, "a") or error("could not open to write: " .. classpath_output)
 	iter(jars):foreach(function(jar)
-		-- run("echo -n :" .. jar .. " >> " .. classpath_output)
 		f:write(":" .. jar)
 	end)
 	io.close(f)
@@ -130,7 +129,6 @@ end
 
 gradle.write_classpath = function(classpath_filename)
 	gradle.get_dependencies_classpath()
-	-- todo
 end
 
 return gradle
