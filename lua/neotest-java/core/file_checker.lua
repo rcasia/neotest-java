@@ -1,5 +1,5 @@
 local File = require("neotest.lib.file")
-FileChecker = {
+local FileChecker = {
 	test_file_patterns = {
 		"IT%.java$",
 		"Test%.java$",

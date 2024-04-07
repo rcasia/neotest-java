@@ -1,4 +1,4 @@
-DirFilter = {
+local DirFilter = {
 	-- List of directories to exclude from search
 	excluded_directories = {
 		"target",
