@@ -20,6 +20,7 @@ local options = {
 					"--output",
 					filepath,
 					"https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.1/junit-platform-console-standalone-1.10.1.jar",
+					"--create-dirs",
 				},
 				on_stderr = function(_, data)
 					table.insert(stderr, data)
