@@ -4,6 +4,14 @@ local binaries = require("neotest-java.command.binaries")
 local javac = binaries.javac
 local java = binaries.java
 
+local function wrap_command_as_bash(command)
+	return ([=[
+  bash -O globstar -c '
+    %s
+  '
+  ]=]):format(command)
+end
+
 local stop_command_when_line_containing = function(command, word)
 	return ([=[
   { %s | while IFS= read -r line; do 
@@ -161,6 +169,8 @@ local CommandBuilder = {
 		command = command:gsub("%s+", " ")
 
 		command = stop_command_when_line_containing(command, "Test run finished")
+
+		command = wrap_command_as_bash(command)
 
 		return command
 	end,
