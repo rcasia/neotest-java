@@ -27,7 +27,8 @@ return {
   {
     "rcasia/neotest-java",
     init = function()
-      -- override the default keymaps
+      -- override the default keymaps.
+      -- needed until neotest-java is integrated in LazyVim
       local keys = require("lazyvim.plugins.lsp.keymaps").get()
       -- run Test File
       keys[#keys + 1] = {"<leader>tt", function() require("neotest").run.run() end, mode = "n" }
@@ -46,6 +47,11 @@ return {
       "nvim-lua/plenary.nvim",
       "antoinemadec/FixCursorHold.nvim",
       "nvim-treesitter/nvim-treesitter"
+    },
+    adapters = {
+        ["neotest-java"] = {
+          -- config here
+        },
     },
   },
 }
