@@ -21,6 +21,36 @@ It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter
 Plug 'rcasia/neotest-java'
 ```
 
+[LazyVim](https://github.com/LazyVim/LazyVim) distro:
+```lua
+return {
+  {
+    "rcasia/neotest-java",
+    init = function()
+      -- override the default keymaps
+      local keys = require("lazyvim.plugins.lsp.keymaps").get()
+      -- run Test File
+      keys[#keys + 1] = {"<leader>tt", function() require("neotest").run.run() end, mode = "n" }
+      -- run Nearest Test
+      keys[#keys + 1] = {"<leader>tr", function() require("neotest").run.run(vim.fn.expand("%")) end, mode = "n" }
+      -- debug Test File
+      keys[#keys + 1] = {"<leader>tD", function() require("jdtls.dap").test_class() end, mode = "n" }
+      -- debug Nearest Test
+      keys[#keys + 1] = {"<leader>td", function() require("jdtls.dap").test_nearest_method() end, mode = "n" }
+    end,
+  },
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-neotest/nvim-nio",
+      "nvim-lua/plenary.nvim",
+      "antoinemadec/FixCursorHold.nvim",
+      "nvim-treesitter/nvim-treesitter"
+    },
+  },
+}
+```
+
 * Run `:NeotestJava setup`
 > [!NOTE]
 > It will download the JUnit standalone jar from https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone and place it in the default directory
