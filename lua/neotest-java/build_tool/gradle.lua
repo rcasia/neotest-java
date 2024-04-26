@@ -6,6 +6,8 @@ local File = require("neotest.lib.file")
 local run = require("neotest-java.command.run")
 local binaries = require("neotest-java.command.binaries")
 
+local JAVA_FILE_PATTERN = ".+%.java"
+
 local function find_file_in_dir(filename, dir)
 	return totable(
 		--
@@ -69,18 +71,25 @@ gradle.get_output_dir = function()
 end
 
 gradle.get_sources_glob = function()
-	-- check if there are generated sources
-	local generated_sources = scan.scan_dir("build", {
-		search_pattern = ".+%.java",
+	local sources = scan.scan_dir(gradle.source_dir(), {
+		search_pattern = JAVA_FILE_PATTERN,
 	})
-	if #generated_sources > 0 then
-		return "src/main/**/*.java build/**/*.java"
-	end
-	return "src/main/**/*.java"
+
+	local generated_sources = scan.scan_dir("build", {
+		search_pattern = JAVA_FILE_PATTERN,
+	})
+
+	local sources_str = table.concat(sources, " ")
+	local generated_sources_str = table.concat(generated_sources, " ")
+
+	return table.concat({ sources_str, generated_sources_str }, " ")
 end
 
 gradle.get_test_sources_glob = function()
-	return "src/test/**/*.java"
+	local test_sources = scan.scan_dir("src/test/java", {
+		search_pattern = JAVA_FILE_PATTERN,
+	})
+	return table.concat(test_sources, " ")
 end
 
 gradle.get_resources = function()

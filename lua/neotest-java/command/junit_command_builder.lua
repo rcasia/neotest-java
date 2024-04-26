@@ -6,7 +6,7 @@ local java = binaries.java
 
 local function wrap_command_as_bash(command)
 	return ([=[
-  bash -O globstar -c '
+  bash -c '
     %s
   '
   ]=]):format(command)
