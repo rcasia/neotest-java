@@ -4,6 +4,8 @@ local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
 local logger = require("neotest.logging")
 
+local JAVA_FILE_PATTERN = ".+%.java"
+
 ---@type neotest-java.BuildTool
 local maven = {}
 
@@ -32,27 +34,30 @@ maven.get_output_dir = function()
 	return "target/neotest-java"
 end
 
-maven.get_sources_glob = function()
-	-- TODO: read from pom.xml <sourceDirectory>
-
-	-- check if there are generated sources
-	local generated_sources = scan.scan_dir("target", {
-		search_pattern = ".+%.java",
+maven.get_sources = function()
+	local sources = scan.scan_dir(maven.source_directory(), {
+		search_pattern = JAVA_FILE_PATTERN,
 	})
-	if #generated_sources > 0 then
-		return ("%s/**/*.java target/**/*.java"):format(maven.source_directory())
-	end
-	return ("%s/**/*.java"):format(maven.source_directory())
+
+	local generated_sources = scan.scan_dir("target", {
+		search_pattern = JAVA_FILE_PATTERN,
+	})
+
+	-- combine sources and generated sources
+	local sources_str = table.concat(sources, " ")
+	local generated_sources_str = table.concat(generated_sources, " ")
+
+	return table.concat({ sources_str, generated_sources_str }, " ")
 end
 
-maven.get_test_sources_glob = function()
+maven.get_test_sources = function()
 	-- TODO: read from pom.xml <testSourceDirectory>
 
-	if tag then
-		return tag
-	end
+	local test_sources = scan.scan_dir(maven.test_source_directory(), {
+		search_pattern = JAVA_FILE_PATTERN,
+	})
 
-	return "src/test/**/*.java"
+	return table.concat(test_sources, " ")
 end
 
 maven.get_resources = function()
