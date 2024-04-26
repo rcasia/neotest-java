@@ -34,7 +34,7 @@ maven.get_output_dir = function()
 	return "target/neotest-java"
 end
 
-maven.get_sources_glob = function()
+maven.get_sources = function()
 	local sources = scan.scan_dir(maven.source_directory(), {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
@@ -50,7 +50,7 @@ maven.get_sources_glob = function()
 	return table.concat({ sources_str, generated_sources_str }, " ")
 end
 
-maven.get_test_sources_glob = function()
+maven.get_test_sources = function()
 	-- TODO: read from pom.xml <testSourceDirectory>
 
 	local test_sources = scan.scan_dir(maven.test_source_directory(), {

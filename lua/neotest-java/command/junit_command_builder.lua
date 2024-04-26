@@ -114,8 +114,8 @@ local CommandBuilder = {
 		local classpath_filename = build_dir .. "/classpath.txt"
 		local reference = self._test_references[1]
 		local resources = table.concat(build_tool.get_resources(), ":")
-		local source_classes_glob = build_tool.get_sources_glob()
-		local test_classes_glob = build_tool.get_test_sources_glob()
+		local source_classes = build_tool.get_sources()
+		local test_classes = build_tool.get_test_sources()
 
 		local ref
 		if reference.type == "test" then
@@ -130,10 +130,10 @@ local CommandBuilder = {
 		build_tool.write_classpath(classpath_filename)
 
 		local source_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}) {{source_classes_glob}}
+      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}) {{source_classes}}
     ]]
 		local test_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}):{{output_dir}} {{test_classes_glob}}
+      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}):{{output_dir}} {{test_classes}}
     ]]
 
 		local test_execution_command = [[
@@ -158,8 +158,8 @@ local CommandBuilder = {
 			["{{classpath_filename}}"] = classpath_filename,
 			["{{reports_dir}}"] = self._reports_dir,
 			["{{selectors}}"] = ref,
-			["{{source_classes_glob}}"] = source_classes_glob,
-			["{{test_classes_glob}}"] = test_classes_glob,
+			["{{source_classes}}"] = source_classes,
+			["{{test_classes}}"] = test_classes,
 		}
 		iter(placeholders):each(function(k, v)
 			command = command:gsub(k, v)

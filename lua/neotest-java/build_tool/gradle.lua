@@ -70,7 +70,7 @@ gradle.get_output_dir = function()
 	return "build/neotest-java"
 end
 
-gradle.get_sources_glob = function()
+gradle.get_sources = function()
 	local sources = scan.scan_dir(gradle.source_dir(), {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
@@ -85,7 +85,7 @@ gradle.get_sources_glob = function()
 	return table.concat({ sources_str, generated_sources_str }, " ")
 end
 
-gradle.get_test_sources_glob = function()
+gradle.get_test_sources = function()
 	local test_sources = scan.scan_dir("src/test/java", {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
