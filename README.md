@@ -30,13 +30,13 @@ return {
       -- override the default keymaps.
       -- needed until neotest-java is integrated in LazyVim
       local keys = require("lazyvim.plugins.lsp.keymaps").get()
-      -- run Test File
-      keys[#keys + 1] = {"<leader>tt", function() require("neotest").run.run() end, mode = "n" }
-      -- run Nearest Test
-      keys[#keys + 1] = {"<leader>tr", function() require("neotest").run.run(vim.fn.expand("%")) end, mode = "n" }
-      -- debug Test File
+      -- run test file
+      keys[#keys + 1] = {"<leader>tt", function() require("neotest").run.run(vim.fn.expand("%")) end, mode = "n" }
+      -- run nearest test
+      keys[#keys + 1] = {"<leader>tr", function() require("neotest").run.run() end, mode = "n" }
+      -- debug test file
       keys[#keys + 1] = {"<leader>tD", function() require("jdtls.dap").test_class() end, mode = "n" }
-      -- debug Nearest Test
+      -- debug nearest test
       keys[#keys + 1] = {"<leader>td", function() require("jdtls.dap").test_nearest_method() end, mode = "n" }
     end,
   },
