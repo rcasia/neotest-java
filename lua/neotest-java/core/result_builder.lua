@@ -1,5 +1,6 @@
 local xml = require("neotest.lib.xml")
 local read_file = require("neotest-java.util.read_file")
+local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -53,11 +54,6 @@ local function extract_test_failures(testcases, name)
 	return failures
 end
 
--- TODO: extract to a diffrent file
-local function qualified_class_name_from_path(path)
-	return path:gsub("(.-)src/test/java/", ""):gsub("/", "."):gsub(".java", ""):gsub("#.*", "")
-end
-
 ResultBuilder = {}
 
 ---@async
@@ -91,16 +87,18 @@ function ResultBuilder.build_results(spec, result, tree)
 		local classname = testcase._attr.classname
 
 		name = name:gsub("%(.*%)", "")
-		testcases[build_unique_key(classname, name)] = testcase
+		local unique_key = build_unique_key(classname, name)
+		testcases[unique_key] = testcase
 	end
 
 	for _, v in tree:iter_nodes() do
 		local node_data = v:data()
 		local is_test = node_data.type == "test"
-		local unique_key = build_unique_key(qualified_class_name_from_path(node_data.path), node_data.name)
 		local is_parameterized = is_parameterized_test(testcases, node_data.name)
 
 		if is_test then
+			local unique_key = build_unique_key(resolve_qualified_name(node_data.path), node_data.name)
+
 			if is_parameterized then
 				local test_failures = extract_test_failures(testcases, unique_key)
 
