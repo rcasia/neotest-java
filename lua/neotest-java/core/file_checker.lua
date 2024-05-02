@@ -45,7 +45,7 @@ end
 ---@async
 ---@param file_path string
 ---@return boolean
-function FileChecker.isTestFile(file_path)
+function FileChecker.is_test_file(file_path)
 	return fileNameMatchesPattern(file_path)
 		or (packagePathMatchesPattern(file_path) and fileBodyContainsPattern(file_path))
 end

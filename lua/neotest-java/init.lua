@@ -58,7 +58,7 @@ end
 ---@param file_path string
 ---@return boolean
 function NeotestJavaAdapter.is_test_file(file_path)
-	return file_checker.isTestFile(file_path)
+	return file_checker.is_test_file(file_path)
 end
 
 ---Given a file path, parse all the tests within it.
