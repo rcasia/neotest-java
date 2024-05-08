@@ -4,7 +4,7 @@
     <img src="https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml/badge.svg">
   </a>
   <h1>neotest-java</h1>
-  <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using JUnit.</p>
+  <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using [JUnit](https://github.com/junit-team/junit5).</p>
 </section>
 
 ## :construction_worker: There is still Work In Progress
