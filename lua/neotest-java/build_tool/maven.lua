@@ -4,7 +4,7 @@ local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
 local logger = require("neotest.logging")
 
-local JAVA_FILE_PATTERN = ".+%.java"
+local JAVA_FILE_PATTERN = ".+%.java$"
 
 ---@type neotest-java.BuildTool
 local maven = {}
