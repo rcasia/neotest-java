@@ -6,7 +6,7 @@ local File = require("neotest.lib.file")
 local run = require("neotest-java.command.run")
 local binaries = require("neotest-java.command.binaries")
 
-local JAVA_FILE_PATTERN = ".+%.java"
+local JAVA_FILE_PATTERN = ".+%.java$"
 
 local function find_file_in_dir(filename, dir)
 	return totable(
