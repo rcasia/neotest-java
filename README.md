@@ -7,9 +7,6 @@
   <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using <a href="https://github.com/junit-team/junit5">JUnit</a>.</p>
 </section>
 
-## :construction_worker: There is still Work In Progress
- :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon:
-
 ## :wrench: Installation
 
 It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
