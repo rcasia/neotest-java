@@ -43,11 +43,11 @@ maven.get_sources = function()
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 
-	-- combine sources and generated sources
-	local sources_str = table.concat(sources, " ")
-	local generated_sources_str = table.concat(generated_sources, " ")
+	for _, source in ipairs(generated_sources) do
+		table.insert(sources, source)
+	end
 
-	return table.concat({ sources_str, generated_sources_str }, " ")
+	return sources
 end
 
 maven.get_test_sources = function()
@@ -57,7 +57,7 @@ maven.get_test_sources = function()
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 
-	return table.concat(test_sources, " ")
+	return test_sources
 end
 
 maven.get_resources = function()

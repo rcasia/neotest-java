@@ -79,17 +79,18 @@ gradle.get_sources = function()
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 
-	local sources_str = table.concat(sources, " ")
-	local generated_sources_str = table.concat(generated_sources, " ")
+	for _, source in ipairs(generated_sources) do
+		table.insert(sources, source)
+	end
 
-	return table.concat({ sources_str, generated_sources_str }, " ")
+	return sources
 end
 
 gradle.get_test_sources = function()
 	local test_sources = scan.scan_dir("src/test/java", {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
-	return table.concat(test_sources, " ")
+	return test_sources
 end
 
 gradle.get_resources = function()
@@ -131,9 +132,11 @@ gradle.get_dependencies_classpath = function()
 			return acc
 		end, {})
 
+	local result = ""
 	local f = io.open(classpath_output, "a") or error("could not open to write: " .. classpath_output)
 	iter(jars):foreach(function(jar)
 		f:write(":" .. jar)
+		result = result .. ":" .. jar
 	end)
 	io.close(f)
 

@@ -1,6 +1,7 @@
 local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
+local log = require("neotest-java.logger")
 
 SpecBuilder = {}
 
@@ -12,8 +13,6 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
 	local position = args.tree:data()
 	local root = root_finder.find_root(position.path)
 	local absolute_path = position.path
-
-	command:set_test_file(absolute_path)
 
 	local reports_dir = "/tmp/neotest-java/" .. vim.fn.strftime("%d%m%y%H%M%S")
 	command:reports_dir(reports_dir)
@@ -41,6 +40,7 @@ function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
 	-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
 	command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 
+	log.debug("junit command: ", command:build())
 	return {
 		command = command:build(),
 		cwd = root,
