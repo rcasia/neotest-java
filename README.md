@@ -7,9 +7,6 @@
   <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using <a href="https://github.com/junit-team/junit5">JUnit</a>.</p>
 </section>
 
-## :construction_worker: There is still Work In Progress
- :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :full_moon: :last_quarter_moon:
-
 ## :wrench: Installation
 
 It requires [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
@@ -67,15 +64,21 @@ require("neotest").setup({
   adapters = {
     require("neotest-java")({
         ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
-        junit_jar = "path/to/junit-standalone.jar",
+        junit_jar = nil,
         -- default: .local/share/nvim/neotest-java/junit-platform-console-standalone-[version].jar
     })
   }
 })
 ```
+
 ## :octocat: Contributing
 Feel free to contribute to this project by creating issues for bug reports, feature requests, or suggestions.
 
 You can also submit pull requests for any enhancements, bug fixes, or new features.
 
 Your contributions are greatly appreciated. See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
+
+## Limitations
+* Does not support debugging yet https://github.com/rcasia/neotest-java/issues/59
+* Does not support multimodule projects yet https://github.com/rcasia/neotest-java/issues/100
+
