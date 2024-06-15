@@ -8,6 +8,7 @@ local dir_filter = require("neotest-java.core.dir_filter")
 local position_discoverer = require("neotest-java.core.positions_discoverer")
 local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
+local log = require("neotest-java.logger")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
@@ -104,6 +105,8 @@ end
 
 -- on init
 (function()
+	log.info("neotest-java adapter initialized")
+
 	-- create data directory if it doesn't exist
 	local data_dir = vim.fn.stdpath("data") .. "/neotest-java"
 	os.execute("mkdir -p " .. data_dir)
