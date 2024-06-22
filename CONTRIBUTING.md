@@ -10,7 +10,6 @@ For larger changes, it is a good idea to open an issue first describing the feat
 For the PRs to succeed and be merged you are expected to:
 * have read this doc
 * run the formatter before every commit
-* add testcases for the feature or bugfix
 * to avoid duplicated work, open a draft PR as soon as you get to work
 
 ### :electric_plug: Set up
