@@ -10,10 +10,12 @@ local available_port = require("neotest-java.util.available_port")
 
 SpecBuilder = {}
 
-local compile_sources = function(sources, output_dir, dependencies_classpath)
+local compile_sources = function(build_tool)
 	vim.notify("Compiling sources", vim.log.levels.INFO)
 	local compilation_errors = {}
 	local status_code = 0
+	local sources = build_tool.get_sources()
+	local output_dir = build_tool.get_output_dir()
 	local source_compilation_command_exited = nio.control.event()
 	local source_compilation_args = {
 		"-Xlint:none",
@@ -85,7 +87,7 @@ local compile_test_sources = function(build_tool)
 	assert(status_code == 0, "Error compiling test sources")
 end
 
-local run_debug_test = function(command, args, log_file)
+local run_debug_test = function(command, args)
 	vim.notify("Running debug test", vim.log.levels.INFO)
 	log.trace("run_debug_test function")
 
@@ -135,7 +137,6 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local absolute_path = position.path
 	local root = root_finder.find_root(absolute_path)
 	local port = available_port()
-	local log_file = "/tmp/neotest-java/test.log"
 
 	-- JUNIT REPORT
 	local reports_dir = "/tmp/neotest-java/" .. vim.fn.strftime("%d%m%y%H%M%S")
@@ -165,13 +166,13 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local build_tool = build_tools.get(project_type)
 	build_tool.prepare_classpath()
 
-	compile_sources(build_tool.get_sources(), build_tool.get_output_dir(), build_tool.get_dependencies_classpath())
+	compile_sources(build_tool)
 	compile_test_sources(build_tool)
 
 	-- PREPARE DEBUG TEST COMMAND
 	local junit = command:build_junit(port)
 	log.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
-	local terminated_command_event = run_debug_test(junit.command, junit.args, log_file)
+	local terminated_command_event = run_debug_test(junit.command, junit.args)
 
 	return {
 		strategy = {
