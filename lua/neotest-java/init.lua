@@ -7,13 +7,11 @@ local root_finder = require("neotest-java.core.root_finder")
 local dir_filter = require("neotest-java.core.dir_filter")
 local position_discoverer = require("neotest-java.core.positions_discoverer")
 local spec_builder = require("neotest-java.core.spec_builder")
-local dap_spec_builder = require("neotest-java.core.dap_spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local there_is_wrapper_in = require("neotest-java.util.there_is_wrapper_in")
-local run = require("neotest-java.command.run")
 
 local check_junit_jar = function(filepath)
 	local exists, err = File.exists(filepath)
@@ -89,10 +87,6 @@ function NeotestJavaAdapter.build_spec(args)
 	local ignore_wrapper = self.config.ignore_wrapper
 	if not ignore_wrapper then
 		ignore_wrapper = not there_is_wrapper_in(root)
-	end
-
-	if args.strategy == "dap" then
-		return dap_spec_builder.build_spec(args, self.project_type, self.config)
 	end
 
 	-- build spec
