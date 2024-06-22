@@ -79,17 +79,18 @@ gradle.get_sources = function()
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 
-	local sources_str = table.concat(sources, " ")
-	local generated_sources_str = table.concat(generated_sources, " ")
+	for _, source in ipairs(generated_sources) do
+		table.insert(sources, source)
+	end
 
-	return table.concat({ sources_str, generated_sources_str }, " ")
+	return sources
 end
 
 gradle.get_test_sources = function()
 	local test_sources = scan.scan_dir("src/test/java", {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
-	return table.concat(test_sources, " ")
+	return test_sources
 end
 
 gradle.get_resources = function()
@@ -105,10 +106,6 @@ gradle.get_dependencies_classpath = function()
 	local suc =
 		os.execute(binaries.gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
 	assert(suc, "failed to run")
-
-	local classpath_output = gradle.get_output_dir() .. "/classpath.txt"
-	-- borrar el archivo si existe
-	run("rm -f " .. classpath_output)
 
 	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
 	local output_lines = vim.split(output, "\n")
@@ -131,17 +128,37 @@ gradle.get_dependencies_classpath = function()
 			return acc
 		end, {})
 
-	local f = io.open(classpath_output, "a") or error("could not open to write: " .. classpath_output)
+	local result = ""
 	iter(jars):foreach(function(jar)
-		f:write(":" .. jar)
+		result = result .. ":" .. jar
 	end)
-	io.close(f)
 
 	return result
 end
 
-gradle.write_classpath = function(classpath_filename)
-	gradle.get_dependencies_classpath()
+gradle.prepare_classpath = function()
+	local classpath = gradle.get_dependencies_classpath()
+	local classpath_arguments = ([[
+		-cp %s:%s:%s
+	]]):format(table.concat(gradle.get_resources(), ":"), classpath, gradle.get_output_dir() .. "/classes")
+
+	--write manifest file
+	local arguments_filepath = "build/neotest-java/cp_arguments.txt"
+	local arguments_file = io.open(arguments_filepath, "w")
+		or error("Could not open file for writing: " .. arguments_filepath)
+	local buffer = ""
+	for i = 1, #classpath_arguments do
+		buffer = buffer .. classpath_arguments:sub(i, i)
+		if i % 500 == 0 then
+			arguments_file:write(buffer)
+			buffer = ""
+		end
+	end
+	if buffer ~= "" then
+		arguments_file:write(buffer)
+	end
+
+	arguments_file:close()
 end
 
 return gradle

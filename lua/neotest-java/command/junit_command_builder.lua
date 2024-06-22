@@ -3,6 +3,7 @@ local build_tools = require("neotest-java.build_tool")
 local binaries = require("neotest-java.command.binaries")
 local javac = binaries.javac
 local java = binaries.java
+local log = require("neotest-java.logger")
 
 local function wrap_command_as_bash(command)
 	return ([=[
@@ -98,20 +99,16 @@ local CommandBuilder = {
 		return method_names
 	end,
 
-	set_test_file = function(self, test_file)
-		self._test_file = test_file
-	end,
-
 	reports_dir = function(self, reports_dir)
 		self._reports_dir = reports_dir
 	end,
 
 	--- @return string @command to run
+	--- @deprecated
 	build = function(self)
 		local build_tool = build_tools.get(self._project_type)
 		local build_dir = build_tool.get_output_dir()
 		local output_dir = build_dir .. "/classes"
-		local classpath_filename = build_dir .. "/classpath.txt"
 		local reference = self._test_references[1]
 		local resources = table.concat(build_tool.get_resources(), ":")
 		local source_classes = build_tool.get_sources()
@@ -127,17 +124,17 @@ local CommandBuilder = {
 		end
 		assert(ref, "ref is nil")
 
-		build_tool.write_classpath(classpath_filename)
+		build_tool.prepare_classpath()
 
 		local source_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}) {{source_classes}}
+      {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{source_classes}}
     ]]
 		local test_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} -cp $(cat {{classpath_filename}}):{{output_dir}} {{test_classes}}
+      {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{test_classes}}
     ]]
 
 		local test_execution_command = [[
-      {{java}} -jar {{junit_jar}} execute -cp {{resources}}:$(cat {{classpath_filename}}):{{output_dir}} {{selectors}}
+      {{java}} -jar {{junit_jar}} execute {{classpath_arg}} {{selectors}}
       --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner
     ]]
 
@@ -155,11 +152,11 @@ local CommandBuilder = {
 			["{{junit_jar}}"] = self._junit_jar,
 			["{{resources}}"] = resources,
 			["{{output_dir}}"] = output_dir,
-			["{{classpath_filename}}"] = classpath_filename,
+			["{{classpath_arg}}"] = ("@%s/cp_arguments.txt"):format(build_dir),
 			["{{reports_dir}}"] = self._reports_dir,
 			["{{selectors}}"] = ref,
-			["{{source_classes}}"] = source_classes,
-			["{{test_classes}}"] = test_classes,
+			["{{source_classes}}"] = table.concat(source_classes, " "),
+			["{{test_classes}}"] = table.concat(test_classes, " "),
 		}
 		iter(placeholders):each(function(k, v)
 			command = command:gsub(k, v)
@@ -168,11 +165,53 @@ local CommandBuilder = {
 		-- remove extra spaces
 		command = command:gsub("%s+", " ")
 
+		log.info("Command: " .. command)
+
 		command = stop_command_when_line_containing(command, "Test run finished")
 
 		command = wrap_command_as_bash(command)
 
 		return command
+	end,
+
+	--- @param port? number
+	--- @return { command: string, args: string[] }
+	build_junit = function(self, port)
+		assert(self._test_references, "test_references cannot be nil")
+		assert(port, "port cannot be nil")
+
+		local build_tool = build_tools.get(self._project_type)
+
+		local selectors = {}
+		for _, v in ipairs(self._test_references) do
+			if v.type == "test" then
+				table.insert(selectors, "-m=" .. v.qualified_name .. "#" .. v.method_name)
+			elseif v.type == "file" then
+				table.insert(selectors, "-c=" .. v.qualified_name)
+			elseif v.type == "dir" then
+				selectors = "-p=" .. v.qualified_name
+			end
+		end
+		assert(#selectors ~= 0, "junit command has to have a selector")
+
+		local junit_command = {
+			command = java(),
+			args = {
+				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" .. port,
+				"-jar",
+				self._junit_jar,
+				"execute",
+				("@%s/cp_arguments.txt"):format(build_tool.get_output_dir()),
+				"--reports-dir=" .. self._reports_dir,
+				"--fail-if-no-tests",
+				"--disable-banner",
+			},
+		}
+		-- add selectors
+		for _, v in ipairs(selectors) do
+			table.insert(junit_command.args, v)
+		end
+		return junit_command
 	end,
 }
 

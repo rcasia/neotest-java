@@ -43,11 +43,11 @@ maven.get_sources = function()
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 
-	-- combine sources and generated sources
-	local sources_str = table.concat(sources, " ")
-	local generated_sources_str = table.concat(generated_sources, " ")
+	for _, source in ipairs(generated_sources) do
+		table.insert(sources, source)
+	end
 
-	return table.concat({ sources_str, generated_sources_str }, " ")
+	return sources
 end
 
 maven.get_test_sources = function()
@@ -57,7 +57,7 @@ maven.get_test_sources = function()
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 
-	return table.concat(test_sources, " ")
+	return test_sources
 end
 
 maven.get_resources = function()
@@ -73,7 +73,6 @@ maven.get_dependencies_classpath = function()
 	end
 
 	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
-	run(command)
 	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
 
 	if string.match(dependency_classpath, "ERROR") then
@@ -84,31 +83,31 @@ maven.get_dependencies_classpath = function()
 	return dependency_classpath
 end
 
-maven.write_classpath = function(filepath)
+maven.prepare_classpath = function()
 	local classpath = maven.get_dependencies_classpath()
 
-	-- create folder if not exists
-	run("mkdir -p " .. filepath:match("(.+)/[^/]+"))
-
-	-- remeve file if exists
-	run("rm -f " .. filepath)
-
 	-- write in file per buffer of 500 characters
-	local file = io.open(filepath, "w") or error("Could not open file for writing: " .. filepath)
+	local classpath_arguments = ([[
+-cp %s:%s:%s
+	]]):format(table.concat(maven.get_resources(), ":"), classpath, maven.get_output_dir() .. "/classes")
+
+	--write manifest file
+	local arguments_filepath = "target/neotest-java/cp_arguments.txt"
+	local arguments_file = io.open(arguments_filepath, "w")
+		or error("Could not open file for writing: " .. arguments_filepath)
 	local buffer = ""
-	for i = 1, #classpath do
-		buffer = buffer .. classpath:sub(i, i)
+	for i = 1, #classpath_arguments do
+		buffer = buffer .. classpath_arguments:sub(i, i)
 		if i % 500 == 0 then
-			file:write(buffer)
+			arguments_file:write(buffer)
 			buffer = ""
 		end
 	end
-	-- write the remaining buffer
 	if buffer ~= "" then
-		file:write(buffer)
+		arguments_file:write(buffer)
 	end
 
-	file:close()
+	arguments_file:close()
 end
 
 return maven

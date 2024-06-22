@@ -1,6 +1,7 @@
 local xml = require("neotest.lib.xml")
 local read_file = require("neotest-java.util.read_file")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
+local log = require("neotest-java.logger")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -62,8 +63,12 @@ ResultBuilder = {}
 ---@param tree neotest.Tree
 ---@return table<string, neotest.Result>
 function ResultBuilder.build_results(spec, result, tree)
-	local results = {}
+	-- wait for the debug test to finish
+	if spec.context.strategy == "dap" then
+		spec.context.terminated_command_event.wait()
+	end
 
+	local results = {}
 	local testcases = {}
 
 	local filename = spec.context.report_file or "/tmp/neotest-java/TEST-junit-jupiter.xml"
@@ -74,6 +79,7 @@ function ResultBuilder.build_results(spec, result, tree)
 		print("Error reading file: " .. filename)
 		return {}
 	end
+	log.debug("Test report file: " .. filename)
 
 	local xml_data = xml.parse(data)
 
@@ -120,10 +126,12 @@ function ResultBuilder.build_results(spec, result, tree)
 						status = "failed",
 						short = message,
 						errors = { { message = message } },
+						output = spec.context.output,
 					}
 				else
 					results[node_data.id] = {
 						status = "passed",
+						output = spec.context.output,
 					}
 				end
 			else
@@ -132,6 +140,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				if not test_case then
 					results[node_data.id] = {
 						status = "skipped",
+						output = spec.context.output,
 					}
 				elseif test_case.error then
 					local message = test_case.error._attr.message
@@ -139,6 +148,7 @@ function ResultBuilder.build_results(spec, result, tree)
 						status = "failed",
 						short = message,
 						errors = { { message = message } },
+						output = spec.context.output,
 					}
 				elseif test_case.failure then
 					local message = test_case.failure._attr.message
@@ -153,10 +163,12 @@ function ResultBuilder.build_results(spec, result, tree)
 						status = "failed",
 						short = message,
 						errors = { { message = message, line = line } },
+						output = spec.context.output,
 					}
 				else
 					results[node_data.id] = {
 						status = "passed",
+						output = spec.context.output,
 					}
 				end
 			end
