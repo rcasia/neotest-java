@@ -109,20 +109,21 @@ local CommandBuilder = {
 		local build_tool = build_tools.get(self._project_type)
 		local build_dir = build_tool.get_output_dir()
 		local output_dir = build_dir .. "/classes"
-		local reference = self._test_references[1]
 		local resources = table.concat(build_tool.get_resources(), ":")
 		local source_classes = build_tool.get_sources()
 		local test_classes = build_tool.get_test_sources()
 
-		local ref
-		if reference.type == "test" then
-			ref = "-m=" .. reference.qualified_name .. "#" .. reference.method_name
-		elseif reference.type == "file" then
-			ref = "-c=" .. reference.qualified_name
-		elseif reference.type == "dir" then
-			ref = "-p=" .. reference.qualified_name
+		local selectors = {}
+		for _, v in ipairs(self._test_references) do
+			if v.type == "test" then
+				table.insert(selectors, "-m=" .. v.qualified_name .. "#" .. v.method_name)
+			elseif v.type == "file" then
+				table.insert(selectors, "-c=" .. v.qualified_name)
+			elseif v.type == "dir" then
+				selectors = "-p=" .. v.qualified_name
+			end
 		end
-		assert(ref, "ref is nil")
+		assert(#selectors ~= 0, "junit command has to have a selector")
 
 		build_tool.prepare_classpath()
 
@@ -154,7 +155,7 @@ local CommandBuilder = {
 			["{{output_dir}}"] = output_dir,
 			["{{classpath_arg}}"] = ("@%s/cp_arguments.txt"):format(build_dir),
 			["{{reports_dir}}"] = self._reports_dir,
-			["{{selectors}}"] = ref,
+			["{{selectors}}"] = table.concat(selectors, " "),
 			["{{source_classes}}"] = table.concat(source_classes, " "),
 			["{{test_classes}}"] = table.concat(test_classes, " "),
 		}
