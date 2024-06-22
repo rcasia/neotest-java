@@ -14,17 +14,15 @@ local binaries = require("neotest-java.command.binaries")
 ---@field get_test_sources fun(): string[]
 ---@field get_resources fun(): string[]
 
-local build_tools = {}
+local build_tools = { gradle = gradle, maven = maven }
 
 --- will determine the build tool to use
 ---@return neotest-java.BuildTool
 build_tools.get = function(project_type)
-	if project_type == "gradle" then
-		return gradle
-	elseif project_type == "maven" then
-		return maven
+	if not build_tools[project_type] then
+		error("unknown project type: " .. project_type)
 	end
-	error("unknown project type: " .. project_type)
+	return build_tools[project_type]
 end
 
 build_tools.compile_sources = function(project_type)

@@ -6,7 +6,6 @@ local logger = require("neotest.logging")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
 
----@type neotest-java.BuildTool
 local maven = {}
 
 maven.source_directory = function()
@@ -110,4 +109,5 @@ maven.prepare_classpath = function()
 	arguments_file:close()
 end
 
+---@type neotest-java.BuildTool
 return maven
