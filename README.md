@@ -32,9 +32,9 @@ return {
       -- run nearest test
       keys[#keys + 1] = {"<leader>tr", function() require("neotest").run.run() end, mode = "n" }
       -- debug test file
-      keys[#keys + 1] = {"<leader>tD", function() require("jdtls.dap").test_class() end, mode = "n" }
+      keys[#keys + 1] = {"<leader>tD", function() require("neotest").run.run({ strategy = "dap" }) end, mode = "n" }
       -- debug nearest test
-      keys[#keys + 1] = {"<leader>td", function() require("jdtls.dap").test_nearest_method() end, mode = "n" }
+      keys[#keys + 1] = {"<leader>td", function() require("neotest").run.run({ vim.fn.expand("%"), strategy = "dap" }) end, mode = "n" }
     end,
   },
   {
@@ -79,6 +79,5 @@ You can also submit pull requests for any enhancements, bug fixes, or new featur
 Your contributions are greatly appreciated. See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
 
 ## Limitations
-* Does not support debugging yet https://github.com/rcasia/neotest-java/issues/59
 * Does not support multimodule projects yet https://github.com/rcasia/neotest-java/issues/100
 
