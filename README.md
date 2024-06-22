@@ -45,10 +45,12 @@ return {
       "antoinemadec/FixCursorHold.nvim",
       "nvim-treesitter/nvim-treesitter"
     },
-    adapters = {
-        ["neotest-java"] = {
-          -- config here
-        },
+    opts = {
+      adapters = {
+          ["neotest-java"] = {
+            -- config here
+          },
+      },
     },
   },
 }
