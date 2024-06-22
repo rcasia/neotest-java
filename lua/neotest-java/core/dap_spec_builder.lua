@@ -39,7 +39,7 @@ local compile_sources = function(sources, output_dir, dependencies_classpath)
 		"-d",
 		output_dir .. "/classes",
 		"-cp",
-		dependencies_classpath,
+		"@" .. output_dir .. "/classpath.txt",
 	}
 	for _, source in ipairs(sources) do
 		table.insert(source_compilation_args, source)
@@ -57,6 +57,7 @@ local compile_sources = function(sources, output_dir, dependencies_classpath)
 			else
 				source_compilation_command_exited.set()
 				vim.notify("Error compiling sources", "error")
+				log.error("test compilation error args: ", vim.inspect(source_compilation_args))
 				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
@@ -68,14 +69,14 @@ end
 local compile_test_sources = function(build_tool)
 	local compilation_errors = {}
 	local status_code = 0
+	local output_dir = build_tool.get_output_dir()
 
 	local test_compilation_command_exited = nio.control.event()
 	local test_sources_compilation_args = {
 		"-Xlint:none",
 		"-d",
-		build_tool.get_output_dir() .. "/classes",
-		"-cp",
-		build_tool.get_dependencies_classpath() .. ":" .. build_tool.get_output_dir() .. "/classes",
+		output_dir .. "/classes",
+		("@%s/cp_arguments.txt"):format(output_dir),
 	}
 	for _, source in ipairs(build_tool.get_test_sources()) do
 		table.insert(test_sources_compilation_args, source)
@@ -94,6 +95,7 @@ local compile_test_sources = function(build_tool)
 			-- do nothing
 			else
 				vim.notify("Error compiling test sources", "error")
+				log.error("test compilation error args: ", vim.inspect(test_sources_compilation_args))
 				error("Error compiling test sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
@@ -108,9 +110,6 @@ local run_debug_test = function(command, args, log_file)
 	local test_command_started_listening = nio.control.event()
 	local terminated_command_event = nio.control.event()
 
-	local file, err = io.open(log_file, "w")
-	assert(file and not err, err)
-
 	local stderr = {}
 	local job = Job:new({
 		command = command,
@@ -119,14 +118,11 @@ local run_debug_test = function(command, args, log_file)
 			stderr[#stderr + 1] = data
 		end,
 		on_stdout = function(err, data)
-			file:write(data .. "\n")
-
 			if string.find(data, "Listening") then
 				test_command_started_listening.set()
 			end
 		end,
 		on_exit = function(_, code)
-			file:close()
 			terminated_command_event.set()
 
 			log.debug("command exited with code: ", code)
@@ -207,7 +203,6 @@ function SpecBuilder.build_spec(args, project_type, config)
 		context = {
 			strategy = args.strategy,
 			report_file = reports_dir .. "/TEST-junit-jupiter.xml",
-			output = log_file,
 			terminated_command_event = terminated_command_event,
 		},
 	}

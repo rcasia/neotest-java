@@ -1,6 +1,7 @@
 local xml = require("neotest.lib.xml")
 local read_file = require("neotest-java.util.read_file")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
+local log = require("neotest-java.logger")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -78,6 +79,7 @@ function ResultBuilder.build_results(spec, result, tree)
 		print("Error reading file: " .. filename)
 		return {}
 	end
+	log.debug("Test report file: " .. filename)
 
 	local xml_data = xml.parse(data)
 

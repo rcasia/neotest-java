@@ -144,7 +144,28 @@ gradle.get_dependencies_classpath = function()
 end
 
 gradle.write_classpath = function(classpath_filename)
-	gradle.get_dependencies_classpath()
+	local classpath = gradle.get_dependencies_classpath()
+	local classpath_arguments = ([[
+		-cp %s:%s:%s
+	]]):format(table.concat(gradle.get_resources(), ":"), classpath, gradle.get_output_dir() .. "/classes")
+
+	--write manifest file
+	local arguments_filepath = "build/neotest-java/cp_arguments.txt"
+	local arguments_file = io.open(arguments_filepath, "w")
+		or error("Could not open file for writing: " .. arguments_filepath)
+	local buffer = ""
+	for i = 1, #classpath_arguments do
+		buffer = buffer .. classpath_arguments:sub(i, i)
+		if i % 500 == 0 then
+			arguments_file:write(buffer)
+			buffer = ""
+		end
+	end
+	if buffer ~= "" then
+		arguments_file:write(buffer)
+	end
+
+	arguments_file:close()
 end
 
 return gradle

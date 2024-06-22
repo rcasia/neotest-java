@@ -128,14 +128,14 @@ local CommandBuilder = {
 		build_tool.write_classpath(classpath_filename)
 
 		local source_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} -cp {{classpath}} {{source_classes}}
+      {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{source_classes}}
     ]]
 		local test_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} -cp {{classpath}}:{{output_dir}} {{test_classes}}
+      {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{test_classes}}
     ]]
 
 		local test_execution_command = [[
-      {{java}} -jar {{junit_jar}} execute -cp {{resources}}:{{classpath}}:{{output_dir}} {{selectors}}
+      {{java}} -jar {{junit_jar}} execute {{classpath_arg}} {{selectors}}
       --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner
     ]]
 
@@ -153,7 +153,7 @@ local CommandBuilder = {
 			["{{junit_jar}}"] = self._junit_jar,
 			["{{resources}}"] = resources,
 			["{{output_dir}}"] = output_dir,
-			["{{classpath}}"] = "$(cat " .. classpath_filename .. ")",
+			["{{classpath_arg}}"] = ("@%s/cp_arguments.txt"):format(build_dir),
 			["{{reports_dir}}"] = self._reports_dir,
 			["{{selectors}}"] = ref,
 			["{{source_classes}}"] = table.concat(source_classes, " "),
@@ -202,12 +202,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				"-cp",
-				("%s:%s:%s"):format(
-					table.concat(build_tool.get_resources(), ":"),
-					"$(cat " .. build_tool.get_output_dir() .. "/classpath.txt)",
-					build_tool.get_output_dir() .. "/classes"
-				),
+				("@%s/cp_arguments.txt"):format(build_tool.get_output_dir()),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",
