@@ -4,18 +4,23 @@ local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name"
 local log = require("neotest-java.logger")
 local available_port = require("neotest-java.util.available_port")
 local build_tools = require("neotest-java.build_tool")
+local nio = require("nio")
 
 SpecBuilder = {}
 
 ---@param args neotest.RunArgs
 ---@param project_type string
+---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-function SpecBuilder.build_spec(args, project_type, ignore_wrapper, config)
+function SpecBuilder.build_spec(args, project_type, config)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
-	local root = root_finder.find_root(position.path)
+	local root = assert(root_finder.find_root(position.path))
 	local absolute_path = position.path
+
+	-- make sure we are in root_dir
+	nio.fn.chdir(root)
 
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir = "/tmp/neotest-java/" .. vim.fn.strftime("%d%m%y%H%M%S")

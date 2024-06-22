@@ -22,7 +22,6 @@ return {
 	end,
 	set_root = function(root)
 		context.root = root
-		nio.fn.chdir(root)
 	end,
 }
 

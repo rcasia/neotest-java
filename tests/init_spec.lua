@@ -9,7 +9,7 @@ describe("NeotestJava plugin", function()
 		local plugin = require("neotest-java")
 
 		-- then
-		assert.are.same(default_config, plugin.config)
+		assert.are.same(default_config, require("neotest-java.context_holder").get_context().config)
 	end)
 
 	it("should init with empty configuration", function()
@@ -17,6 +17,6 @@ describe("NeotestJava plugin", function()
 		local plugin = require("neotest-java")({})
 
 		-- then
-		assert.are.same(default_config, plugin.config)
+		assert.are.same(default_config, require("neotest-java.context_holder").get_context().config)
 	end)
 end)
