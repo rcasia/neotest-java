@@ -5,30 +5,10 @@ local binaries = require("neotest-java.command.binaries")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local Job = require("plenary.job")
-local run = require("neotest-java.command.run")
 local log = require("neotest-java.logger")
+local available_port = require("neotest-java.util.available_port")
 
 SpecBuilder = {}
-
-local random_port = function(start_port, end_port)
-	start_port = start_port or 5005
-	end_port = end_port or 65535
-
-	local function is_port_in_use(port)
-		local handle = assert(io.popen("netstat -an | grep ':" .. port .. "'"))
-		local result = handle:read("*a")
-		handle:close()
-		return result ~= ""
-	end
-
-	for port = start_port, end_port do
-		if not is_port_in_use(port) then
-			return port
-		end
-	end
-
-	error(("No free port found in the specified range [%s - %s]"):format(start_port, end_port))
-end
 
 local compile_sources = function(sources, output_dir, dependencies_classpath)
 	local compilation_errors = {}
@@ -152,7 +132,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local position = args.tree:data()
 	local absolute_path = position.path
 	local root = root_finder.find_root(absolute_path)
-	local port = random_port()
+	local port = available_port()
 	local log_file = "/tmp/neotest-java/test.log"
 
 	-- JUNIT REPORT
