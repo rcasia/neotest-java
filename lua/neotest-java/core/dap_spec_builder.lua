@@ -18,8 +18,7 @@ local compile_sources = function(sources, output_dir, dependencies_classpath)
 		"-Xlint:none",
 		"-d",
 		output_dir .. "/classes",
-		"-cp",
-		"@" .. output_dir .. "/classpath.txt",
+		"@" .. output_dir .. "/cp_arguments.txt",
 	}
 	for _, source in ipairs(sources) do
 		table.insert(source_compilation_args, source)
@@ -161,7 +160,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- COMPILATION STEPS
 	local build_tool = build_tools.get(project_type)
-	build_tool.write_classpath(build_tool.get_output_dir() .. "/classpath.txt")
+	build_tool.prepare_classpath()
 
 	compile_sources(build_tool.get_sources(), build_tool.get_output_dir(), build_tool.get_dependencies_classpath())
 	compile_test_sources(build_tool)

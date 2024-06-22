@@ -109,7 +109,6 @@ local CommandBuilder = {
 		local build_tool = build_tools.get(self._project_type)
 		local build_dir = build_tool.get_output_dir()
 		local output_dir = build_dir .. "/classes"
-		local classpath_filename = build_dir .. "/classpath.txt"
 		local reference = self._test_references[1]
 		local resources = table.concat(build_tool.get_resources(), ":")
 		local source_classes = build_tool.get_sources()
@@ -125,7 +124,7 @@ local CommandBuilder = {
 		end
 		assert(ref, "ref is nil")
 
-		build_tool.write_classpath(classpath_filename)
+		build_tool.prepare_classpath()
 
 		local source_compilation_command = [[
       {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{source_classes}}

@@ -107,10 +107,6 @@ gradle.get_dependencies_classpath = function()
 		os.execute(binaries.gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
 	assert(suc, "failed to run")
 
-	local classpath_output = gradle.get_output_dir() .. "/classpath.txt"
-	-- borrar el archivo si existe
-	run("rm -f " .. classpath_output)
-
 	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
 	local output_lines = vim.split(output, "\n")
 
@@ -133,17 +129,14 @@ gradle.get_dependencies_classpath = function()
 		end, {})
 
 	local result = ""
-	local f = io.open(classpath_output, "a") or error("could not open to write: " .. classpath_output)
 	iter(jars):foreach(function(jar)
-		f:write(":" .. jar)
 		result = result .. ":" .. jar
 	end)
-	io.close(f)
 
 	return result
 end
 
-gradle.write_classpath = function(classpath_filename)
+gradle.prepare_classpath = function()
 	local classpath = gradle.get_dependencies_classpath()
 	local classpath_arguments = ([[
 		-cp %s:%s:%s
