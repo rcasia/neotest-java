@@ -11,6 +11,7 @@ local available_port = require("neotest-java.util.available_port")
 SpecBuilder = {}
 
 local compile_sources = function(sources, output_dir, dependencies_classpath)
+	vim.notify("Compiling sources", vim.log.levels.INFO)
 	local compilation_errors = {}
 	local status_code = 0
 	local source_compilation_command_exited = nio.control.event()
@@ -46,6 +47,7 @@ local compile_sources = function(sources, output_dir, dependencies_classpath)
 end
 
 local compile_test_sources = function(build_tool)
+	vim.notify("Compiling test sources", vim.log.levels.INFO)
 	local compilation_errors = {}
 	local status_code = 0
 	local output_dir = build_tool.get_output_dir()
@@ -84,6 +86,7 @@ local compile_test_sources = function(build_tool)
 end
 
 local run_debug_test = function(command, args, log_file)
+	vim.notify("Running debug test", vim.log.levels.INFO)
 	log.trace("run_debug_test function")
 
 	local test_command_started_listening = nio.control.event()
