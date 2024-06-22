@@ -59,7 +59,6 @@ local function take_just_the_dependency(line)
 	return dependency
 end
 
----@type neotest-java.BuildTool
 local gradle = {}
 
 gradle.source_dir = function()
@@ -161,4 +160,5 @@ gradle.prepare_classpath = function()
 	arguments_file:close()
 end
 
+---@type neotest-java.BuildTool
 return gradle
