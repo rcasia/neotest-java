@@ -72,6 +72,7 @@ maven.get_dependencies_classpath = function()
 	end
 
 	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
+	run(command)
 	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
 
 	if string.match(dependency_classpath, "ERROR") then
