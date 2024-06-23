@@ -2,7 +2,7 @@ local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
-local available_port = require("neotest-java.util.available_port")
+local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 
@@ -48,7 +48,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
-		local port = available_port()
+		local port = random_port()
 
 		-- COMPILATION STEPS
 		local build_tool = build_tools.get(project_type)
