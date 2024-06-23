@@ -198,7 +198,8 @@ local CommandBuilder = {
 		local junit_command = {
 			command = java(),
 			args = {
-				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" .. port,
+				"-Xdebug",
+				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:" .. port,
 				"-jar",
 				self._junit_jar,
 				"execute",
