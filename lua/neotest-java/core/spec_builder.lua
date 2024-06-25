@@ -5,6 +5,7 @@ local log = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
+local run = require("neotest-java.command.run")
 
 SpecBuilder = {}
 
@@ -21,6 +22,10 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- make sure we are in root_dir
 	nio.fn.chdir(root)
+
+	-- make sure outputDir is created to operate in it
+	local outputDir = build_tools.get(project_type).get_output_dir()
+	run({ "mkdir", "-p", outputDir })
 
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir = "/tmp/neotest-java/" .. vim.fn.strftime("%d%m%y%H%M%S")
