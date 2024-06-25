@@ -23,7 +23,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	nio.fn.chdir(root)
 
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir = "/tmp/neotest-java/" .. vim.fn.strftime("%d%m%y%H%M%S")
+	local reports_dir = "/tmp/neotest-java/" .. nio.fn.strftime("%d%m%y%H%M%S")
 	command:reports_dir(reports_dir)
 
 	-- TEST SELECTORS
