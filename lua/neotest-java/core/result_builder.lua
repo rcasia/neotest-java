@@ -65,7 +65,6 @@ local LINE_SEPARATOR = "=================================\n"
 ---@param data string | string[] | table
 ---@return string | nil filepath
 local function create_file_with_content(data)
-	print("Creating file with content. arg: ", vim.inspect(data))
 	if not data then
 		return nil
 	end
