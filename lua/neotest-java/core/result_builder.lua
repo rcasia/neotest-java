@@ -2,6 +2,7 @@ local xml = require("neotest.lib.xml")
 local read_file = require("neotest-java.util.read_file")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
+local nio = require("nio")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -44,15 +45,49 @@ local function extract_test_failures(testcases, name)
 	local regex = name .. "[%(%.%{]?.*%[%d+%]$"
 
 	local failures = {}
+	local passes = {}
 	for k, v in pairs(testcases) do
 		if string.match(k, regex) then
 			if v.failure then
 				failures[#failures + 1] = v
+			else
+				passes[#passes + 1] = v
 			end
 		end
 	end
 
-	return failures
+	return failures, passes
+end
+
+local LINE_SEPARATOR = "=================================\n"
+
+---@param data string | string[] | table
+---@return string | nil filepath
+local function create_file_with_content(data)
+	if not data then
+		return nil
+	end
+
+	if type(data) == "table" then
+		data = vim.iter(data):flatten(math.huge):totable()
+		data = table.concat(data, LINE_SEPARATOR)
+	end
+
+	-- Generate a unique temporary file name
+	local filepath = nio.fn.tempname()
+
+	nio.run(function()
+		-- Open the file in write mode
+		local file = assert(io.open(filepath, "w"))
+
+		file:write(data)
+
+		-- Close the file
+		file:close()
+	end)
+
+	-- Return the path to the file
+	return filepath
 end
 
 ResultBuilder = {}
@@ -69,6 +104,7 @@ function ResultBuilder.build_results(spec, result, tree)
 	end
 
 	local results = {}
+
 	local testcases = {}
 
 	local filename = spec.context.report_file or "/tmp/neotest-java/TEST-junit-jupiter.xml"
@@ -106,19 +142,33 @@ function ResultBuilder.build_results(spec, result, tree)
 			local unique_key = build_unique_key(resolve_qualified_name(node_data.path), node_data.name)
 
 			if is_parameterized then
-				local test_failures = extract_test_failures(testcases, unique_key)
+				local test_failures, passes = extract_test_failures(testcases, unique_key)
+				local system_out = {}
+				for _, pass in ipairs(passes) do
+					system_out[#system_out + 1] = table.concat(pass["system-out"], LINE_SEPARATOR)
+				end
 
 				local short_failure_messages = {}
+				local long_failure_messages = {}
 				for _, failure in ipairs(test_failures) do
 					local failure_message = failure.failure[1]
 					local name = failure._attr.name
 					-- take just the first line of the failure message
 					local short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
 					short_failure_messages[#short_failure_messages + 1] = short_failure_message
+					long_failure_messages[#long_failure_messages + 1] = table.concat(
+						failure["system-out"],
+						LINE_SEPARATOR
+					) .. LINE_SEPARATOR .. failure_message
+				end
+
+				for _, lfm in ipairs(long_failure_messages) do
+					system_out[#system_out + 1] = lfm
 				end
 
 				-- sort the messages alphabetically
 				table.sort(short_failure_messages)
+				table.sort(system_out)
 
 				local message = table.concat(short_failure_messages, "\n")
 				if #test_failures > 0 then
@@ -126,12 +176,12 @@ function ResultBuilder.build_results(spec, result, tree)
 						status = "failed",
 						short = message,
 						errors = { { message = message } },
-						output = spec.context.output,
+						output = create_file_with_content(system_out),
 					}
 				else
 					results[node_data.id] = {
 						status = "passed",
-						output = spec.context.output,
+						output = create_file_with_content(system_out),
 					}
 				end
 			else
@@ -140,7 +190,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				if not test_case then
 					results[node_data.id] = {
 						status = "skipped",
-						output = spec.context.output,
+						output = create_file_with_content({ node_data.id, "This test was not executed." }),
 					}
 				elseif test_case.error then
 					local message = test_case.error._attr.message
@@ -148,7 +198,7 @@ function ResultBuilder.build_results(spec, result, tree)
 						status = "failed",
 						short = message,
 						errors = { { message = message } },
-						output = spec.context.output,
+						output = create_file_with_content({ test_case["system-out"], test_case.error[1] }),
 					}
 				elseif test_case.failure then
 					local message = test_case.failure._attr.message
@@ -163,12 +213,12 @@ function ResultBuilder.build_results(spec, result, tree)
 						status = "failed",
 						short = message,
 						errors = { { message = message, line = line } },
-						output = spec.context.output,
+						output = create_file_with_content({ test_case["system-out"], test_case.failure[1] }),
 					}
 				else
 					results[node_data.id] = {
 						status = "passed",
-						output = spec.context.output,
+						output = create_file_with_content(test_case["system-out"]),
 					}
 				end
 			end
