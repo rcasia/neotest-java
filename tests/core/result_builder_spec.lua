@@ -35,23 +35,18 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-      {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
-          errors = {{ line=13, message="expected: <true> but was: <false>" }},
-          short = "expected: <true> but was: <false>",
-          status = "failed"
-        },
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
-          status = "passed"
-        }
-      }
-    ]]
+		local expected = {
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
+				errors = { { line = 13, message = "expected: <true> but was: <false>" } },
+				short = "expected: <true> but was: <false>",
+				status = "failed",
+			},
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+				status = "passed",
+			},
+		}
 
-		expected = expected:gsub("{{current_dir}}", current_dir)
-
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for a maven test that has an error at start", function()
@@ -76,20 +71,19 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-      {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::ErroneousTest::shouldFailOnError"] = {
-	        errors = {{ message="Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed" }},
-          short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
-          status = "failed"
-        }
-      }
-    ]]
+		local expected = {
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::ErroneousTest::shouldFailOnError"] = {
+				errors = {
+					{
+						message = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
+					},
+				},
+				short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
+				status = "failed",
+			},
+		}
 
-		expected = expected:gsub("{{current_dir}}", current_dir)
-
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for gradle", function()
@@ -114,23 +108,19 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-      {
-        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
-	        errors = {{ line=14,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
-          short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
-          status = "failed"
-        },
-        ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
-          status = "passed"
-        }
-      }
-    ]]
-
-		expected = expected:gsub("{{current_dir}}", current_dir)
-
-		assert_equal_ignoring_whitespaces(expected, actual)
+		local expected = {
+			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
+				errors = {
+					{ line = 14, message = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" },
+				},
+				short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+				status = "failed",
+			},
+			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+				status = "passed",
+			},
+		}
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results when the is a single test method and it fails for gradle", function()
@@ -167,9 +157,15 @@ describe("ResultBuilder", function()
       }
     }
     ]]
-		expected = expected:gsub("{{current_dir}}", current_dir)
+		local expected = {
+			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
+				errors = { { line = 9, message = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" } },
+				short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+				status = "failed",
+			},
+		}
 
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results when the is a single test method and it fails for maven", function()
@@ -195,20 +191,15 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-    {
-      ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] 
-      = { 
-        errors = {{ line=9, message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
-        short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
-        status = "failed"
-      }
-    }
-    ]]
-		expected = expected:gsub("{{current_dir}}", current_dir)
+		local expected = {
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
+				errors = { { line = 9, message = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" } },
+				short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+				status = "failed",
+			},
+		}
 
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for integrations tests", function()
@@ -233,18 +224,13 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-      {
-        ["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::RepositoryIT::shouldWorkProperly"]
+		local expected = {
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::RepositoryIT::shouldWorkProperly"] = {
+				status = "passed",
+			},
+		}
 
-      = {status="passed"}
-      }
-    ]]
-
-		expected = expected:gsub("{{current_dir}}", current_dir)
-
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for parameterized test with @CsvSource for maven", function()
@@ -270,30 +256,25 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-	      {
-		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"]
-		  = {
-        errors={{message="
-			  parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\n
-			  parameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
-        "}},
-	    short="
-			  parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\n
-			  parameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>
-		    ",
-		    status="failed"
-		  }
-	      ,
-		["{{current_dir}}tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldNotFail"]
-		  = {status="passed"}
-	      }
-	    ]]
+		local expected = {
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
+				errors = {
+					{
+						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+					},
+					{
+						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+					},
+				},
+				short = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+				status = "failed",
+			},
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
+				status = "passed",
+			},
+		}
 
-		expected = expected:gsub("{{current_dir}}", current_dir)
-
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for parameterized with @EmptySource test", function()
@@ -322,25 +303,21 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
+		local expected = {
+			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"] = {
+				errors = {
+					{
+						message = "emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
+					},
+				},
+				short = "emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
+				status = "failed",
+			},
+			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"] = {
+				status = "passed",
+			},
+		}
 
-		local expected = [[
-      {
-        ["{{current_dir}}tests/fixtures/{{project_dir}}/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"]
-          = {
-          errors={{message="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>"}},
-          short="emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
-          status="failed"
-          }
-        ,
-        ["{{current_dir}}tests/fixtures/{{project_dir}}/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"]
-          = {status="passed"}
-      }
-    ]]
-
-		expected = expected:gsub("{{current_dir}}", current_dir)
-		expected = expected:gsub("{{project_dir}}", project_dir)
-
-		assert_equal_ignoring_whitespaces(expected, actual)
+		assert.are.same(expected, results)
 	end)
 end)
