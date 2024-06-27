@@ -3,6 +3,7 @@ local read_file = require("neotest-java.util.read_file")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
 local nio = require("nio")
+local fun = require("fun")
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -48,7 +49,7 @@ local function extract_test_failures(testcases, name)
 	local passes = {}
 	for k, v in pairs(testcases) do
 		if string.match(k, regex) then
-			if v.failure then
+			if v.failure or v.error then
 				failures[#failures + 1] = v
 			else
 				passes[#passes + 1] = v
@@ -64,12 +65,16 @@ local LINE_SEPARATOR = "=================================\n"
 ---@param data string | string[] | table
 ---@return string | nil filepath
 local function create_file_with_content(data)
+	print("Creating file with content. arg: ", vim.inspect(data))
 	if not data then
 		return nil
 	end
 
 	if type(data) == "table" then
-		data = vim.iter(data):flatten(math.huge):totable()
+		if #data == 0 then
+			return nil
+		end
+		data = vim.iter(vim.tbl_values(data)):flatten(math.huge):totable()
 		data = table.concat(data, LINE_SEPARATOR)
 	end
 
@@ -145,7 +150,7 @@ function ResultBuilder.build_results(spec, result, tree)
 				local test_failures, passes = extract_test_failures(testcases, unique_key)
 				local system_out = {}
 				for _, pass in ipairs(passes) do
-					system_out[#system_out + 1] = table.concat(pass["system-out"], LINE_SEPARATOR)
+					system_out[#system_out + 1] = table.concat(pass["system-out"] or {}, LINE_SEPARATOR)
 				end
 
 				local short_failure_messages = {}
@@ -157,7 +162,7 @@ function ResultBuilder.build_results(spec, result, tree)
 					local short_failure_message = name .. " -> " .. failure_message:gsub("\n.*", "")
 					short_failure_messages[#short_failure_messages + 1] = short_failure_message
 					long_failure_messages[#long_failure_messages + 1] = table.concat(
-						failure["system-out"],
+						failure["system-out"] or {},
 						LINE_SEPARATOR
 					) .. LINE_SEPARATOR .. failure_message
 				end
@@ -218,7 +223,8 @@ function ResultBuilder.build_results(spec, result, tree)
 				else
 					results[node_data.id] = {
 						status = "passed",
-						output = create_file_with_content(test_case["system-out"]),
+						output = test_case["system-out"] and create_file_with_content(test_case["system-out"])
+							or create_file_with_content("Test passed"),
 					}
 				end
 			end

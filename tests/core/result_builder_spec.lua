@@ -1,18 +1,22 @@
 local async = require("nio").tests
 local plugin = require("neotest-java")
+local tempname_fn = require("nio").fn.tempname
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
-
--- Function to convert a Lua table to a string
-function table_to_string(tbl)
-	return vim.inspect(tbl)
-end
-
-function assert_equal_ignoring_whitespaces(expected, actual)
-	assert.are.equal(expected:gsub("%s+", ""), actual:gsub("%s+", ""))
-end
+local TEMPNAME = "/tmp/tempname-1234"
 
 describe("ResultBuilder", function()
+	async.before_each(function()
+		-- mock the tempname function to return a fixed value
+		require("nio").fn.tempname = function()
+			return TEMPNAME
+		end
+	end)
+
+	async.after_each(function()
+		require("nio").fn.tempname = tempname_fn
+	end)
+
 	async.it("builds the results for maven", function()
 		--given
 		local runSpec = {
@@ -40,9 +44,11 @@ describe("ResultBuilder", function()
 				errors = { { line = 13, message = "expected: <true> but was: <false>" } },
 				short = "expected: <true> but was: <false>",
 				status = "failed",
+				output = TEMPNAME,
 			},
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
 				status = "passed",
+				output = TEMPNAME,
 			},
 		}
 
@@ -78,6 +84,7 @@ describe("ResultBuilder", function()
 						message = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
 					},
 				},
+				output = TEMPNAME,
 				short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
 				status = "failed",
 			},
@@ -111,13 +118,15 @@ describe("ResultBuilder", function()
 		local expected = {
 			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
 				errors = {
-					{ line = 14, message = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" },
+					{ line = 14, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
 				},
-				short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+				output = TEMPNAME,
+				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
 				status = "failed",
 			},
 			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
 				status = "passed",
+				output = TEMPNAME,
 			},
 		}
 		assert.are.same(expected, results)
@@ -146,22 +155,14 @@ describe("ResultBuilder", function()
 		local results = plugin.results(runSpec, strategyResult, tree)
 
 		--then
-		local actual = table_to_string(results)
-		local expected = [[
-    {
-      ["{{current_dir}}tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] 
-      = { 
-	      errors = {{ line=9,message="org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" }},
-        short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
-        status = "failed"
-      }
-    }
-    ]]
 		local expected = {
 			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
-				errors = { { line = 9, message = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" } },
-				short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+				errors = {
+					{ line = 9, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
+				},
+				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
 				status = "failed",
+				output = TEMPNAME,
 			},
 		}
 
@@ -193,9 +194,12 @@ describe("ResultBuilder", function()
 		--then
 		local expected = {
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
-				errors = { { line = 9, message = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>" } },
-				short = "org.opentest4j.AssertionFailedError:expected:<true>butwas:<false>",
+				errors = {
+					{ line = 9, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
+				},
+				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
 				status = "failed",
+				output = TEMPNAME,
 			},
 		}
 
@@ -227,6 +231,7 @@ describe("ResultBuilder", function()
 		local expected = {
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::RepositoryIT::shouldWorkProperly"] = {
 				status = "passed",
+				output = TEMPNAME,
 			},
 		}
 
@@ -260,17 +265,16 @@ describe("ResultBuilder", function()
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
 				errors = {
 					{
-						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
-					},
-					{
-						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
 					},
 				},
 				short = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
 				status = "failed",
+				output = TEMPNAME,
 			},
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
 				status = "passed",
+				output = TEMPNAME,
 			},
 		}
 
@@ -312,9 +316,11 @@ describe("ResultBuilder", function()
 				},
 				short = "emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
 				status = "failed",
+				output = TEMPNAME,
 			},
 			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"] = {
 				status = "passed",
+				output = TEMPNAME,
 			},
 		}
 
