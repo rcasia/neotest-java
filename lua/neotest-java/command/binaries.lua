@@ -1,4 +1,5 @@
 local File = require("neotest.lib.file")
+local ch = require("neotest-java.context_holder")
 local runtime = require("neotest-java.command.runtime")
 
 local binaries = {
@@ -13,14 +14,14 @@ local binaries = {
 	end,
 
 	mvn = function()
-		if File.exists("mvnw") then
+		if File.exists("mvnw") and not ch.get_context().config.ignore_wrapper then
 			return "./mvnw"
 		end
 		return "mvn"
 	end,
 
 	gradle = function()
-		if File.exists("gradlew") then
+		if File.exists("gradlew") and not ch.get_context().config.ignore_wrapper then
 			return "./gradlew"
 		end
 		return "gradle"
