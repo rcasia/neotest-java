@@ -17,7 +17,7 @@ return {
 		return context
 	end,
 	set_opts = function(opts)
-		vim.tbl_extend("force", context.config, opts)
+		context.config = vim.tbl_extend("force", context.config, opts)
 		log.debug("Config updated: ", context.config)
 	end,
 	set_root = function(root)
