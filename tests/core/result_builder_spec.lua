@@ -264,11 +264,24 @@ describe("ResultBuilder", function()
 		local expected = {
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
 				errors = {
+					-- {
+					-- 	line = 27,
+					-- 	message = "expected: <true> but was: <false>",
+					-- },
+					-- {
+					-- 	line = 27,
+					-- 	message = "expected: <true> but was: <false>",
+					-- },
 					{
-						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+						line = 27,
+						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>",
+					},
+					{
+						line = 27,
+						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
 					},
 				},
-				short = "parameterizedMethodShouldFail(Integer, Integer)[1] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+				short = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
 				status = "failed",
 				output = TEMPNAME,
 			},
@@ -311,10 +324,11 @@ describe("ResultBuilder", function()
 			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"] = {
 				errors = {
 					{
-						message = "emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
+						line = 22,
+						message = "emptySourceShouldFail(String)[1] -> expected: <false> but was: <true>",
 					},
 				},
-				short = "emptySourceShouldFail(String)[1] -> org.opentest4j.AssertionFailedError: expected: <false> but was: <true>",
+				short = "emptySourceShouldFail(String)[1] -> expected: <false> but was: <true>",
 				status = "failed",
 				output = TEMPNAME,
 			},
