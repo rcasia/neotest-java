@@ -3,7 +3,7 @@ local read_file = require("neotest-java.util.read_file")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
 local nio = require("nio")
-local JunitResult = require("neotest-java.core.junit_result")
+local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
 
 --- @param classname string name of class
