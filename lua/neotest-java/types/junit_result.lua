@@ -181,8 +181,6 @@ function JunitResult.merge_results(results)
 			return a .. NEW_LINE .. b
 		end)
 
-	print("output: " .. vim.inspect(create_file_with_content(output)))
-
 	return { status = status, errors = errors, short = short, output = create_file_with_content(output) }
 end
 
