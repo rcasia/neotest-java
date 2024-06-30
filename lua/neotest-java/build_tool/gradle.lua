@@ -103,17 +103,16 @@ gradle.get_dependencies_classpath = function()
 
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	-- local suc =
-	-- 	os.execute(gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
+	-- local suc = os.execute(gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
 
-    -- todo this has to go through system too, to set the env variables
-    local command = { gradle(), "-q", "dependencies > build/neotest-java/dependencies.txt < /dev/null" }
-    -- at the very least the correct runtime must be set before running gradle, this has to be done every time gradle is used to work on the project resources
-    local result = vim.system(command, { env = { ["JAVA_HOME"] = runtime() } }):wait()
+	-- fix: this has to go through system too, to set the env variables, or update nio.run to support passing in env vars
+	local command = { gradle(), "-q", "dependencies > build/neotest-java/dependencies.txt < /dev/null" }
+	-- at the very least the correct runtime must be set before running gradle, this has to be done every time gradle is used to work on the project resources
+	local result = vim.system(command, { env = { ["JAVA_HOME"] = runtime() } }):wait()
 
-    if not result or result.code ~= 0 then
-        error('error while running command "' .. table.concat(command, " "))
-    end
+	if not result or result.code ~= 0 then
+		error('error while running command "' .. table.concat(command, " "))
+	end
 
 	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
 	local output_lines = vim.split(output, "\n")
