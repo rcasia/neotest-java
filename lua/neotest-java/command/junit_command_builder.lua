@@ -136,7 +136,7 @@ local CommandBuilder = {
 
 		local test_execution_command = [[
       {{java}} -jar {{junit_jar}} execute {{classpath_arg}} {{selectors}}
-      --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner
+      --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner --details=testfeed --config=junit.platform.output.capture.stdout=true
     ]]
 
 		-- combine commands sequentially
@@ -198,7 +198,8 @@ local CommandBuilder = {
 		local junit_command = {
 			command = java(),
 			args = {
-				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:" .. port,
+				"-Xdebug",
+				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:" .. port,
 				"-jar",
 				self._junit_jar,
 				"execute",
@@ -206,6 +207,8 @@ local CommandBuilder = {
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",
+				"--details=testfeed",
+				"--config=junit.platform.output.capture.stdout=true",
 			},
 		}
 		-- add selectors

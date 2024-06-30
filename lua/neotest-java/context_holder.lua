@@ -1,5 +1,4 @@
 local log = require("neotest-java.logger")
-local nio = require("nio")
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
@@ -17,7 +16,7 @@ return {
 		return context
 	end,
 	set_opts = function(opts)
-		vim.tbl_extend("force", context.config, opts)
+		context.config = vim.tbl_extend("force", context.config, opts)
 		log.debug("Config updated: ", context.config)
 	end,
 	set_root = function(root)
