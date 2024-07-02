@@ -1,14 +1,16 @@
 local File = require("neotest.lib.file")
 local ch = require("neotest-java.context_holder")
+local runtime = require("neotest-java.command.runtime")
 
 local binaries = {
-
 	java = function()
-		return "java"
+		local runtime_path = runtime()
+		return runtime_path and vim.fs.normalize(string.format("%s/bin/java", runtime_path)) or "java"
 	end,
 
 	javac = function()
-		return "javac"
+		local runtime_path = runtime()
+		return runtime_path and vim.fs.normalize(string.format("%s/bin/javac", runtime_path)) or "javac"
 	end,
 
 	mvn = function()
