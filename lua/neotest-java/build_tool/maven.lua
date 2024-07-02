@@ -1,7 +1,10 @@
-local run = require("neotest-java.command.run")
 local read_xml_tag = require("neotest-java.util.read_xml_tag")
-local scan = require("plenary.scandir")
+
+local run = require("neotest-java.command.run")
+local runtime = require("neotest-java.command.runtime")
 local mvn = require("neotest-java.command.binaries").mvn
+
+local scan = require("plenary.scandir")
 local logger = require("neotest.logging")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
@@ -67,12 +70,19 @@ end
 local memoized_result
 ---@return string
 maven.get_dependencies_classpath = function()
+	-- fix: this memoization is not going to work, every time the class path changes, this has to be detected,
+	-- and the class file path has to be re-generated !
 	if memoized_result then
 		return memoized_result
 	end
 
-	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
-	run(command)
+	local command = { mvn(), "-q", "dependency:build-classpath", "-Dmdep.outputFile=target/neotest-java/classpath.txt" }
+	local result = vim.system(command, { env = { ["JAVA_HOME"] = runtime() } }):wait()
+
+	if not result or result.code ~= 0 then
+		error('error while running command "' .. table.concat(command, " "))
+	end
+
 	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
 
 	if string.match(dependency_classpath, "ERROR") then
@@ -89,7 +99,7 @@ maven.prepare_classpath = function()
 	-- write in file per buffer of 500 characters
 	local classpath_arguments = ([[
 -cp %s:%s:%s
-	]]):format(table.concat(maven.get_resources(), ":"), classpath, maven.get_output_dir() .. "/classes")
+    ]]):format(table.concat(maven.get_resources(), ":"), classpath, maven.get_output_dir() .. "/classes")
 
 	--write manifest file
 	local arguments_filepath = "target/neotest-java/cp_arguments.txt"

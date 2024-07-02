@@ -2,9 +2,10 @@ local fun = require("fun")
 local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
-local File = require("neotest.lib.file")
+
 local run = require("neotest-java.command.run")
-local binaries = require("neotest-java.command.binaries")
+local runtime = require("neotest-java.command.runtime")
+local grdl = require("neotest-java.command.binaries").gradle
 
 local JAVA_FILE_PATTERN = ".+%.java$"
 
@@ -102,9 +103,13 @@ gradle.get_dependencies_classpath = function()
 
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	local suc =
-		os.execute(binaries.gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
-	assert(suc, "failed to run")
+	-- fix: this has to go through system too, to set the env variables, or update nio.run
+	local command = { grdl(), "-q", "dependencies > build/neotest-java/dependencies.txt < /dev/null" }
+	local result = vim.system(command, { env = { ["JAVA_HOME"] = runtime() } }):wait()
+
+	if not result or result.code ~= 0 then
+		error('error while running command "' .. table.concat(command, " "))
+	end
 
 	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
 	local output_lines = vim.split(output, "\n")
