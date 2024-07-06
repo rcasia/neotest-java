@@ -9,10 +9,24 @@ local COMPILER = "org.eclipse.jdt.core.compiler.source"
 local LOCATION = "org.eclipse.jdt.ls.core.vm.location"
 local RUNTIMES = {}
 
+local function input_runtime(actual_version)
+	local message =
+		string.format("Enter runtime directory for JDK-%s (defaults to JAVA_HOME if empty): ", actual_version)
+	local runtime_path = nio.fn.input({
+		default = "",
+		prompt = message,
+		completion = "dir",
+		cancelreturn = "__INPUT_CANCELLED__",
+	})
+	if not runtime_path or runtime_path == "__INPUT_CANCELLED__" then
+		return vim.env.JAVA_HOME
+	end
+	return runtime_path
+end
+
 local function extract_runtime(bufnr)
 	local uri = vim.uri_from_bufnr(bufnr)
-	local err, settings, client = nil, nil, nil
-	lsp.execute_command({
+	local err, settings, client = lsp.execute_command({
 		command = "java.project.getSettings",
 		arguments = { uri, { COMPILER, LOCATION } },
 	}, bufnr)
@@ -81,19 +95,7 @@ local function get_runtime(opts)
 				if vim.env and vim.env[runtime_name] then
 					return vim.env[runtime_name]
 				else
-					local message = string.format(
-						"Enter runtime directory for JDK-%s (defaults to JAVA_HOME if empty): ",
-						actual_version
-					)
-					local runtime_path = nio.fn.input({
-						default = "",
-						prompt = message,
-						completion = "dir",
-						cancelreturn = "__INPUT_CANCELLED__",
-					})
-					if not runtime_path or runtime_path == "__INPUT_CANCELLED__" then
-						return vim.env.JAVA_HOME
-					end
+					local runtime_path = input_runtime(actual_version)
 					RUNTIMES[actual_version] = runtime_path
 					return runtime_path
 				end
