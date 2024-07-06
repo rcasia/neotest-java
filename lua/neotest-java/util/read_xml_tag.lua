@@ -1,7 +1,6 @@
 local memo = require("neotest.lib.func_util.memoize")
 local file = require("neotest.lib.file")
 local xml = require("neotest.lib.xml")
-local logger = require("neotest.logging")
 
 ---@param filepath string
 ---@param selector string ex: project.build.sourceDirectory
@@ -16,12 +15,15 @@ local read_xml_tag = memo(function(filepath, selector)
 			return nil
 		end
 		parsed = parsed[tag]
+		vim.print(tag, parsed)
 	end
 
-	if type(parsed) == "table" then
-		return nil
-	end
-
+	-- why ? there are tags which can hold multiple tags / array of tags ?
+	-- such as dependencies or plugins
+	-- if type(parsed) == "table" then
+	-- 	return nil
+	-- end
+	--
 	return parsed
 end, cache)
 

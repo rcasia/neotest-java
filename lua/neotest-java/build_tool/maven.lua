@@ -86,7 +86,7 @@ maven.get_dependencies_classpath = function()
 	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
 
 	if string.match(dependency_classpath, "ERROR") then
-		error('error while running command "' .. command .. '" -> ' .. dependency_classpath)
+		error("error while running command " .. dependency_classpath)
 	end
 
 	memoized_result = dependency_classpath
