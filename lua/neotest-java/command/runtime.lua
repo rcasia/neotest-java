@@ -103,6 +103,7 @@ local function get_runtime(opts)
 		end
 	elseif File.exists("build.gradle") then
 		-- fix: what to do here, is it needed, or does gradle pick it up from the local project config, have to check ?
+		-- fix: do we need to provide explicit runtime to gradle ? thensomething has to read the gradle.properties and / or build.gradle to parse the runtime here
 		return nil
 	end
 	log.error("Unable to extract a valid project runtime")

@@ -102,8 +102,9 @@ gradle.get_dependencies_classpath = function()
 
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	-- fix: is is needed for something has to read the gradle.properties and / or build.gradle to parse the runtime here
+	-- fix: do we need to provide explicit runtime to gradle ? thensomething has to read the gradle.properties and / or build.gradle to parse the runtime here
 	local dependency_classpath = _gradle() .. "-q dependencies > build/neotest-java/dependencies.txt < /dev/null"
+	run(dependency_classpath)
 
 	if string.match(dependency_classpath, "ERROR") then
 		error("error while running command " .. dependency_classpath)
