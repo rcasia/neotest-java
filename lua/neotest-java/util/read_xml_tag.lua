@@ -15,7 +15,6 @@ local read_xml_tag = memo(function(filepath, selector)
 			return nil
 		end
 		parsed = parsed[tag]
-		vim.print(tag, parsed)
 	end
 
 	-- why ? there are tags which can hold multiple tags / array of tags ?
@@ -23,7 +22,7 @@ local read_xml_tag = memo(function(filepath, selector)
 	-- if type(parsed) == "table" then
 	-- 	return nil
 	-- end
-	--
+
 	return parsed
 end, cache)
 
