@@ -24,6 +24,38 @@ local function input_runtime(actual_version)
 	return runtime_path
 end
 
+local function maven_runtime()
+	local plugins = read_xml_tag("pom.xml", "project.build.plugins.plugin")
+	for _, plugin in ipairs(plugins or {}) do
+		if plugin.artifactId == "maven-compiler-plugin" and plugin.configuration then
+			if plugin.configuration.target ~= plugin.configuration.source then
+				error("Target and source mismatch detected in maven-compiler-plugin")
+			end
+			local target_version = vim.split(plugin.configuration.target, "%.")
+			local actual_version = target_version[#target_version]
+			if RUNTIMES[actual_version] then
+				return RUNTIMES[actual_version]
+			end
+
+			local runtime_name = string.format("JAVA_HOME_%d", actual_version)
+			if vim.env and vim.env[runtime_name] then
+				return vim.env[runtime_name]
+			else
+				local runtime_path = input_runtime(actual_version)
+				RUNTIMES[actual_version] = runtime_path
+				return runtime_path
+			end
+		end
+	end
+	return vim.env.JAVA_HOME
+end
+
+local function gradle_runtime()
+	-- fix: what to do here, is it needed, or does gradle pick it up from the local project config, have to check ?
+	-- fix: do we need to provide explicit runtime to gradle ? thensomething has to read the gradle.properties and / or build.gradle to parse the runtime here
+	return vim.env.JAVA_HOME
+end
+
 local function extract_runtime(bufnr)
 	local uri = vim.uri_from_bufnr(bufnr)
 	local err, settings, client = lsp.execute_command({
@@ -31,7 +63,7 @@ local function extract_runtime(bufnr)
 		arguments = { uri, { COMPILER, LOCATION } },
 	}, bufnr)
 
-	if err ~= nil or client == nil then
+	if err ~= nil or client == nil or settings == nil then
 		return
 	end
 
@@ -71,42 +103,17 @@ end
 
 ---@return string | nil
 local function get_runtime(opts)
-	-- todo: this is not robust, there is no way to know where this is triggered from and if the current buffer is actually a 'java' one needs to be changed !!!
+	-- fix: this is not robust, there is no way to know where this is triggered from and if the current buffer is actually a 'java' one needs to be changed !!!
 	local bufnr = nio.api.nvim_get_current_buf()
 	local runtime = extract_runtime(bufnr)
 	if runtime and #runtime > 0 then
 		return runtime
-	end
-
-	if File.exists("pom.xml") then
-		local plugins = read_xml_tag("pom.xml", "project.build.plugins.plugin")
-		for _, plugin in ipairs(plugins or {}) do
-			if plugin.artifactId == "maven-compiler-plugin" and plugin.configuration then
-				if plugin.configuration.target ~= plugin.configuration.source then
-					error("Target and source mismatch detected in maven-compiler-plugin")
-				end
-				local target_version = vim.split(plugin.configuration.target, "%.")
-				local actual_version = target_version[#target_version]
-				if RUNTIMES[actual_version] then
-					return RUNTIMES[actual_version]
-				end
-
-				local runtime_name = string.format("JAVA_HOME_%d", actual_version)
-				if vim.env and vim.env[runtime_name] then
-					return vim.env[runtime_name]
-				else
-					local runtime_path = input_runtime(actual_version)
-					RUNTIMES[actual_version] = runtime_path
-					return runtime_path
-				end
-			end
-		end
+	elseif File.exists("pom.xml") then
+		return maven_runtime()
 	elseif File.exists("build.gradle") then
-		-- fix: what to do here, is it needed, or does gradle pick it up from the local project config, have to check ?
-		-- fix: do we need to provide explicit runtime to gradle ? thensomething has to read the gradle.properties and / or build.gradle to parse the runtime here
-		return nil
+		return gradle_runtime()
 	end
-	log.error("Unable to extract a valid project runtime")
+	log.error("Unable to resolve project runtime")
 	return nil
 end
 
