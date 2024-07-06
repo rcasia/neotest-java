@@ -32,8 +32,8 @@ local function execute_command(command, bufnr)
 				)
 			)
 		end
-		local error = not ok and result ~= vim.NIL and { message = result } or nil
-		return error,
+		local err = not ok and result ~= vim.NIL and { message = result } or nil
+		return err,
 			result,
 			{
 				-- adapter for the native lsp client talbe format, to simplify external clients using this interface to talk to the lsp client, which ever it happens to be
@@ -62,7 +62,7 @@ local function execute_command(command, bufnr)
 					string.format(
 						"Unable to run lsp %s command with payload %s",
 						command.command,
-						vim.sinepct(command.arguments)
+						vim.inspect(command.arguments)
 					)
 				)
 			end

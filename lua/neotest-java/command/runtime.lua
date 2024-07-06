@@ -11,13 +11,13 @@ local RUNTIMES = {}
 
 local function extract_runtime(bufnr)
 	local uri = vim.uri_from_bufnr(bufnr)
-	local error, settings, client = nil, nil, nil
-	--    lsp.execute_command({
-	-- 	command = "java.project.getSettings",
-	-- 	arguments = { uri, { COMPILER, LOCATION } },
-	-- }, bufnr)
+	local err, settings, client = nil, nil, nil
+	lsp.execute_command({
+		command = "java.project.getSettings",
+		arguments = { uri, { COMPILER, LOCATION } },
+	}, bufnr)
 
-	if error ~= nil or client == nil then
+	if err ~= nil or client == nil then
 		return
 	end
 
