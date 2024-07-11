@@ -3,6 +3,7 @@ local nio = require("nio")
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
+	java_runtimes = {},
 	ignore_wrapper = false,
 	junit_jar = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar",
 }
@@ -27,6 +28,7 @@ return {
 
 ---@class neotest-java.ConfigOpts
 ---@field ignore_wrapper boolean
+---@field java_runtimes table<string, string>
 ---@field junit_jar string
 
 ---@class neotest-java.Context
