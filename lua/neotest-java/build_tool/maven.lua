@@ -1,7 +1,10 @@
-local run = require("neotest-java.command.run")
 local read_xml_tag = require("neotest-java.util.read_xml_tag")
-local scan = require("plenary.scandir")
+
+local run = require("neotest-java.command.run")
+local runtime = require("neotest-java.command.runtime")
 local mvn = require("neotest-java.command.binaries").mvn
+
+local scan = require("plenary.scandir")
 local logger = require("neotest.logging")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
@@ -67,16 +70,23 @@ end
 local memoized_result
 ---@return string
 maven.get_dependencies_classpath = function()
+	-- fix: this memoization is not going to work, every time the class path changes, this has to be detected, an fs watcher on the pom has to be created or remove this caching completely
 	if memoized_result then
 		return memoized_result
 	end
 
 	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
-	run(command)
-	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
+	local dependency_classpath = run(command, nil, { env = { ["JAVA_HOME"] = runtime() } })
 
 	if string.match(dependency_classpath, "ERROR") then
-		error('error while running command "' .. command .. '" -> ' .. dependency_classpath)
+		error('error while running command "' .. command)
+	end
+
+	command = "cat target/neotest-java/classpath.txt"
+	dependency_classpath = run(command)
+
+	if string.match(dependency_classpath, "ERROR") then
+		error('error while running command "' .. command)
 	end
 
 	memoized_result = dependency_classpath
@@ -89,7 +99,7 @@ maven.prepare_classpath = function()
 	-- write in file per buffer of 500 characters
 	local classpath_arguments = ([[
 -cp %s:%s:%s
-	]]):format(table.concat(maven.get_resources(), ":"), classpath, maven.get_output_dir() .. "/classes")
+    ]]):format(table.concat(maven.get_resources(), ":"), classpath, maven.get_output_dir() .. "/classes")
 
 	--write manifest file
 	local arguments_filepath = "target/neotest-java/cp_arguments.txt"

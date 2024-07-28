@@ -10,12 +10,14 @@ end
 
 ---@param command string | string[]
 ---@param output_file? string
-local function run(command, output_file)
+---@param args? table
+local function run(command, output_file, args)
 	if type(command) == "string" then
 		command = string_to_table(command)
 	end
 
-	local exit_code, res = process.run(command, { stdout = true, stderr = true })
+	local exit_code, res =
+		process.run(command, vim.tbl_deep_extend("force", { stdout = true, stderr = true }, args or {}))
 
 	assert(
 		exit_code == 0,

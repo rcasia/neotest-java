@@ -66,12 +66,20 @@ require("neotest").setup({
   adapters = {
     require("neotest-java")({
         ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
+        java_runtimes = {
+            -- there are no runtimes defined by default, if you wish to have neotest-java resolve them based on your environment define them here, one could also define environment variables with the same key/names i.e. `JAVA_HOME_8` or `JAVA_HOME_11` or `JAVA_HOME_17` etc.
+            ["JAVA_HOME_8"] = "/absolute/path/to/jdk8/home/directory",
+            ["JAVA_HOME_11"] = "/absolute/path/to/jdk11/home/directory",
+            ["JAVA_HOME_17"] = "/absolute/path/to/jdk17/home/directory",
+        },
         junit_jar = nil,
         -- default: .local/share/nvim/neotest-java/junit-platform-console-standalone-[version].jar
     })
   }
 })
 ```
+
+Neotest java would try it's best to determine the current project's runtime based on the currently running lsp servers. Note that, neotest-java supports both native neovim lsp and coc.nvim, it would try to fallback to your project configuration, supports both maven (reading from pom.xml) & gradle (reading from build.gradle or gradle.properties). In case the runtime is found but the location of it is not defined, neotest-java would prompt the user to input the absolute directory for the specific runtime version (only once).
 
 ## :octocat: Contributing
 Feel free to contribute to this project by creating issues for bug reports, feature requests, or suggestions.
