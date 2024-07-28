@@ -70,23 +70,23 @@ end
 local memoized_result
 ---@return string
 maven.get_dependencies_classpath = function()
-	-- fix: this memoization is not going to work, every time the class path changes, this has to be detected,
-	-- and the class file path has to be re-generated !
+	-- fix: this memoization is not going to work, every time the class path changes, this has to be detected, an fs watcher on the pom has to be created or remove this caching completely
 	if memoized_result then
 		return memoized_result
 	end
 
-	local command = { mvn(), "-q", "dependency:build-classpath", "-Dmdep.outputFile=target/neotest-java/classpath.txt" }
-	local result = vim.system(command, { env = { ["JAVA_HOME"] = runtime() } }):wait()
-
-	if not result or result.code ~= 0 then
-		error('error while running command "' .. table.concat(command, " "))
-	end
-
-	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
+	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
+	local dependency_classpath = run(command, nil, { env = { ["JAVA_HOME"] = runtime() } })
 
 	if string.match(dependency_classpath, "ERROR") then
-		error("error while running command " .. dependency_classpath)
+		error('error while running command "' .. command)
+	end
+
+	command = "cat target/neotest-java/classpath.txt"
+	dependency_classpath = run(command)
+
+	if string.match(dependency_classpath, "ERROR") then
+		error('error while running command "' .. command)
 	end
 
 	memoized_result = dependency_classpath

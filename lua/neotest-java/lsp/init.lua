@@ -64,9 +64,9 @@ end
 
 local function execute_command(command, bufnr)
 	if vim.g.did_coc_loaded ~= nil then
-		coc_command(command, bufnr)
+		return coc_command(command, bufnr)
 	else
-		lsp_command(command, bufnr)
+		return lsp_command(command, bufnr)
 	end
 end
 
