@@ -38,6 +38,7 @@ build_tools.compile_sources = function(project_type)
 	local source_compilation_command_exited = nio.control.event()
 	local source_compilation_args = {
 		"-Xlint:none",
+		"-parameters",
 		"-d",
 		output_dir .. "/classes",
 		"@" .. output_dir .. "/cp_arguments.txt",
@@ -78,6 +79,7 @@ build_tools.compile_test_sources = function(project_type)
 	local test_compilation_command_exited = nio.control.event()
 	local test_sources_compilation_args = {
 		"-Xlint:none",
+		"-parameters",
 		"-d",
 		output_dir .. "/classes",
 		("@%s/cp_arguments.txt"):format(output_dir),

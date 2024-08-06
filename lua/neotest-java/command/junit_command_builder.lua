@@ -128,10 +128,10 @@ local CommandBuilder = {
 		build_tool.prepare_classpath()
 
 		local source_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{source_classes}}
+      {{javac}} -Xlint:none -parameters -d {{output_dir}} {{classpath_arg}} {{source_classes}}
     ]]
 		local test_compilation_command = [[
-      {{javac}} -Xlint:none -d {{output_dir}} {{classpath_arg}} {{test_classes}}
+      {{javac}} -Xlint:none -parameters -d {{output_dir}} {{classpath_arg}} {{test_classes}}
     ]]
 
 		local test_execution_command = [[
