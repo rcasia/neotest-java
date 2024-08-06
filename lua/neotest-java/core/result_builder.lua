@@ -82,7 +82,7 @@ function ResultBuilder.build_results(spec, result, tree)
 		return read_file(filename)
 	end)
 	if not ok then
-		vim.notify("Error reading file: " .. filename)
+		log.error("Error reading file: " .. filename)
 		return {}
 	end
 	log.debug("Test report file: " .. filename)
