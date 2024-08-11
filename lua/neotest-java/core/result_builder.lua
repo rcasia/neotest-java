@@ -3,6 +3,7 @@ local read_file = require("neotest-java.util.read_file")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
 local nio = require("nio")
+local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
 
@@ -82,7 +83,7 @@ function ResultBuilder.build_results(spec, result, tree)
 		return read_file(filename)
 	end)
 	if not ok then
-		log.error("Error reading file: " .. filename)
+		lib.notify("Error reading file: " .. filename)
 		return {}
 	end
 	log.debug("Test report file: " .. filename)
