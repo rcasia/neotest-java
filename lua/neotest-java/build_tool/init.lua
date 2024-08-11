@@ -38,6 +38,7 @@ build_tools.compile_sources = function(project_type)
 	local output_dir = build_tool.get_output_dir()
 	local source_compilation_command_exited = nio.control.event()
 	local source_compilation_args = {
+		"-g",
 		"-Xlint:none",
 		"-parameters",
 		"-d",
@@ -79,6 +80,7 @@ build_tools.compile_test_sources = function(project_type)
 
 	local test_compilation_command_exited = nio.control.event()
 	local test_sources_compilation_args = {
+		"-g",
 		"-Xlint:none",
 		"-parameters",
 		"-d",
