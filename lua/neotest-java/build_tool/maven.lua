@@ -3,6 +3,7 @@ local read_xml_tag = require("neotest-java.util.read_xml_tag")
 local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
 local logger = require("neotest.logging")
+local read_file = require("neotest-java.util.read_file")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
 
@@ -73,7 +74,7 @@ maven.get_dependencies_classpath = function()
 
 	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
 	run(command)
-	local dependency_classpath = run("cat target/neotest-java/classpath.txt")
+	local dependency_classpath = read_file("target/neotest-java/classpath.txt")
 
 	if string.match(dependency_classpath, "ERROR") then
 		error('error while running command "' .. command .. '" -> ' .. dependency_classpath)
