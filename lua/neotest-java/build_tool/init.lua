@@ -3,6 +3,7 @@ local gradle = require("neotest-java.build_tool.gradle")
 local log = require("neotest-java.logger")
 local nio = require("nio")
 local Job = require("plenary.job")
+local lib = require("neotest.lib")
 local binaries = require("neotest-java.command.binaries")
 
 ---@class neotest-java.BuildTool
@@ -26,7 +27,7 @@ build_tools.get = function(project_type)
 end
 
 build_tools.compile_sources = function(project_type)
-	vim.notify("Compiling sources", vim.log.levels.INFO)
+	lib.notify("Compiling sources", vim.log.levels.INFO)
 
 	local build_tool = build_tools.get(project_type)
 	build_tool.prepare_classpath()
@@ -58,7 +59,7 @@ build_tools.compile_sources = function(project_type)
 				source_compilation_command_exited.set()
 			else
 				source_compilation_command_exited.set()
-				vim.notify("Error compiling sources", vim.log.levels.ERROR)
+				lib.notify("Error compiling sources", vim.log.levels.ERROR)
 				log.error("test compilation error args: ", vim.inspect(source_compilation_args))
 				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
 			end
@@ -69,7 +70,7 @@ build_tools.compile_sources = function(project_type)
 end
 
 build_tools.compile_test_sources = function(project_type)
-	vim.notify("Compiling test sources", vim.log.levels.INFO)
+	lib.notify("Compiling test sources", vim.log.levels.INFO)
 	local build_tool = build_tools.get(project_type)
 
 	local compilation_errors = {}
@@ -100,7 +101,7 @@ build_tools.compile_test_sources = function(project_type)
 			if code == 0 then
 			-- do nothing
 			else
-				vim.notify("Error compiling test sources", vim.log.levels.ERROR)
+				lib.notify("Error compiling test sources", vim.log.levels.ERROR)
 				log.error("test compilation error args: ", vim.inspect(test_sources_compilation_args))
 				error("Error compiling test sources: " .. table.concat(compilation_errors, "\n"))
 			end
@@ -114,7 +115,7 @@ end
 ---@param args string[]
 ---@return nio.control.Event
 build_tools.launch_debug_test = function(command, args)
-	vim.notify("Running debug test", vim.log.levels.INFO)
+	lib.notify("Running debug test", vim.log.levels.INFO)
 	log.trace("run_debug_test function")
 
 	local test_command_started_listening = nio.control.event()
