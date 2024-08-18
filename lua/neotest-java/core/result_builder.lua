@@ -1,11 +1,18 @@
 local xml = require("neotest.lib.xml")
 local read_file = require("neotest-java.util.read_file")
+local flat_map = require("neotest-java.util.flat_map")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
 local nio = require("nio")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
+
+local REPORT_FILE_NAMES = {
+		"TEST-junit-jupiter.xml",
+		"TEST-junit-vintage.xml",
+		"TEST-junit-platform-suite.xml",
+	}
 
 --- @param classname string name of class
 --- @param testname string name of test
@@ -78,22 +85,25 @@ function ResultBuilder.build_results(spec, result, tree)
 	---@type table<string, neotest-java.JunitResult>
 	local testcases_junit = {}
 
-	local filename = spec.context.report_file or "/tmp/neotest-java/TEST-junit-jupiter.xml"
-	local ok, data = pcall(function()
-		return read_file(filename)
-	end)
-	if not ok then
-		lib.notify("Error reading file: " .. filename)
-		return {}
-	end
-	log.debug("Test report file: " .. filename)
+	local testcases_in_xml = flat_map(function(filename)
+		local filepath = spec.context.reports_dir .. "/" .. filename
+		local ok, data = pcall(function()
+			return read_file(filepath)
+		end)
+		if not ok then
+			lib.notify("Error reading file: " .. filepath)
+			return {}
+		end
+		log.debug("Test report file: " .. filepath)
 
-	local xml_data = xml.parse(data)
+		local xml_data = xml.parse(data)
 
-	local testcases_in_xml = xml_data.testsuite.testcase
-	if not is_array(testcases_in_xml) then
-		testcases_in_xml = { testcases_in_xml }
-	end
+		local testcases_in_xml = xml_data.testsuite.testcase
+		if not is_array(testcases_in_xml) then
+			testcases_in_xml = { testcases_in_xml }
+		end
+		return testcases_in_xml
+	end, REPORT_FILE_NAMES)
 
 	for _, testcase in ipairs(testcases_in_xml) do
 		local jresult = JunitResult:new(testcase)
