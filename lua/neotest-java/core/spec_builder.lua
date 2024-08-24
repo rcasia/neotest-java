@@ -78,7 +78,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 			symbol = position.name,
 			context = {
 				strategy = args.strategy,
-				report_file = reports_dir .. "/TEST-junit-jupiter.xml",
+				reports_dir = reports_dir,
 				terminated_command_event = terminated_command_event,
 			},
 		}
@@ -90,7 +90,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 		command = command:build(),
 		cwd = root,
 		symbol = position.name,
-		context = { report_file = reports_dir .. "/TEST-junit-jupiter.xml" },
+		context = { reports_dir = reports_dir },
 	}
 end
 

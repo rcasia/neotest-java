@@ -1,12 +1,14 @@
 local xml = require("neotest.lib.xml")
 local read_file = require("neotest-java.util.read_file")
+local flat_map = require("neotest-java.util.flat_map")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
-local nio = require("nio")
+local scan = require("plenary.scandir")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
 
+local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 --- @param classname string name of class
 --- @param testname string name of test
 --- @return string unique_key based on classname and testname
@@ -78,22 +80,27 @@ function ResultBuilder.build_results(spec, result, tree)
 	---@type table<string, neotest-java.JunitResult>
 	local testcases_junit = {}
 
-	local filename = spec.context.report_file or "/tmp/neotest-java/TEST-junit-jupiter.xml"
-	local ok, data = pcall(function()
-		return read_file(filename)
-	end)
-	if not ok then
-		lib.notify("Error reading file: " .. filename)
-		return {}
-	end
-	log.debug("Test report file: " .. filename)
+	local report_filepaths = scan.scan_dir(spec.context.reports_dir, {
+		search_pattern = REPORT_FILE_NAMES_PATTERN,
+	})
+	local testcases_in_xml = flat_map(function(filepath)
+		local ok, data = pcall(function()
+			return read_file(filepath)
+		end)
+		if not ok then
+			lib.notify("Error reading file: " .. filepath)
+			return {}
+		end
+		log.debug("Test report file: " .. filepath)
 
-	local xml_data = xml.parse(data)
+		local xml_data = xml.parse(data)
 
-	local testcases_in_xml = xml_data.testsuite.testcase
-	if not is_array(testcases_in_xml) then
-		testcases_in_xml = { testcases_in_xml }
-	end
+		local testcases_in_xml = xml_data.testsuite.testcase
+		if not is_array(testcases_in_xml) then
+			testcases_in_xml = { testcases_in_xml }
+		end
+		return testcases_in_xml
+	end, report_filepaths)
 
 	for _, testcase in ipairs(testcases_in_xml) do
 		local jresult = JunitResult:new(testcase)

@@ -4,6 +4,9 @@ local tempname_fn = require("nio").fn.tempname
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 local TEMPNAME = "/tmp/tempname-1234"
+local MAVEN_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/maven-demo/target/surefire-reports/"
+
+local GRADLE_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/gradle-groovy-demo/build/test-results/test"
 
 describe("ResultBuilder", function()
 	async.before_each(function()
@@ -22,8 +25,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/maven-demo/target/surefire-reports/TEST-com.example.ExampleTest.xml",
+				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
@@ -60,8 +62,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/maven-demo/target/surefire-reports/TEST-com.example.ErroneousTest.xml",
+				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
@@ -98,8 +99,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/gradle-groovy-demo/build/test-results/test/TEST-com.example.ExampleTest.xml",
+				reports_dir = GRADLE_REPORTS_DIR,
 			},
 		}
 
@@ -137,8 +137,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/gradle-groovy-demo/build/test-results/test/TEST-com.example.SingleMethodFailingTest.xml",
+				reports_dir = GRADLE_REPORTS_DIR,
 			},
 		}
 
@@ -174,8 +173,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/gradle-groovy-demo/build/test-results/test/TEST-com.example.SingleMethodFailingTest.xml",
+				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
@@ -195,9 +193,9 @@ describe("ResultBuilder", function()
 		local expected = {
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
 				errors = {
-					{ line = 9, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
+					{ line = 9, message = "expected: <true> but was: <false>" },
 				},
-				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
+				short = "expected: <true> but was: <false>",
 				status = "failed",
 				output = TEMPNAME,
 			},
@@ -211,8 +209,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/maven-demo/target/surefire-reports/TEST-com.example.demo.RepositoryIT.xml",
+				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
@@ -243,8 +240,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/maven-demo",
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/maven-demo/target/surefire-reports/TEST-com.example.ParameterizedMethodTest.xml",
+				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
@@ -300,8 +296,7 @@ describe("ResultBuilder", function()
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/" .. project_dir,
 			context = {
-				report_file = vim.loop.cwd()
-					.. "/tests/fixtures/maven-demo/target/surefire-reports/TEST-com.example.EmptySourceTest.xml",
+				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
