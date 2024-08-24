@@ -90,7 +90,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 		command = command:build(),
 		cwd = root,
 		symbol = position.name,
-		context = { reports_dir = reports_dir},
+		context = { reports_dir = reports_dir },
 	}
 end
 

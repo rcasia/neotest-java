@@ -3,17 +3,12 @@ local read_file = require("neotest-java.util.read_file")
 local flat_map = require("neotest-java.util.flat_map")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
-local nio = require("nio")
+local scan = require("plenary.scandir")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
 
-local REPORT_FILE_NAMES = {
-		"TEST-junit-jupiter.xml",
-		"TEST-junit-vintage.xml",
-		"TEST-junit-platform-suite.xml",
-	}
-
+local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 --- @param classname string name of class
 --- @param testname string name of test
 --- @return string unique_key based on classname and testname
@@ -85,8 +80,10 @@ function ResultBuilder.build_results(spec, result, tree)
 	---@type table<string, neotest-java.JunitResult>
 	local testcases_junit = {}
 
-	local testcases_in_xml = flat_map(function(filename)
-		local filepath = spec.context.reports_dir .. "/" .. filename
+	local report_filepaths = scan.scan_dir(spec.context.reports_dir, {
+		search_pattern = REPORT_FILE_NAMES_PATTERN,
+	})
+	local testcases_in_xml = flat_map(function(filepath)
 		local ok, data = pcall(function()
 			return read_file(filepath)
 		end)
@@ -103,7 +100,7 @@ function ResultBuilder.build_results(spec, result, tree)
 			testcases_in_xml = { testcases_in_xml }
 		end
 		return testcases_in_xml
-	end, REPORT_FILE_NAMES)
+	end, report_filepaths)
 
 	for _, testcase in ipairs(testcases_in_xml) do
 		local jresult = JunitResult:new(testcase)
