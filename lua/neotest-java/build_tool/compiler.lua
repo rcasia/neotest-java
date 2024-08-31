@@ -8,15 +8,41 @@ local read_file = require("neotest-java.util.read_file")
 
 local Compiler = {}
 
-Compiler.compile_sources = function(project_type)
-	lib.notify("Compiling sources", vim.log.levels.INFO)
+---@type { hash: string, source: string }
+local source_hashmap = {}
+local filter_unchanged_sources = function(sources)
+	local changed_sources = {}
+	for _, source in ipairs(sources) do
+		local hash = nio.fn.sha256(read_file(source))
 
+		-- if file not seen yet
+		-- or file content has changed
+		if not source_hashmap[source] or source_hashmap[source] ~= hash then
+			-- add
+			source_hashmap[source] = hash
+
+			changed_sources[#changed_sources + 1] = source
+		end
+	end
+
+	log.debug("changed_sources: " .. vim.inspect(changed_sources))
+	return changed_sources
+end
+
+Compiler.compile_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
+	local sources = filter_unchanged_sources(build_tool.get_sources())
+	if #sources == 0 then
+		lib.notify("Skipping main sources compilation")
+		return
+	end
+
+	lib.notify("Compiling main sources")
+
 	build_tool.prepare_classpath()
 
 	local compilation_errors = {}
 	local status_code = 0
-	local sources = build_tool.get_sources()
 	local output_dir = build_tool.get_output_dir()
 	local source_compilation_command_exited = nio.control.event()
 	local source_compilation_args = {
@@ -53,8 +79,14 @@ Compiler.compile_sources = function(project_type)
 end
 
 Compiler.compile_test_sources = function(project_type)
-	lib.notify("Compiling test sources", vim.log.levels.INFO)
 	local build_tool = build_tools.get(project_type)
+	local sources = filter_unchanged_sources(build_tool.get_test_sources())
+	if #sources == 0 then
+		lib.notify("Skipping test sources compilation")
+		return
+	end
+
+	lib.notify("Compiling test sources")
 
 	local compilation_errors = {}
 	local status_code = 0
@@ -69,7 +101,7 @@ Compiler.compile_test_sources = function(project_type)
 		output_dir .. "/classes",
 		("@%s/cp_arguments.txt"):format(output_dir),
 	}
-	for _, source in ipairs(build_tool.get_test_sources()) do
+	for _, source in ipairs(sources) do
 		table.insert(test_sources_compilation_args, source)
 	end
 
