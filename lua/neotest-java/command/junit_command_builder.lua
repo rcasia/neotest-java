@@ -103,83 +103,10 @@ local CommandBuilder = {
 		self._reports_dir = reports_dir
 	end,
 
-	--- @return string @command to run
-	--- @deprecated
-	build = function(self)
-		local build_tool = build_tools.get(self._project_type)
-		local build_dir = build_tool.get_output_dir()
-		local output_dir = build_dir .. "/classes"
-		local resources = table.concat(build_tool.get_resources(), ":")
-		local source_classes = build_tool.get_sources()
-		local test_classes = build_tool.get_test_sources()
-
-		local selectors = {}
-		for _, v in ipairs(self._test_references) do
-			if v.type == "test" then
-				table.insert(selectors, "-m=" .. v.qualified_name .. "#" .. v.method_name)
-			elseif v.type == "file" then
-				table.insert(selectors, "-c=" .. v.qualified_name)
-			elseif v.type == "dir" then
-				selectors = "-p=" .. v.qualified_name
-			end
-		end
-		assert(#selectors ~= 0, "junit command has to have a selector")
-
-		build_tool.prepare_classpath()
-
-		local source_compilation_command = [[
-      {{javac}} -Xlint:none -parameters -d {{output_dir}} {{classpath_arg}} {{source_classes}}
-    ]]
-		local test_compilation_command = [[
-      {{javac}} -Xlint:none -parameters -d {{output_dir}} {{classpath_arg}} {{test_classes}}
-    ]]
-
-		local test_execution_command = [[
-      {{java}} -jar {{junit_jar}} execute {{classpath_arg}} {{selectors}}
-      --fail-if-no-tests --reports-dir={{reports_dir}} --disable-banner --details=testfeed --config=junit.platform.output.capture.stdout=true
-    ]]
-
-		-- combine commands sequentially
-		local command = table.concat({
-			source_compilation_command,
-			test_compilation_command,
-			test_execution_command,
-		}, " && ")
-
-		-- replace placeholders
-		local placeholders = {
-			["{{javac}}"] = javac(),
-			["{{java}}"] = java(),
-			["{{junit_jar}}"] = self._junit_jar,
-			["{{resources}}"] = resources,
-			["{{output_dir}}"] = output_dir,
-			["{{classpath_arg}}"] = ("@%s/cp_arguments.txt"):format(build_dir),
-			["{{reports_dir}}"] = self._reports_dir,
-			["{{selectors}}"] = table.concat(selectors, " "),
-			["{{source_classes}}"] = table.concat(source_classes, " "),
-			["{{test_classes}}"] = table.concat(test_classes, " "),
-		}
-		iter(placeholders):each(function(k, v)
-			command = command:gsub(k, v)
-		end)
-
-		-- remove extra spaces
-		command = command:gsub("%s+", " ")
-
-		log.info("Command: " .. command)
-
-		command = stop_command_when_line_containing(command, "Test run finished")
-
-		command = wrap_command_as_bash(command)
-
-		return command
-	end,
-
 	--- @param port? number
 	--- @return { command: string, args: string[] }
 	build_junit = function(self, port)
 		assert(self._test_references, "test_references cannot be nil")
-		assert(port, "port cannot be nil")
 
 		local build_tool = build_tools.get(self._project_type)
 
@@ -198,8 +125,6 @@ local CommandBuilder = {
 		local junit_command = {
 			command = java(),
 			args = {
-				"-Xdebug",
-				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:" .. port,
 				"-jar",
 				self._junit_jar,
 				"execute",
@@ -215,7 +140,25 @@ local CommandBuilder = {
 		for _, v in ipairs(selectors) do
 			table.insert(junit_command.args, v)
 		end
+
+		-- add debug arguments if debug port is specified
+		if port then
+			table.insert(junit_command.args, 1, "-Xdebug")
+			table.insert(
+				junit_command.args,
+				1,
+				"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:" .. port
+			)
+		end
+
 		return junit_command
+	end,
+
+	--- @param port? number
+	--- @return { command: string, args: string[] }
+	build_to_string = function(self, port)
+		local c = self:build_junit(port)
+		return c.command .. " " .. table.concat(c.args, " ")
 	end,
 }
 

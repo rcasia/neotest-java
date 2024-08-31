@@ -2,6 +2,7 @@ describe("NeotestJava plugin", function()
 	local default_config = {
 		ignore_wrapper = false,
 		junit_jar = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar",
+		incremental_build = true,
 	}
 
 	it("should init default configuration", function()

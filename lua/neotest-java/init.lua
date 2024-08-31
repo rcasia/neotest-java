@@ -10,6 +10,8 @@ local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
+local lib = require("neotest.lib")
+local timer = require("neotest-java.util.timer")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -68,9 +70,13 @@ function NeotestJavaAdapter.discover_positions(file_path)
 	return position_discoverer.discover_positions(file_path)
 end
 
+---@type neotest-java.Timer
+local test_timer = nil
+
 ---@param args neotest.RunArgs
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function NeotestJavaAdapter.build_spec(args)
+	test_timer = timer:start()
 	local self = NeotestJavaAdapter
 	check_junit_jar(ch.get_context().config.junit_jar)
 
@@ -93,7 +99,13 @@ end
 ---@param tree neotest.Tree
 ---@return table<string, neotest.Result>
 function NeotestJavaAdapter.results(spec, result, tree)
-	return result_builder.build_results(spec, result, tree)
+	local results = result_builder.build_results(spec, result, tree)
+
+	if test_timer then
+		lib.notify("Tests lasted " .. test_timer:stop() .. " ms.")
+	end
+
+	return results
 end
 
 -- on init

@@ -6,6 +6,7 @@ local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local run = require("neotest-java.command.run")
+local compiler = require("neotest-java.build_tool.compiler")
 
 SpecBuilder = {}
 
@@ -51,16 +52,13 @@ function SpecBuilder.build_spec(args, project_type, config)
 		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 	end
 
+	-- COMPILATION STEPS
+	compiler.compile_sources(project_type)
+	compiler.compile_test_sources(project_type)
+
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
 		local port = random_port()
-
-		-- COMPILATION STEPS
-		local build_tool = build_tools.get(project_type)
-		build_tool.prepare_classpath()
-
-		build_tools.compile_sources(project_type)
-		build_tools.compile_test_sources(project_type)
 
 		-- PREPARE DEBUG TEST COMMAND
 		local junit = command:build_junit(port)
@@ -85,9 +83,9 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- NORMAL STRATEGY
-	log.debug("junit command: ", command:build())
+	log.info("junit command: ", command:build_to_string())
 	return {
-		command = command:build(),
+		command = command:build_to_string(),
 		cwd = root,
 		symbol = position.name,
 		context = { reports_dir = reports_dir },

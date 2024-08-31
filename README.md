@@ -68,6 +68,7 @@ require("neotest").setup({
         ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
         junit_jar = nil,
         -- default: .local/share/nvim/neotest-java/junit-platform-console-standalone-[version].jar
+        incremental_build = true
     })
   }
 })
