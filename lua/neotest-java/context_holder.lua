@@ -1,10 +1,10 @@
 local log = require("neotest-java.logger")
-local nio = require("nio")
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
 	ignore_wrapper = false,
 	junit_jar = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar",
+	incremental_build = true,
 }
 
 ---@type neotest-java.Context
@@ -28,6 +28,7 @@ return {
 ---@class neotest-java.ConfigOpts
 ---@field ignore_wrapper boolean
 ---@field junit_jar string
+---@field incremental_build boolean
 
 ---@class neotest-java.Context
 ---@field config neotest-java.ConfigOpts
