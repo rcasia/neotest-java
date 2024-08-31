@@ -33,8 +33,7 @@ Compiler.compile_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
 	local sources = filter_unchanged_sources(build_tool.get_sources())
 	if #sources == 0 then
-		lib.notify("Skipping main sources compilation")
-		return
+		return -- skipping as there are no sources to compile
 	end
 
 	lib.notify("Compiling main sources")
@@ -82,8 +81,7 @@ Compiler.compile_test_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
 	local sources = filter_unchanged_sources(build_tool.get_test_sources())
 	if #sources == 0 then
-		lib.notify("Skipping test sources compilation")
-		return
+		return -- skipping as there are no sources to compile
 	end
 
 	lib.notify("Compiling test sources")
