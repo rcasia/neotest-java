@@ -6,7 +6,7 @@ local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local run = require("neotest-java.command.run")
-local lib = require("neotest.lib")
+local compiler = require("neotest-java.build_tool.compiler")
 
 SpecBuilder = {}
 
@@ -53,10 +53,8 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEPS
-	local build_tool = build_tools.get(project_type)
-	build_tool.prepare_classpath()
-	build_tools.compile_sources(project_type)
-	build_tools.compile_test_sources(project_type)
+	compiler.compile_sources(project_type)
+	compiler.compile_test_sources(project_type)
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
