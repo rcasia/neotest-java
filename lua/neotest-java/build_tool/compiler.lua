@@ -5,12 +5,27 @@ local lib = require("neotest.lib")
 local binaries = require("neotest-java.command.binaries")
 local build_tools = require("neotest-java.build_tool")
 local read_file = require("neotest-java.util.read_file")
+local write_file = require("neotest-java.util.write_file")
 
 local Compiler = {}
 
----@type { hash: string, source: string }
-local source_hashmap = {}
-local filter_unchanged_sources = function(sources)
+---@param sources table<string>
+---@param cache_dir string
+---@return table<string> changed_sources
+local filter_unchanged_sources = function(sources, cache_dir)
+	---@type { hash: string, source: string }
+	local source_hashmap
+	local success
+	local cache_filepath = string.format("%s/cached_classes.json", cache_dir)
+
+	success, source_hashmap = pcall(function()
+		return nio.fn.json_decode(read_file(cache_filepath))
+	end)
+
+	if not success then
+		source_hashmap = {}
+	end
+
 	local changed_sources = {}
 	for _, source in ipairs(sources) do
 		local hash = nio.fn.sha256(read_file(source))
@@ -26,12 +41,15 @@ local filter_unchanged_sources = function(sources)
 	end
 
 	log.debug("changed_sources: " .. vim.inspect(changed_sources))
+
+	write_file(cache_filepath, nio.fn.json_encode(source_hashmap))
+
 	return changed_sources
 end
 
 Compiler.compile_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
-	local sources = filter_unchanged_sources(build_tool.get_sources())
+	local sources = filter_unchanged_sources(build_tool.get_sources(), build_tool.get_output_dir())
 	if #sources == 0 then
 		return -- skipping as there are no sources to compile
 	end
@@ -79,7 +97,7 @@ end
 
 Compiler.compile_test_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
-	local sources = filter_unchanged_sources(build_tool.get_test_sources())
+	local sources = filter_unchanged_sources(build_tool.get_test_sources(), build_tool.get_output_dir())
 	if #sources == 0 then
 		return -- skipping as there are no sources to compile
 	end
