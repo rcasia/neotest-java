@@ -46,7 +46,9 @@ local filter_unchanged_sources = function(sources, cache_dir)
 
 	log.debug("changed_sources: " .. vim.inspect(changed_sources))
 
-	write_file(cache_filepath, nio.fn.json_encode(source_hashmap))
+	if #changed_sources ~= 0 then
+		write_file(cache_filepath, nio.fn.json_encode(source_hashmap))
+	end
 
 	return changed_sources
 end
@@ -111,6 +113,68 @@ Compiler.compile_sources = function(project_type)
 		clear_cached_sources(output_dir)
 	end
 	assert(status_code == 0, "Error compiling sources")
+end
+
+---@param project neotest-java.Project
+Compiler.compile_sources2 = function(project)
+	--TODO: check if this is needed
+	project:prepare_classpath()
+
+	for _, mod in ipairs(project:get_modules()) do
+		print("compiling module: " .. mod.base_dir)
+
+		local sources = config.incremental_build and filter_unchanged_sources(mod:get_sources(), mod:get_output_dir())
+			or mod:get_sources()
+
+		if #sources == 0 then
+			print("continue!")
+			goto continue -- skipping as there are no sources to compile
+		end
+
+		lib.notify("Compiling main sources")
+
+		local compilation_errors = {}
+		local status_code = 0
+		local output_dir = mod:get_output_dir()
+		local source_compilation_command_exited = nio.control.event()
+		local source_compilation_args = {
+			"-g",
+			"-Xlint:none",
+			"-parameters",
+			"-d",
+			output_dir .. "/classes",
+			"@" .. project.build_tool.get_output_dir() .. "/cp_arguments.txt",
+		}
+		for _, source in ipairs(sources) do
+			table.insert(source_compilation_args, source)
+		end
+
+		print("running command")
+
+		Job:new({
+			command = binaries.javac(),
+			args = source_compilation_args,
+			on_stderr = function(_, data)
+				table.insert(compilation_errors, data)
+			end,
+			on_exit = function(_, code)
+				status_code = code
+				if code == 0 then
+					source_compilation_command_exited.set()
+				else
+					source_compilation_command_exited.set()
+					lib.notify("Error compiling sources", vim.log.levels.ERROR)
+					log.error("test compilation error args: ", vim.inspect(source_compilation_args))
+					error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
+				end
+			end,
+		}):start()
+		source_compilation_command_exited.wait()
+		assert(status_code == 0, "Error compiling sources")
+		print("terminated command")
+
+		::continue::
+	end
 end
 
 Compiler.compile_test_sources = function(project_type)

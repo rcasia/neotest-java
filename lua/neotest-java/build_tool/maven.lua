@@ -5,44 +5,62 @@ local mvn = require("neotest-java.command.binaries").mvn
 local logger = require("neotest.logging")
 local read_file = require("neotest-java.util.read_file")
 local compatible_path = require("neotest-java.util.compatible_path")
+local File = require("neotest.lib.file")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
+local PROJECT_FILE = "pom.xml"
 
 local maven = {}
 
-maven.source_directory = function()
-	local tag_content = read_xml_tag("pom.xml", "project.build.sourceDirectory")
+maven.source_directory = function(root)
+	root = root and root or "."
+
+	local tag_content = read_xml_tag(PROJECT_FILE, "project.build.sourceDirectory")
 
 	if tag_content then
 		logger.debug("Found sourceDirectory in pom.xml: " .. tag_content)
-		return tag_content
+		return root .. "/" .. tag_content
 	end
 
-	return compatible_path("src/main/java")
+	return root .. compatible_path("src/main/java")
 end
 
-maven.test_source_directory = function()
-	local tag_content = read_xml_tag("pom.xml", "project.build.testSourceDirectory")
+maven.test_source_directory = function(root)
+	root = root and root or "."
+
+	local tag_content = read_xml_tag(PROJECT_FILE, "project.build.testSourceDirectory")
+
 	if tag_content then
 		logger.debug("Found testSourceDirectory in pom.xml: " .. tag_content)
-		return tag_content
+		return root .. "/" .. tag_content
 	end
-	return compatible_path("src/test/java")
+	return root .. compatible_path("src/test/java")
 end
 
-maven.get_output_dir = function()
+maven.get_output_dir = function(root)
+	root = root and root or "."
 	-- TODO: read from pom.xml <build><directory>
-	return compatible_path("target/neotest-java")
+	return root .. compatible_path("target/neotest-java")
 end
 
-maven.get_sources = function()
-	local sources = scan.scan_dir(maven.source_directory(), {
-		search_pattern = JAVA_FILE_PATTERN,
-	})
+maven.get_sources = function(root)
+	root = root and root or "."
 
-	local generated_sources = scan.scan_dir("target", {
-		search_pattern = JAVA_FILE_PATTERN,
-	})
+	local sources = {}
+	local source_directory = maven.source_directory(root)
+	if File.exists(source_directory) then
+		sources = scan.scan_dir(source_directory, {
+			search_pattern = JAVA_FILE_PATTERN,
+		})
+	end
+
+	local generated_sources = {}
+	local generated_sources_dir = root .. "/target"
+	if File.exists(generated_sources_dir) then
+		generated_sources = scan.scan_dir(generated_sources_dir, {
+			search_pattern = JAVA_FILE_PATTERN,
+		})
+	end
 
 	for _, source in ipairs(generated_sources) do
 		table.insert(sources, source)
@@ -51,12 +69,17 @@ maven.get_sources = function()
 	return sources
 end
 
-maven.get_test_sources = function()
+maven.get_test_sources = function(root)
 	-- TODO: read from pom.xml <testSourceDirectory>
+	--
+	local test_source_dir = maven.test_source_directory(root)
 
-	local test_sources = scan.scan_dir(maven.test_source_directory(), {
-		search_pattern = JAVA_FILE_PATTERN,
-	})
+	local test_sources = {}
+	if File.exists(test_source_dir) then
+		test_sources = scan.scan_dir(test_source_dir, {
+			search_pattern = JAVA_FILE_PATTERN,
+		})
+	end
 
 	return test_sources
 end
@@ -86,8 +109,13 @@ maven.get_dependencies_classpath = function()
 	return dependency_classpath
 end
 
-maven.prepare_classpath = function()
+maven.prepare_classpath = function(output_dirs)
+	output_dirs = output_dirs and output_dirs or {}
 	local classpath = maven.get_dependencies_classpath()
+
+	for i, dir in ipairs(output_dirs) do
+		output_dirs[i] = compatible_path(dir .. "/classes")
+	end
 
 	-- write in file per buffer of 500 characters
 	local classpath_arguments = ([[
@@ -95,7 +123,8 @@ maven.prepare_classpath = function()
 	]]):format(
 		table.concat(maven.get_resources(), ":"),
 		classpath,
-		compatible_path(maven.get_output_dir() .. "/classes")
+		-- maven.get_output_dir() .. "/classes",
+		table.concat(output_dirs, ":")
 	)
 
 	--write manifest file

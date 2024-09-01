@@ -8,6 +8,8 @@ local nio = require("nio")
 local compiler = require("neotest-java.build_tool.compiler")
 local path = require("plenary.path")
 local compatible_path = require("neotest-java.util.compatible_path")
+local Project = require("neotest-java.types.project")
+local Compiler = require("neotest-java.build_tool.compiler")
 
 local SpecBuilder = {}
 
@@ -57,8 +59,11 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEPS
-	compiler.compile_sources(project_type)
-	compiler.compile_test_sources(project_type)
+	local project = Project.from_root_dir(root)
+	Compiler.compile_sources2(project)
+
+	-- compiler.compile_sources(project_type)
+	-- compiler.compile_test_sources(project_type)
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then

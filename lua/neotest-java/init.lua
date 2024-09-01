@@ -1,4 +1,5 @@
 local File = require("neotest.lib.file")
+local Project = require("neotest-java.types.project")
 
 local file_checker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
@@ -10,6 +11,9 @@ local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local lib = require("neotest.lib")
 local timer = require("neotest-java.util.timer")
+local nio = require("nio")
+local module = require("neotest-java.java-modules")
+local Compiler = require("neotest-java.build_tool.compiler")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -41,9 +45,8 @@ local NeotestJavaAdapter = {
 	filter_dir = dir_filter.filter_dir,
 	is_test_file = file_checker.is_test_file,
 	discover_positions = position_discoverer.discover_positions,
-
 	build_spec = function(args)
-		test_timer = timer.start()
+		-- test_timer = timer.start()
 		check_junit_jar(ch.get_context().config.junit_jar)
 
 		-- TODO: find a way to avoid to make this steps every time
