@@ -7,6 +7,7 @@ local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local run = require("neotest-java.command.run")
 local compiler = require("neotest-java.build_tool.compiler")
+local path = require("plenary.path")
 
 SpecBuilder = {}
 
@@ -25,11 +26,14 @@ function SpecBuilder.build_spec(args, project_type, config)
 	nio.fn.chdir(root)
 
 	-- make sure outputDir is created to operate in it
-	local outputDir = build_tools.get(project_type).get_output_dir()
-	run({ "mkdir", "-p", outputDir })
+	local output_dir = build_tools.get(project_type).get_output_dir()
+	local output_dir_parent = path:new(output_dir):parent().filename
+
+	vim.uv.fs_mkdir(output_dir_parent, 493)
+	vim.uv.fs_mkdir(output_dir, 493)
 
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir = "/tmp/neotest-java/" .. nio.fn.strftime("%d%m%y%H%M%S")
+	local reports_dir = string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
 	command:reports_dir(reports_dir)
 
 	-- TEST SELECTORS

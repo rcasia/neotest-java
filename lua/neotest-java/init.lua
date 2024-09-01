@@ -12,6 +12,7 @@ local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local lib = require("neotest.lib")
 local timer = require("neotest-java.util.timer")
+local nio = require("nio")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -114,7 +115,7 @@ end
 
 	-- create data directory if it doesn't exist
 	local data_dir = vim.fn.stdpath("data") .. "/neotest-java"
-	os.execute("mkdir -p " .. data_dir)
+	vim.uv.fs_mkdir(data_dir, 493)
 end)()
 
 setmetatable(NeotestJavaAdapter, {
