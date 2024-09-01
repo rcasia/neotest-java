@@ -75,7 +75,14 @@ end
 ---@return string | nil failure_output a more detailed output
 function JunitResult:status()
 	local failed = self.testcase.failure or self.testcase.error
-	if failed then
+	-- This is not parsed correctly by the library
+	-- <failure message="expected: &lt;1> but was: &lt;2>" type="org.opentest4j.AssertionFailedError">
+	-- it breaks in the first '>'
+	-- so it does not detect message attribute sometimes
+	if failed and not failed._attr then
+		return FAILED, failed[1], failed[2]
+	end
+	if failed and failed._attr then
 		return FAILED, failed._attr.message, failed[1]
 	end
 	return PASSED
