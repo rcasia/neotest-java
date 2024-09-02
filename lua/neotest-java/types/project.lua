@@ -34,8 +34,6 @@ function Project:get_modules()
 	for _, dir in ipairs(dirs) do
 		local base_dir = Path:new(dir):parent().filename
 		modules[#modules + 1] = Module.new(base_dir, self.build_tool)
-		print(vim.inspect(modules[#modules].base_dir))
-		print(vim.inspect(modules[#modules]:get_output_dir()))
 	end
 
 	return modules
@@ -49,9 +47,21 @@ function Project:get_output_dirs()
 		end))
 end
 
+function Project:get_resources()
+	local resources = {}
+	for _, mod in ipairs(self:get_modules()) do
+		table.foreach(mod:get_resources(), function(idx, r)
+			resources[#resources + 1] = r
+		end)
+	end
+
+	return resources
+end
+
 function Project:prepare_classpath()
 	local output_dirs = self:get_output_dirs()
-	self.build_tool.prepare_classpath(output_dirs)
+	local resources = self:get_resources()
+	self.build_tool.prepare_classpath(output_dirs, resources)
 end
 
 return Project

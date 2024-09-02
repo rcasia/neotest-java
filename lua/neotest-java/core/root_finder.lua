@@ -1,5 +1,6 @@
 local lib = require("neotest.lib")
 local log = require("neotest-java.logger")
+local Path = require("plenary.path")
 
 local RootFinder = {}
 
@@ -18,7 +19,10 @@ function RootFinder.find_root(dir)
 
 	for _, matcher in ipairs(matchers) do
 		local root = lib.files.match_root_pattern(matcher)(dir)
-		if root then
+		local parent_dir = Path:new(dir):parent().filename
+		local is_parent_root_canditate = lib.files.match_root_pattern(matcher)(parent_dir)
+
+		if root and not is_parent_root_canditate then
 			log.debug("Found root: " .. root)
 			return root
 		end

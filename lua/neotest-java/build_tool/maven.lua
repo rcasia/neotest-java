@@ -6,11 +6,49 @@ local logger = require("neotest.logging")
 local read_file = require("neotest-java.util.read_file")
 local compatible_path = require("neotest-java.util.compatible_path")
 local File = require("neotest.lib.file")
+local write_file = require("neotest-java.util.write_file")
+local fun = require("fun")
+local iter = fun.iter
+local totable = fun.totable
 
 local JAVA_FILE_PATTERN = ".+%.java$"
 local PROJECT_FILE = "pom.xml"
 
 local maven = {}
+
+local function find_file_in_dir(filename, dir)
+	return totable(
+		--
+		iter(scan.scan_dir(dir, { silent = true }))
+			--
+			:filter(function(path)
+				return string.find(path, filename, 1, true)
+			end)
+	)[1]
+end
+
+local function to_gradle_path(dependency)
+	if dependency == nil then
+		return nil
+	end
+	local group_id, artifact_id, version = dependency:match("([^:]+):([^:]+):([^:]+)")
+
+	local filename = string.format("%s-%s.jar", artifact_id, version)
+	local dir =
+		string.format("%s/.m2/repository/%s/%s/%s", os.getenv("HOME"), group_id:gsub("%.", "/"), artifact_id, version)
+	local result = find_file_in_dir(filename, dir)
+	return result
+end
+
+local function take_just_the_dependency(line)
+	-- Manejar casos estándar, capturando 'groupId:artifactId' y la versión
+	local group_and_artifact, version = line:match("([%w._-]+:[%w._-]+):[%w._-]*:([%w._%-]+)")
+	if group_and_artifact and version then
+		return group_and_artifact .. ":" .. version
+	end
+
+	return nil
+end
 
 maven.source_directory = function(root)
 	root = root and root or "."
@@ -22,7 +60,7 @@ maven.source_directory = function(root)
 		return root .. "/" .. tag_content
 	end
 
-	return root .. compatible_path("src/main/java")
+	return compatible_path(root .. "/src/main/java")
 end
 
 maven.test_source_directory = function(root)
@@ -34,13 +72,13 @@ maven.test_source_directory = function(root)
 		logger.debug("Found testSourceDirectory in pom.xml: " .. tag_content)
 		return root .. "/" .. tag_content
 	end
-	return root .. compatible_path("src/test/java")
+	return compatible_path(root .. "/src/test/java")
 end
 
 maven.get_output_dir = function(root)
 	root = root and root or "."
 	-- TODO: read from pom.xml <build><directory>
-	return root .. compatible_path("target/neotest-java")
+	return compatible_path(root .. "/target/neotest-java")
 end
 
 maven.get_sources = function(root)
@@ -84,22 +122,23 @@ maven.get_test_sources = function(root)
 	return test_sources
 end
 
-maven.get_resources = function()
+maven.get_resources = function(root)
+	root = root or "."
+
 	-- TODO: read from pom.xml <resources>
-	return { compatible_path("src/main/resources"), compatible_path("src/test/resources") }
+	return { compatible_path(root .. "/src/main/resources"), compatible_path(root .. "/src/test/resources") }
 end
 
 local memoized_result
 ---@return string
-maven.get_dependencies_classpath = function()
+maven.get_dependencies_classpath_old = function()
 	if memoized_result then
 		return memoized_result
 	end
 
-	local classpath_filepath = compatible_path("target/neotest-java/classpath.txt")
-	local command = ("%s -q dependency:build-classpath -Dmdep.outputFile=%s"):format(mvn(), classpath_filepath)
-	run(command)
-	local dependency_classpath = read_file(classpath_filepath)
+	local command = mvn() .. " -q dependency:tree"
+	local dependency_classpath = run(command)
+	write_file("target/neotest-java/classpath.txt", dependency_classpath)
 
 	if string.match(dependency_classpath, "ERROR") then
 		error('error while running command "' .. command .. '" -> ' .. dependency_classpath)
@@ -109,8 +148,53 @@ maven.get_dependencies_classpath = function()
 	return dependency_classpath
 end
 
-maven.prepare_classpath = function(output_dirs)
+maven.get_dependencies_classpath = function()
+	local command = mvn() .. " dependency:tree"
+	local dependency_classpath = run(command)
+	assert(dependency_classpath)
+	assert(dependency_classpath ~= "")
+
+	local output = dependency_classpath
+	local output_lines = vim.split(output, "\n")
+
+	local jars = iter(output_lines)
+		--
+		:map(take_just_the_dependency)
+		--
+		-- filter nil
+		:filter(function(x)
+			return x ~= nil
+		end)
+		:map(to_gradle_path)
+		--
+		-- filter nil
+		:filter(function(x)
+			return x ~= nil
+		end)
+		-- distinct
+		:reduce(function(acc, curr)
+			if not acc[curr] then
+				acc[curr] = curr
+			end
+			return acc
+		end, {})
+
+	local result = ""
+	iter(jars):foreach(function(jar)
+		result = result .. ":" .. jar
+	end)
+
+	assert(result)
+	assert(result ~= "")
+
+	write_file("target/neotest-java/classpath.txt", result)
+	return result
+end
+
+maven.prepare_classpath = function(output_dirs, resources)
 	output_dirs = output_dirs and output_dirs or {}
+	resources = resources or maven.get_resources()
+
 	local classpath = maven.get_dependencies_classpath()
 
 	for i, dir in ipairs(output_dirs) do
@@ -121,7 +205,7 @@ maven.prepare_classpath = function(output_dirs)
 	local classpath_arguments = ([[
 -cp %s:%s:%s
 	]]):format(
-		table.concat(maven.get_resources(), ":"),
+		table.concat(resources, ":"),
 		classpath,
 		-- maven.get_output_dir() .. "/classes",
 		table.concat(output_dirs, ":")

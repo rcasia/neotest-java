@@ -28,6 +28,10 @@ function Module:get_output_dir()
 	return self._build_tool.get_output_dir(self.base_dir)
 end
 
+function Module:get_resources()
+	return self._build_tool.get_resources(self.base_dir)
+end
+
 ---@return string
 function Module:to_string()
 	return "neotest-java.Module: { base_dir = " .. self.base_dir .. " }"

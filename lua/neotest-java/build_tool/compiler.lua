@@ -8,6 +8,8 @@ local read_file = require("neotest-java.util.read_file")
 local write_file = require("neotest-java.util.write_file")
 local config = require("neotest-java.context_holder").config
 local compatible_path = require("neotest-java.util.compatible_path")
+local ch = require("neotest-java.context_holder")
+local path = require("plenary.path")
 
 local CACHE_FILENAME = "%s/cached_classes.json"
 
@@ -17,6 +19,7 @@ local Compiler = {}
 ---@param cache_dir string
 ---@return table<string> changed_sources
 local filter_unchanged_sources = function(sources, cache_dir)
+	assert(ch.get_context().config.incremental_build == true)
 	---@type { hash: string, source: string }
 	local source_hashmap
 	local success
@@ -62,6 +65,7 @@ end
 
 Compiler.compile_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
+	local config = ch.get_context().config
 
 	local sources = config().incremental_build
 			and filter_unchanged_sources(build_tool.get_sources(), build_tool.get_output_dir())
@@ -117,21 +121,28 @@ end
 
 ---@param project neotest-java.Project
 Compiler.compile_sources2 = function(project)
+	local config = ch.get_context().config
+
 	--TODO: check if this is needed
 	project:prepare_classpath()
 
 	for _, mod in ipairs(project:get_modules()) do
-		print("compiling module: " .. mod.base_dir)
+		-- make sure outputDir is created to operate in it
+		local output_dir = mod:get_output_dir()
+		local output_dir_parent = path:new(output_dir):parent().filename
+
+		vim.uv.fs_mkdir(output_dir_parent, 493)
+		vim.uv.fs_mkdir(output_dir, 493)
 
 		local sources = config.incremental_build and filter_unchanged_sources(mod:get_sources(), mod:get_output_dir())
 			or mod:get_sources()
 
 		if #sources == 0 then
-			print("continue!")
+			log.debug("continue without recompiling main sources module in " .. mod.base_dir)
 			goto continue -- skipping as there are no sources to compile
 		end
 
-		lib.notify("Compiling main sources")
+		lib.notify("Compiling main sources for " .. mod.base_dir)
 
 		local compilation_errors = {}
 		local status_code = 0
@@ -173,6 +184,61 @@ Compiler.compile_sources2 = function(project)
 		assert(status_code == 0, "Error compiling sources")
 		print("terminated command")
 
+		::continue::
+	end
+end
+
+---@param project neotest-java.Project
+Compiler.compile_test_sources2 = function(project)
+	local config = ch.get_context().config
+	for _, mod in ipairs(project:get_modules()) do
+		local sources = config.incremental_build
+				and filter_unchanged_sources(mod:get_test_sources(), mod:get_output_dir())
+			or mod:get_test_sources()
+
+		if #sources == 0 then
+			goto continue -- skipping as there are no sources to compile
+		end
+
+		lib.notify("Compiling test sources")
+
+		local compilation_errors = {}
+		local status_code = 0
+		local output_dir = mod:get_output_dir()
+
+		local test_compilation_command_exited = nio.control.event()
+		local test_sources_compilation_args = {
+			"-g",
+			"-Xlint:none",
+			"-parameters",
+			"-d",
+			output_dir .. "/classes",
+			("@%s/cp_arguments.txt"):format(project.build_tool.get_output_dir()),
+		}
+		for _, source in ipairs(sources) do
+			table.insert(test_sources_compilation_args, source)
+		end
+
+		Job:new({
+			command = binaries.javac(),
+			args = test_sources_compilation_args,
+			on_stderr = function(_, data)
+				table.insert(compilation_errors, data)
+			end,
+			on_exit = function(_, code)
+				status_code = code
+				test_compilation_command_exited.set()
+				if code == 0 then
+				-- do nothing
+				else
+					lib.notify("Error compiling test sources", vim.log.levels.ERROR)
+					log.error("test compilation error args: ", vim.inspect(test_sources_compilation_args))
+					error("Error compiling test sources: " .. table.concat(compilation_errors, "\n"))
+				end
+			end,
+		}):start()
+		test_compilation_command_exited.wait()
+		assert(status_code == 0, "Error compiling test sources")
 		::continue::
 	end
 end

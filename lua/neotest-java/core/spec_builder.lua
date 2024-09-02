@@ -10,6 +10,7 @@ local path = require("plenary.path")
 local compatible_path = require("neotest-java.util.compatible_path")
 local Project = require("neotest-java.types.project")
 local Compiler = require("neotest-java.build_tool.compiler")
+local ch = require("neotest-java.context_holder")
 
 local SpecBuilder = {}
 
@@ -21,7 +22,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
-	local root = assert(root_finder.find_root(position.path))
+	local root = assert(ch:get_context().root)
 	local absolute_path = position.path
 
 	-- make sure we are in root_dir
@@ -61,6 +62,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	-- COMPILATION STEPS
 	local project = Project.from_root_dir(root)
 	Compiler.compile_sources2(project)
+	Compiler.compile_test_sources2(project)
 
 	-- compiler.compile_sources(project_type)
 	-- compiler.compile_test_sources(project_type)
