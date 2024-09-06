@@ -8,6 +8,7 @@ local nio = require("nio")
 local run = require("neotest-java.command.run")
 local compiler = require("neotest-java.build_tool.compiler")
 local path = require("plenary.path")
+local compatible_path = require("neotest-java.util.compatible_path")
 
 SpecBuilder = {}
 
@@ -34,7 +35,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir = string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
-	command:reports_dir(reports_dir)
+	command:reports_dir(compatible_path(reports_dir))
 
 	-- TEST SELECTORS
 	if position.type == "dir" then

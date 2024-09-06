@@ -7,6 +7,7 @@ local build_tools = require("neotest-java.build_tool")
 local read_file = require("neotest-java.util.read_file")
 local write_file = require("neotest-java.util.write_file")
 local config = require("neotest-java.context_holder").get_context().config
+local compatible_path = require("neotest-java.util.compatible_path")
 
 local Compiler = {}
 
@@ -72,8 +73,8 @@ Compiler.compile_sources = function(project_type)
 		"-Xlint:none",
 		"-parameters",
 		"-d",
-		output_dir .. "/classes",
-		"@" .. output_dir .. "/cp_arguments.txt",
+		compatible_path(output_dir .. "/classes"),
+		"@" .. compatible_path(output_dir .. "/cp_arguments.txt"),
 	}
 	for _, source in ipairs(sources) do
 		table.insert(source_compilation_args, source)
@@ -123,8 +124,8 @@ Compiler.compile_test_sources = function(project_type)
 		"-Xlint:none",
 		"-parameters",
 		"-d",
-		output_dir .. "/classes",
-		("@%s/cp_arguments.txt"):format(output_dir),
+		compatible_path(output_dir .. "/classes"),
+		"@" .. compatible_path(output_dir .. "/cp_arguments.txt"),
 	}
 	for _, source in ipairs(sources) do
 		table.insert(test_sources_compilation_args, source)
