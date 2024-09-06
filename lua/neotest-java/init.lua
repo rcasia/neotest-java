@@ -1,5 +1,3 @@
----@diagnostic disable: undefined-doc-name, duplicate-doc-field, duplicate-set-field
-
 local File = require("neotest.lib.file")
 
 local file_checker = require("neotest-java.core.file_checker")
@@ -12,7 +10,6 @@ local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local lib = require("neotest.lib")
 local timer = require("neotest-java.util.timer")
-local nio = require("nio")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -28,86 +25,50 @@ local check_junit_jar = function(filepath)
 	)
 end
 
----@class neotest.Adapter
-NeotestJavaAdapter = {
-	name = "neotest-java",
-}
-
----Find the project root directory given a current directory to work from.
----Should no root be found, the adapter can still be used in a non-project context if a test file matches.
----@async
----@param dir string @Directory to treat as cwd
----@return string | nil @Absolute root dir of test suite
-function NeotestJavaAdapter.root(dir)
-	local root = root_finder.find_root(dir)
-	if root then
-		ch.set_root(root)
-	end
-	return root
-end
-
----Filter directories when searching for test files
----@async
----@param name string Name of directory
----@param rel_path string Path to directory, relative to root
----@param root string Root directory of project
----@return boolean
-function NeotestJavaAdapter.filter_dir(name, rel_path, root)
-	return dir_filter.filter_dir(name, rel_path, root)
-end
-
----@async
----@param file_path string
----@return boolean
-function NeotestJavaAdapter.is_test_file(file_path)
-	return file_checker.is_test_file(file_path)
-end
-
----Given a file path, parse all the tests within it.
----@async
----@param file_path string Absolute file path
----@return neotest.Tree | nil
-function NeotestJavaAdapter.discover_positions(file_path)
-	return position_discoverer.discover_positions(file_path)
-end
-
 ---@type neotest-java.Timer
 local test_timer = nil
 
----@param args neotest.RunArgs
----@return nil | neotest.RunSpec | neotest.RunSpec[]
-function NeotestJavaAdapter.build_spec(args)
-	test_timer = timer:start()
-	local self = NeotestJavaAdapter
-	check_junit_jar(ch.get_context().config.junit_jar)
+---@class neotest.Adapter
+NeotestJavaAdapter = {
+	name = "neotest-java",
+	root = function(dir)
+		local root = root_finder.find_root(dir)
+		if root then
+			ch.set_root(root)
+		end
+		return root
+	end,
+	filter_dir = dir_filter.filter_dir,
+	is_test_file = file_checker.is_test_file,
+	discover_positions = position_discoverer.discover_positions,
 
-	-- TODO: find a way to avoid to make this steps every time
+	build_spec = function(args)
+		test_timer = timer:start()
+		local self = NeotestJavaAdapter
+		check_junit_jar(ch.get_context().config.junit_jar)
 
-	-- find root
-	local root = ch.get_context().root or self.root(vim.fn.getcwd())
-	assert(root, "root directory not found")
+		-- TODO: find a way to avoid to make this steps every time
 
-	-- detect project type
-	local project_type = detect_project_type(root)
+		-- find root
+		local root = ch.get_context().root or self.root(vim.fn.getcwd())
+		assert(root, "root directory not found")
 
-	-- build spec
-	return spec_builder.build_spec(args, project_type, ch.get_context().config)
-end
+		-- detect project type
+		local project_type = detect_project_type(root)
 
----@async
----@param spec neotest.RunSpec
----@param result neotest.StrategyResult
----@param tree neotest.Tree
----@return table<string, neotest.Result>
-function NeotestJavaAdapter.results(spec, result, tree)
-	local results = result_builder.build_results(spec, result, tree)
+		-- build spec
+		return spec_builder.build_spec(args, project_type, ch.get_context().config)
+	end,
+	results = function(spec, result, tree)
+		local results = result_builder.build_results(spec, result, tree)
 
-	if test_timer then
-		lib.notify("Tests lasted " .. test_timer:stop() .. " ms.")
-	end
+		if test_timer then
+			lib.notify("Tests lasted " .. test_timer:stop() .. " ms.")
+		end
 
-	return results
-end
+		return results
+	end,
+};
 
 -- on init
 (function()
