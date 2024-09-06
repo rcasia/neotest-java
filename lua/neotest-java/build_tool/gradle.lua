@@ -1,4 +1,5 @@
 local fun = require("fun")
+local compatible_path = require("neotest-java.util.compatible_path")
 local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
@@ -26,12 +27,14 @@ local function to_gradle_path(dependency)
 	local group_id, artifact_id, version = dependency:match("([^:]+):([^:]+):([^:]+)")
 
 	local filename = string.format("%s-%s.jar", artifact_id, version)
-	local dir = string.format(
-		"%s/.gradle/caches/modules-2/files-2.1/%s/%s/%s",
-		os.getenv("HOME"),
-		group_id,
-		artifact_id,
-		version
+	local dir = compatible_path(
+		string.format(
+			"%s/.gradle/caches/modules-2/files-2.1/%s/%s/%s",
+			os.getenv("HOME"),
+			group_id,
+			artifact_id,
+			version
+		)
 	)
 	local result = find_file_in_dir(filename, dir)
 	return result
@@ -62,11 +65,11 @@ end
 local gradle = {}
 
 gradle.source_dir = function()
-	return "src/main/java"
+	return compatible_path("src/main/java")
 end
 
 gradle.get_output_dir = function()
-	return "build/neotest-java"
+	return compatible_path("build/neotest-java")
 end
 
 gradle.get_sources = function()
@@ -86,14 +89,14 @@ gradle.get_sources = function()
 end
 
 gradle.get_test_sources = function()
-	local test_sources = scan.scan_dir("src/test/java", {
+	local test_sources = scan.scan_dir(compatible_path("src/test/java"), {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 	return test_sources
 end
 
 gradle.get_resources = function()
-	return { "src/main/resources", "src/test/resources" }
+	return { compatible_path("src/main/resources"), compatible_path("src/test/resources") }
 end
 
 gradle.get_dependencies_classpath = function()
@@ -102,11 +105,12 @@ gradle.get_dependencies_classpath = function()
 
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
+	-- FIX: this will work only with unix systems
 	local suc =
 		os.execute(binaries.gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
 	assert(suc, "failed to run")
 
-	local output = run("cat " .. gradle.get_output_dir() .. "/dependencies.txt")
+	local output = run("cat " .. compatible_path(gradle.get_output_dir() .. "/dependencies.txt"))
 	local output_lines = vim.split(output, "\n")
 
 	local jars = iter(output_lines)
@@ -139,10 +143,14 @@ gradle.prepare_classpath = function()
 	local classpath = gradle.get_dependencies_classpath()
 	local classpath_arguments = ([[
 		-cp %s:%s:%s
-	]]):format(table.concat(gradle.get_resources(), ":"), classpath, gradle.get_output_dir() .. "/classes")
+	]]):format(
+		table.concat(gradle.get_resources(), ":"),
+		classpath,
+		compatible_path(gradle.get_output_dir() .. "/classes")
+	)
 
 	--write manifest file
-	local arguments_filepath = "build/neotest-java/cp_arguments.txt"
+	local arguments_filepath = compatible_path("build/neotest-java/cp_arguments.txt")
 	local arguments_file = io.open(arguments_filepath, "w")
 		or error("Could not open file for writing: " .. arguments_filepath)
 	local buffer = ""

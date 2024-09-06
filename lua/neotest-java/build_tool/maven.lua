@@ -4,6 +4,7 @@ local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
 local logger = require("neotest.logging")
 local read_file = require("neotest-java.util.read_file")
+local compatible_path = require("neotest-java.util.compatible_path")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
 
@@ -17,7 +18,7 @@ maven.source_directory = function()
 		return tag_content
 	end
 
-	return "src/main/java"
+	return compatible_path("src/main/java")
 end
 
 maven.test_source_directory = function()
@@ -26,12 +27,12 @@ maven.test_source_directory = function()
 		logger.debug("Found testSourceDirectory in pom.xml: " .. tag_content)
 		return tag_content
 	end
-	return "src/test/java"
+	return compatible_path("src/test/java")
 end
 
 maven.get_output_dir = function()
 	-- TODO: read from pom.xml <build><directory>
-	return "target/neotest-java"
+	return compatible_path("target/neotest-java")
 end
 
 maven.get_sources = function()
@@ -62,7 +63,7 @@ end
 
 maven.get_resources = function()
 	-- TODO: read from pom.xml <resources>
-	return { "src/main/resources", "src/test/resources" }
+	return { compatible_path("src/main/resources"), compatible_path("src/test/resources") }
 end
 
 local memoized_result
@@ -72,9 +73,10 @@ maven.get_dependencies_classpath = function()
 		return memoized_result
 	end
 
-	local command = mvn() .. " -q dependency:build-classpath -Dmdep.outputFile=target/neotest-java/classpath.txt"
+	local classpath_filepath = compatible_path("target/neotest-java/classpath.txt")
+	local command = ("%s -q dependency:build-classpath -Dmdep.outputFile=%s"):format(mvn(), classpath_filepath)
 	run(command)
-	local dependency_classpath = read_file("target/neotest-java/classpath.txt")
+	local dependency_classpath = read_file(classpath_filepath)
 
 	if string.match(dependency_classpath, "ERROR") then
 		error('error while running command "' .. command .. '" -> ' .. dependency_classpath)
@@ -90,10 +92,14 @@ maven.prepare_classpath = function()
 	-- write in file per buffer of 500 characters
 	local classpath_arguments = ([[
 -cp %s:%s:%s
-	]]):format(table.concat(maven.get_resources(), ":"), classpath, maven.get_output_dir() .. "/classes")
+	]]):format(
+		table.concat(maven.get_resources(), ":"),
+		classpath,
+		compatible_path(maven.get_output_dir() .. "/classes")
+	)
 
 	--write manifest file
-	local arguments_filepath = "target/neotest-java/cp_arguments.txt"
+	local arguments_filepath = compatible_path("target/neotest-java/cp_arguments.txt")
 	local arguments_file = io.open(arguments_filepath, "w")
 		or error("Could not open file for writing: " .. arguments_filepath)
 	local buffer = ""

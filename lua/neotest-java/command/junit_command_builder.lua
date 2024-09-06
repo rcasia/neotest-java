@@ -1,9 +1,7 @@
-local iter = require("fun").iter
 local build_tools = require("neotest-java.build_tool")
 local binaries = require("neotest-java.command.binaries")
-local javac = binaries.javac
+local compatible_path = require("neotest-java.util.compatible_path")
 local java = binaries.java
-local log = require("neotest-java.logger")
 
 local function wrap_command_as_bash(command)
 	return ([=[
@@ -128,7 +126,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				("@%s/cp_arguments.txt"):format(build_tool.get_output_dir()),
+				"@" .. compatible_path(("%s/cp_arguments.txt"):format(build_tool.get_output_dir())),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",
