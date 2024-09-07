@@ -3,7 +3,6 @@ local compatible_path = require("neotest-java.util.compatible_path")
 local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
-local File = require("neotest.lib.file")
 local run = require("neotest-java.command.run")
 local binaries = require("neotest-java.command.binaries")
 

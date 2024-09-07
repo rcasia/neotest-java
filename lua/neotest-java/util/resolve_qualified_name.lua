@@ -8,7 +8,7 @@ local function resolve_qualified_name(filename)
 		local root = lang_tree:parse()[1]:root()
 
 		local result = ""
-		for i, node, metadata in query:iter_captures(root, content, 0, -1) do
+		for _, node, _ in query:iter_captures(root, content, 0, -1) do --luacheck: ignore 512 loop is executed at most once
 			result = vim.treesitter.get_node_text(node, content)
 			break
 		end

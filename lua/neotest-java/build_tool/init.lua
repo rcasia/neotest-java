@@ -4,7 +4,6 @@ local log = require("neotest-java.logger")
 local nio = require("nio")
 local Job = require("plenary.job")
 local lib = require("neotest.lib")
-local binaries = require("neotest-java.command.binaries")
 
 ---@class neotest-java.BuildTool
 ---@field get_dependencies_classpath fun(): string
@@ -43,7 +42,7 @@ build_tools.launch_debug_test = function(command, args)
 		on_stderr = function(_, data)
 			stderr[#stderr + 1] = data
 		end,
-		on_stdout = function(err, data)
+		on_stdout = function(_, data)
 			if string.find(data, "Listening") then
 				test_command_started_listening.set()
 			end

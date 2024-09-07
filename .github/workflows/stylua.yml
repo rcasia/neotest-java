@@ -19,3 +19,6 @@ jobs:
         version: latest # NOTE: we recommend pinning to a specific version in case of formatting changes
         # CLI arguments
         args: --check .
+    - name: Luacheck
+      uses: lunarmodules/luacheck@v1.2.0
+            

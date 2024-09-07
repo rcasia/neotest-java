@@ -1,6 +1,6 @@
 local lib = require("neotest.lib")
 
-PositionsDiscoverer = {}
+local PositionsDiscoverer = {}
 
 ---Given a file path, parse all the tests within it.
 ---@async
@@ -18,7 +18,7 @@ function PositionsDiscoverer.discover_positions(file_path)
       (method_declaration
         (modifiers
           (marker_annotation
-            name: (identifier) @annotation 
+            name: (identifier) @annotation
               (#any-of? @annotation "Test" "ParameterizedTest" "CartesianTest")
             )
         )

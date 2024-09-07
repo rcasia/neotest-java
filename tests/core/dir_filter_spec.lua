@@ -1,6 +1,4 @@
-local async = require("plenary.async.tests")
 local plugin = require("neotest-java")
-local Tree = require("neotest.types").Tree
 
 describe("DirFilter", function()
 	it("should filter out excluded directories", function()

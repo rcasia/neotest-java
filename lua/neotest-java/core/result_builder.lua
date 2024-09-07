@@ -60,14 +60,14 @@ local function extract_parameterized_tests(testcases, name)
 	return tests
 end
 
-ResultBuilder = {}
+local ResultBuilder = {}
 
 ---@async
 ---@param spec neotest.RunSpec
 ---@param result neotest.StrategyResult
 ---@param tree neotest.Tree
 ---@return table<string, neotest.Result>
-function ResultBuilder.build_results(spec, result, tree)
+function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212 unused argument
 	-- wait for the debug test to finish
 	if spec.context.strategy == "dap" then
 		spec.context.terminated_command_event.wait()

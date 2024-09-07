@@ -3,28 +3,6 @@ local binaries = require("neotest-java.command.binaries")
 local compatible_path = require("neotest-java.util.compatible_path")
 local java = binaries.java
 
-local function wrap_command_as_bash(command)
-	return ([=[
-  bash -c '
-    %s
-  '
-  ]=]):format(command)
-end
-
-local stop_command_when_line_containing = function(command, word)
-	return ([=[
-  { %s | while IFS= read -r line; do 
-        echo "$line" 
-        if [[ "$line" == *"%s"* ]]; then
-            pkill -9 -P $$
-            exit
-        fi
-    done
-  } & 
-  wait $!
-  ]=]):format(command, word)
-end
-
 --- @class CommandBuilder
 local CommandBuilder = {
 
@@ -60,10 +38,6 @@ local CommandBuilder = {
 		return self
 	end,
 
-	ignore_wrapper = function(self, ignore_wrapper)
-		-- do nothing
-	end,
-
 	get_referenced_classes = function(self)
 		local classes = {}
 		for _, v in ipairs(self._test_references) do
@@ -82,7 +56,7 @@ local CommandBuilder = {
 		return methods
 	end,
 
-	_create_method_qualified_reference = function(self, qualified_name, method_name)
+	_create_method_qualified_reference = function(_, qualified_name, method_name)
 		if method_name == nil then
 			return qualified_name
 		end

@@ -14,7 +14,7 @@ local timer = require("neotest-java.util.timer")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
 local check_junit_jar = function(filepath)
-	local exists, err = File.exists(filepath)
+	local exists, _ = File.exists(filepath)
 	assert(
 		exists,
 		([[
@@ -28,8 +28,8 @@ end
 ---@type neotest-java.Timer
 local test_timer = nil
 
----@class neotest.Adapter
-NeotestJavaAdapter = {
+---@type neotest.Adapter
+local NeotestJavaAdapter = {
 	name = "neotest-java",
 	root = function(dir)
 		local root = root_finder.find_root(dir)
@@ -43,14 +43,13 @@ NeotestJavaAdapter = {
 	discover_positions = position_discoverer.discover_positions,
 
 	build_spec = function(args)
-		test_timer = timer:start()
-		local self = NeotestJavaAdapter
+		test_timer = timer.start()
 		check_junit_jar(ch.get_context().config.junit_jar)
 
 		-- TODO: find a way to avoid to make this steps every time
 
 		-- find root
-		local root = ch.get_context().root or self.root(vim.fn.getcwd())
+		local root = ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
 		assert(root, "root directory not found")
 
 		-- detect project type

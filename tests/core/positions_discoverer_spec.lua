@@ -1,6 +1,5 @@
 local async = require("nio").tests
 local plugin = require("neotest-java")
-local Tree = require("neotest.types").Tree
 
 local current_dir = vim.fn.expand("%:p:h") .. "/"
 

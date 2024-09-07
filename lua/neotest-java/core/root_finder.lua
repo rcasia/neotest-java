@@ -1,7 +1,8 @@
 local lib = require("neotest.lib")
 local log = require("neotest-java.logger")
 
-RootFinder = {}
+local RootFinder = {}
+
 ---Find the project root directory given a current directory to work from.
 ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
 ---@async

@@ -140,9 +140,7 @@ Compiler.compile_test_sources = function(project_type)
 		on_exit = function(_, code)
 			status_code = code
 			test_compilation_command_exited.set()
-			if code == 0 then
-			-- do nothing
-			else
+			if code ~= 0 then
 				lib.notify("Error compiling test sources", vim.log.levels.ERROR)
 				log.error("test compilation error args: ", vim.inspect(test_sources_compilation_args))
 				error("Error compiling test sources: " .. table.concat(compilation_errors, "\n"))

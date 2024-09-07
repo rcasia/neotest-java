@@ -16,7 +16,7 @@ local DirFilter = {
 ---@param rel_path string Path to directory, relative to root
 ---@param root string Root directory of project
 ---@return boolean
-function DirFilter.filter_dir(name, rel_path, root)
+function DirFilter.filter_dir(name, rel_path, root) -- luacheck: ignore 212 unused argument
 	for _, v in ipairs(DirFilter.excluded_directories) do
 		if string.find(rel_path, "test") then
 			return true
