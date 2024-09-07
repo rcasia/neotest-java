@@ -9,6 +9,8 @@ local write_file = require("neotest-java.util.write_file")
 local config = require("neotest-java.context_holder").get_context().config
 local compatible_path = require("neotest-java.util.compatible_path")
 
+local CACHE_FILENAME = "%s/cached_classes.json"
+
 local Compiler = {}
 
 ---@param sources table<string>
@@ -18,7 +20,7 @@ local filter_unchanged_sources = function(sources, cache_dir)
 	---@type { hash: string, source: string }
 	local source_hashmap
 	local success
-	local cache_filepath = string.format("%s/cached_classes.json", cache_dir)
+	local cache_filepath = CACHE_FILENAME:format(cache_dir)
 
 	success, source_hashmap = pcall(function()
 		return nio.fn.json_decode(read_file(cache_filepath))
@@ -47,6 +49,13 @@ local filter_unchanged_sources = function(sources, cache_dir)
 	write_file(cache_filepath, nio.fn.json_encode(source_hashmap))
 
 	return changed_sources
+end
+
+---@param cache_dir string
+local clear_cached_sources = function(cache_dir)
+	local cache_filepath = CACHE_FILENAME:format(cache_dir)
+	write_file(cache_filepath, "{}")
+	log.debug(("cleared file at %s"):format(cache_filepath))
 end
 
 Compiler.compile_sources = function(project_type)
@@ -98,6 +107,9 @@ Compiler.compile_sources = function(project_type)
 		end,
 	}):start()
 	source_compilation_command_exited.wait()
+	if status_code ~= 0 then
+		clear_cached_sources(output_dir)
+	end
 	assert(status_code == 0, "Error compiling sources")
 end
 
@@ -148,6 +160,9 @@ Compiler.compile_test_sources = function(project_type)
 		end,
 	}):start()
 	test_compilation_command_exited.wait()
+	if status_code ~= 0 then
+		clear_cached_sources(output_dir)
+	end
 	assert(status_code == 0, "Error compiling test sources")
 end
 
