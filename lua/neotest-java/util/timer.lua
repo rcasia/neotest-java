@@ -28,7 +28,7 @@ function Timer:getElapsedTime()
 end
 
 -- Method to create and start a new timer
-function Timer:start()
+function Timer.start()
 	local instance = setmetatable({}, Timer)
 	instance.startTime = os.clock() * 1000
 	instance.endTime = nil

@@ -5,12 +5,11 @@ local log = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
-local run = require("neotest-java.command.run")
 local compiler = require("neotest-java.build_tool.compiler")
 local path = require("plenary.path")
 local compatible_path = require("neotest-java.util.compatible_path")
 
-SpecBuilder = {}
+local SpecBuilder = {}
 
 ---@param args neotest.RunArgs
 ---@param project_type string

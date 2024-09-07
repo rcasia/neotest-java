@@ -41,7 +41,7 @@ end
 
 ---@class neotest-java.JunitResult
 ---@field testcase table
-JunitResult = {}
+local JunitResult = {}
 
 ---@return neotest.Result
 function JunitResult.SKIPPED(id)

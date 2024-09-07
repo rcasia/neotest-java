@@ -292,7 +292,7 @@ describe("ResultBuilder", function()
 
 	async.it("builds the results for parameterized with @EmptySource test", function()
 		--given
-		local project_dir = project_type == "maven" and "maven-demo" or "gradle-groovy-demo"
+		local project_dir = "gradle-groovy-demo"
 		local runSpec = {
 			cwd = current_dir .. "tests/fixtures/" .. project_dir,
 			context = {

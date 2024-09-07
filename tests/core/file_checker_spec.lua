@@ -1,6 +1,5 @@
 local plugin = require("neotest-java")
 local mock = require("luassert.mock")
-local stub = require("luassert.stub")
 
 describe("file_checker", function()
 	it("should return true for unit test files", function()

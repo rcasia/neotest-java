@@ -1,7 +1,6 @@
 local memo = require("neotest.lib.func_util.memoize")
 local file = require("neotest.lib.file")
 local xml = require("neotest.lib.xml")
-local logger = require("neotest.logging")
 
 ---@param filepath string
 ---@param selector string ex: project.build.sourceDirectory
