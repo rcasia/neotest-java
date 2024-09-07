@@ -11,11 +11,14 @@ local default_config = {
 ---@type neotest-java.Context
 local context = { root = nil, config = default_config }
 
----@type neotest-java.ContextHolder
+---@class neotest-java.ContextHolder
 return {
 	--
 	get_context = function()
 		return context
+	end,
+	config = function()
+		return context.config
 	end,
 	set_opts = function(opts)
 		context.config = vim.tbl_extend("force", context.config, opts)
@@ -34,8 +37,3 @@ return {
 ---@class neotest-java.Context
 ---@field config neotest-java.ConfigOpts
 ---@field root string|nil
----
----@class neotest-java.ContextHolder
----@field get_context fun(): neotest-java.Context
----@field set_opts fun(opts: neotest-java.ConfigOpts)
----@field set_root fun(root: string)
