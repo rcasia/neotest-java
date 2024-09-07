@@ -6,7 +6,7 @@ local binaries = require("neotest-java.command.binaries")
 local build_tools = require("neotest-java.build_tool")
 local read_file = require("neotest-java.util.read_file")
 local write_file = require("neotest-java.util.write_file")
-local config = require("neotest-java.context_holder").get_context().config
+local config = require("neotest-java.context_holder").config
 local compatible_path = require("neotest-java.util.compatible_path")
 
 local CACHE_FILENAME = "%s/cached_classes.json"
@@ -61,7 +61,7 @@ end
 Compiler.compile_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
 
-	local sources = config.incremental_build
+	local sources = config().incremental_build
 			and filter_unchanged_sources(build_tool.get_sources(), build_tool.get_output_dir())
 		or build_tool.get_sources()
 
@@ -116,7 +116,7 @@ end
 Compiler.compile_test_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
 
-	local sources = config.incremental_build
+	local sources = config().incremental_build
 			and filter_unchanged_sources(build_tool.get_test_sources(), build_tool.get_output_dir())
 		or build_tool.get_test_sources()
 
