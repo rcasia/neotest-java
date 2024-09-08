@@ -148,8 +148,10 @@ maven.get_dependencies_classpath_old = function()
 	return dependency_classpath
 end
 
-maven.get_dependencies_classpath = function()
-	local command = mvn() .. " dependency:tree"
+---@param mod neotest-java.Module
+maven.get_dependencies_classpath = function(mod)
+	local settings_filename = ("%s/pom.xml"):format(mod and mod.base_dir or ".")
+	local command = ("%s dependency:tree -f %s"):format(mvn(), settings_filename)
 	local dependency_classpath = run(command)
 	assert(dependency_classpath)
 	assert(dependency_classpath ~= "")
@@ -187,15 +189,20 @@ maven.get_dependencies_classpath = function()
 	assert(result)
 	assert(result ~= "")
 
-	write_file("target/neotest-java/classpath.txt", result)
+	if mod then
+		write_file(mod:get_output_dir() .. "/classpath.txt", result)
+	else
+		write_file("target/neotest-java/classpath.txt", result)
+	end
 	return result
 end
 
-maven.prepare_classpath = function(output_dirs, resources)
+---@param mod neotest-java.Module
+maven.prepare_classpath = function(output_dirs, resources, mod)
 	output_dirs = output_dirs and output_dirs or {}
 	resources = resources or maven.get_resources()
 
-	local classpath = maven.get_dependencies_classpath()
+	local classpath = maven.get_dependencies_classpath(mod)
 
 	for i, dir in ipairs(output_dirs) do
 		output_dirs[i] = compatible_path(dir .. "/classes")
@@ -204,15 +211,16 @@ maven.prepare_classpath = function(output_dirs, resources)
 	-- write in file per buffer of 500 characters
 	local classpath_arguments = ([[
 -cp %s:%s:%s
-	]]):format(
-		table.concat(resources, ":"),
-		classpath,
-		-- maven.get_output_dir() .. "/classes",
-		table.concat(output_dirs, ":")
-	)
+	]]):format(table.concat(resources, ":"), classpath, table.concat(output_dirs, ":"))
 
 	--write manifest file
-	local arguments_filepath = compatible_path("target/neotest-java/cp_arguments.txt")
+	local arguments_filepath
+	if mod then
+		arguments_filepath = compatible_path(mod:get_output_dir() .. "/cp_arguments.txt")
+	else
+		arguments_filepath = compatible_path("target/neotest-java/cp_arguments.txt")
+	end
+
 	local arguments_file = io.open(arguments_filepath, "w")
 		or error("Could not open file for writing: " .. arguments_filepath)
 	local buffer = ""

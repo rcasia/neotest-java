@@ -65,7 +65,6 @@ end
 
 Compiler.compile_sources = function(project_type)
 	local build_tool = build_tools.get(project_type)
-	local config = ch.get_context().config
 
 	local sources = config().incremental_build
 			and filter_unchanged_sources(build_tool.get_sources(), build_tool.get_output_dir())
@@ -120,79 +119,68 @@ Compiler.compile_sources = function(project_type)
 end
 
 ---@param project neotest-java.Project
-Compiler.compile_sources2 = function(project)
-	local config = ch.get_context().config
+---@param mod neotest-java.Module
+Compiler.compile_sources2 = function(project, mod)
+	--TODO: only prepare if the pom.xml has changed
+	mod:prepare_classpath()
 
-	--TODO: check if this is needed
-	project:prepare_classpath()
+	-- make sure outputDir is created to operate in it
+	local output_dir = mod:get_output_dir()
+	local output_dir_parent = path:new(output_dir):parent().filename
+	vim.uv.fs_mkdir(output_dir_parent, 493)
+	vim.uv.fs_mkdir(output_dir, 493)
 
-	for _, mod in ipairs(project:get_modules()) do
-		-- make sure outputDir is created to operate in it
-		local output_dir = mod:get_output_dir()
-		local output_dir_parent = path:new(output_dir):parent().filename
+	local sources = config().incremental_build and filter_unchanged_sources(mod:get_sources(), mod:get_output_dir())
+		or mod:get_sources()
 
-		vim.uv.fs_mkdir(output_dir_parent, 493)
-		vim.uv.fs_mkdir(output_dir, 493)
-
-		local sources = config.incremental_build and filter_unchanged_sources(mod:get_sources(), mod:get_output_dir())
-			or mod:get_sources()
-
-		if #sources == 0 then
-			log.debug("continue without recompiling main sources module in " .. mod.base_dir)
-			goto continue -- skipping as there are no sources to compile
-		end
-
-		lib.notify("Compiling main sources for " .. mod.base_dir)
-
-		local compilation_errors = {}
-		local status_code = 0
-		local output_dir = mod:get_output_dir()
-		local source_compilation_command_exited = nio.control.event()
-		local source_compilation_args = {
-			"-g",
-			"-Xlint:none",
-			"-parameters",
-			"-d",
-			output_dir .. "/classes",
-			"@" .. project.build_tool.get_output_dir() .. "/cp_arguments.txt",
-		}
-		for _, source in ipairs(sources) do
-			table.insert(source_compilation_args, source)
-		end
-
-		print("running command")
-
-		Job:new({
-			command = binaries.javac(),
-			args = source_compilation_args,
-			on_stderr = function(_, data)
-				table.insert(compilation_errors, data)
-			end,
-			on_exit = function(_, code)
-				status_code = code
-				if code == 0 then
-					source_compilation_command_exited.set()
-				else
-					source_compilation_command_exited.set()
-					lib.notify("Error compiling sources", vim.log.levels.ERROR)
-					log.error("test compilation error args: ", vim.inspect(source_compilation_args))
-					error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
-				end
-			end,
-		}):start()
-		source_compilation_command_exited.wait()
-		assert(status_code == 0, "Error compiling sources")
-		print("terminated command")
-
-		::continue::
+	if #sources == 0 then
+		log.debug("continue without recompiling main sources module in " .. mod.base_dir)
+		return -- skipping as there are no sources to compile
 	end
+
+	lib.notify("Compiling main sources for " .. mod.base_dir)
+
+	local compilation_errors = {}
+	local status_code = 0
+	local source_compilation_command_exited = nio.control.event()
+	local source_compilation_args = {
+		"-g",
+		"-Xlint:none",
+		"-parameters",
+		"-d",
+		output_dir .. "/classes",
+		"@" .. mod:get_output_dir() .. "/cp_arguments.txt",
+	}
+	for _, source in ipairs(sources) do
+		table.insert(source_compilation_args, source)
+	end
+
+	Job:new({
+		command = binaries.javac(),
+		args = source_compilation_args,
+		on_stderr = function(_, data)
+			table.insert(compilation_errors, data)
+		end,
+		on_exit = function(_, code)
+			status_code = code
+			if code == 0 then
+				source_compilation_command_exited.set()
+			else
+				source_compilation_command_exited.set()
+				lib.notify("Error compiling sources", vim.log.levels.ERROR)
+				log.error("test compilation error args: ", vim.inspect(source_compilation_args))
+				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
+			end
+		end,
+	}):start()
+	source_compilation_command_exited.wait()
+	assert(status_code == 0, "Error compiling sources")
 end
 
 ---@param project neotest-java.Project
 Compiler.compile_test_sources2 = function(project)
-	local config = ch.get_context().config
 	for _, mod in ipairs(project:get_modules()) do
-		local sources = config.incremental_build
+		local sources = config().incremental_build
 				and filter_unchanged_sources(mod:get_test_sources(), mod:get_output_dir())
 			or mod:get_test_sources()
 
@@ -237,8 +225,10 @@ Compiler.compile_test_sources2 = function(project)
 				end
 			end,
 		}):start()
+
 		test_compilation_command_exited.wait()
 		assert(status_code == 0, "Error compiling test sources")
+
 		::continue::
 	end
 end

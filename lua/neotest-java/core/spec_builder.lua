@@ -61,11 +61,11 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- COMPILATION STEPS
 	local project = Project.from_root_dir(root)
-	Compiler.compile_sources2(project)
-	Compiler.compile_test_sources2(project)
-
-	-- compiler.compile_sources(project_type)
-	-- compiler.compile_test_sources(project_type)
+	project:prepare_classpath()
+	for _, mod in ipairs(project:get_modules()) do
+		Compiler.compile_sources2(project, mod)
+	end
+	Compiler.compile_test_sources2(project, mod)
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then

@@ -37,4 +37,10 @@ function Module:to_string()
 	return "neotest-java.Module: { base_dir = " .. self.base_dir .. " }"
 end
 
+function Module:prepare_classpath()
+	local output_dir = self:get_output_dir()
+	local resources = self:get_resources()
+	self._build_tool.prepare_classpath({ output_dir }, resources, self)
+end
+
 return Module
