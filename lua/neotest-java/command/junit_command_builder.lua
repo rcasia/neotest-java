@@ -75,10 +75,16 @@ local CommandBuilder = {
 		self._reports_dir = reports_dir
 	end,
 
+	basedir = function(self, basedir)
+		self._basedir = basedir
+	end,
+
+	--- @param basedir? string
 	--- @param port? number
 	--- @return { command: string, args: string[] }
-	build_junit = function(self, port)
+	build_junit = function(self, port, basedir)
 		assert(self._test_references, "test_references cannot be nil")
+		assert(self._basedir, "basedir cannot be nil")
 
 		local build_tool = build_tools.get(self._project_type)
 
@@ -101,7 +107,8 @@ local CommandBuilder = {
 				self._junit_jar,
 				"execute",
 				-- "@" .. compatible_path(("%s/cp_arguments.txt"):format(build_tool.get_output_dir())),
-				"@" .. compatible_path(("rest-module/%s/cp_arguments.txt"):format(build_tool.get_output_dir())),
+				"@"
+					.. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",

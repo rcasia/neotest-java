@@ -1,12 +1,17 @@
 local File = require("neotest.lib.file")
+local Path = require("plenary.path")
+local nio = require("nio")
 
 ---@param filepath string
 ---@param content string
 local function write_file(filepath, content)
 	-- for os compatibibility
-	local compatible_path = filepath:gsub("\\", File.sep):gsub("/", File.sep)
+	local _filepath = Path:new(filepath)
+	-- create parent directories if they don't exist
+	nio.fn.mkdir(_filepath:parent():absolute(), "p")
 
-	--write manifest file
+	local compatible_path = _filepath:absolute()
+
 	local file = io.open(compatible_path, "w") or error("Could not open file for writing: " .. compatible_path)
 	local buffer = ""
 	for i = 1, #content do
