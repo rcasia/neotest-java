@@ -106,7 +106,7 @@ Compiler.compile_sources = function(project_type)
 			else
 				source_compilation_command_exited.set()
 				lib.notify("Error compiling sources", vim.log.levels.ERROR)
-				log.error("test compilation error args: ", vim.inspect(source_compilation_args))
+				log.error("compilation error args: ", vim.inspect(source_compilation_args))
 				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
@@ -125,7 +125,7 @@ Compiler.compile_sources2 = function(project, mod)
 	mod:prepare_classpath()
 
 	-- make sure outputDir is created to operate in it
-	local output_dir = mod:get_output_dir()
+	local output_dir = assert(mod:get_output_dir())
 	local output_dir_parent = path:new(output_dir):parent().filename
 	nio.fn.mkdir(output_dir, "p")
 
@@ -148,7 +148,7 @@ Compiler.compile_sources2 = function(project, mod)
 		"-parameters",
 		"-d",
 		output_dir .. "/classes",
-		"@" .. mod:get_output_dir() .. "/cp_arguments.txt",
+		"@" .. output_dir .. "/cp_arguments.txt",
 	}
 	for _, source in ipairs(sources) do
 		table.insert(source_compilation_args, source)
@@ -164,10 +164,11 @@ Compiler.compile_sources2 = function(project, mod)
 			status_code = code
 			if code == 0 then
 				source_compilation_command_exited.set()
+				log.debug("source compilation done")
 			else
 				source_compilation_command_exited.set()
 				lib.notify("Error compiling sources", vim.log.levels.ERROR)
-				log.error("test compilation error args: ", vim.inspect(source_compilation_args))
+				log.error("compilation error args: java", vim.inspect(table.concat(source_compilation_args, " ")))
 				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
@@ -190,7 +191,7 @@ Compiler.compile_test_sources2 = function(project, mod)
 
 	local compilation_errors = {}
 	local status_code = 0
-	local output_dir = mod:get_output_dir()
+	local output_dir = assert(mod:get_output_dir())
 
 	local test_compilation_command_exited = nio.control.event()
 	local test_sources_compilation_args = {
@@ -205,6 +206,8 @@ Compiler.compile_test_sources2 = function(project, mod)
 		table.insert(test_sources_compilation_args, source)
 	end
 
+	log.debug("test_sources_compilation_args: " .. vim.inspect(test_sources_compilation_args))
+
 	Job:new({
 		command = binaries.javac(),
 		args = test_sources_compilation_args,
@@ -215,6 +218,7 @@ Compiler.compile_test_sources2 = function(project, mod)
 			status_code = code
 			test_compilation_command_exited.set()
 			if code == 0 then
+				log.debug("test compilation done")
 				-- do nothing
 			else
 				lib.notify("Error compiling test sources", vim.log.levels.ERROR)

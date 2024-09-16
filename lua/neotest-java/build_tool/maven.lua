@@ -2,24 +2,27 @@ local run = require("neotest-java.command.run")
 local read_xml_tag = require("neotest-java.util.read_xml_tag")
 local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
-local logger = require("neotest.logging")
+local logger = require("neotest-java.logger")
 local read_file = require("neotest-java.util.read_file")
 local compatible_path = require("neotest-java.util.compatible_path")
 local File = require("neotest.lib.file")
 local write_file = require("neotest-java.util.write_file")
 local fun = require("fun")
+local take_just_the_dependency = require("neotest-java.util.just_take_the_dependency")
 local iter = fun.iter
 local totable = fun.totable
 
 local JAVA_FILE_PATTERN = ".+%.java$"
+local JAR_FILE_PATTERN = ".+%.jar$"
 local PROJECT_FILE = "pom.xml"
 
+---@class neotest-java.MavenBuildTool : neotest-java.BuildTool
 local maven = {}
 
 local function find_file_in_dir(filename, dir)
 	return totable(
 		--
-		iter(scan.scan_dir(dir, { silent = true }))
+		iter(scan.scan_dir(dir, { silent = true, search_pattern = JAR_FILE_PATTERN }))
 			--
 			:filter(function(path)
 				return string.find(path, filename, 1, true)
@@ -27,27 +30,18 @@ local function find_file_in_dir(filename, dir)
 	)[1]
 end
 
-local function to_gradle_path(dependency)
+local function to_maven_path(dependency)
 	if dependency == nil then
 		return nil
 	end
 	local group_id, artifact_id, version = dependency:match("([^:]+):([^:]+):([^:]+)")
 
 	local filename = string.format("%s-%s.jar", artifact_id, version)
+	local filename_fallback = string.format("%s-%s", artifact_id, version)
 	local dir =
 		string.format("%s/.m2/repository/%s/%s/%s", os.getenv("HOME"), group_id:gsub("%.", "/"), artifact_id, version)
-	local result = find_file_in_dir(filename, dir)
+	local result = find_file_in_dir(filename, dir) or find_file_in_dir(filename_fallback, dir)
 	return result
-end
-
-local function take_just_the_dependency(line)
-	-- Manejar casos estándar, capturando 'groupId:artifactId' y la versión
-	local group_and_artifact, version = line:match("([%w._-]+:[%w._-]+):[%w._-]*:([%w._%-]+)")
-	if group_and_artifact and version then
-		return group_and_artifact .. ":" .. version
-	end
-
-	return nil
 end
 
 maven.source_directory = function(root)
@@ -87,6 +81,7 @@ maven.get_sources = function(root)
 	local sources = {}
 	local source_directory = maven.source_directory(root)
 	if File.exists(source_directory) then
+		logger.debug("Scanning sources in " .. source_directory)
 		sources = scan.scan_dir(source_directory, {
 			search_pattern = JAVA_FILE_PATTERN,
 		})
@@ -95,9 +90,11 @@ maven.get_sources = function(root)
 	local generated_sources = {}
 	local generated_sources_dir = root .. "/target"
 	if File.exists(generated_sources_dir) then
+		logger.debug("Scanning generated sources in " .. generated_sources_dir)
 		generated_sources = scan.scan_dir(generated_sources_dir, {
 			search_pattern = JAVA_FILE_PATTERN,
 		})
+		logger.debug("Found ", #generated_sources, " generated sources")
 	end
 
 	for _, source in ipairs(generated_sources) do
@@ -167,7 +164,7 @@ maven.get_dependencies_classpath = function(mod)
 		:filter(function(x)
 			return x ~= nil
 		end)
-		:map(to_gradle_path)
+		:map(to_maven_path)
 		--
 		-- filter nil
 		:filter(function(x)
