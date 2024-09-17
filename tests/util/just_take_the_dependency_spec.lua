@@ -1,4 +1,5 @@
 local take_just_the_dependency = require("neotest-java.util.just_take_the_dependency")
+local scan = require("plenary.scandir")
 
 describe("take_just_the_dependency", function()
 	local test_cases = {
@@ -38,6 +39,22 @@ describe("take_just_the_dependency", function()
 			input = "[INFO] |    +- junit:junit:jar:4.12:compile",
 			expected = "junit:junit:4.12",
 		},
+		{
+			input = " junit:junit:4.12 (*)",
+			expected = "junit:junit:4.12",
+		},
+		{
+			input = "| +--- org.springframework.boot:spring-boot-starter:3.1.0",
+			expected = "org.springframework.boot:spring-boot-starter:3.1.0",
+		},
+		{
+			input="+--- org.junit.platform:junit-platform-launcher:1.9.2 -> 1.9.3", 
+			expected="org.junit.platform:junit-platform-launcher:1.9.3"
+		},
+		{
+			input="     |    \\--- org.junit.platform:junit-platform-launcher:1.9.2.RELEASE (*)", 
+			expected="org.junit.platform:junit-platform-launcher:1.9.2.RELEASE"
+		}
 	}
 
 	for _, case in ipairs(test_cases) do

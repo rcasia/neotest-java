@@ -126,25 +126,6 @@ maven.get_resources = function(root)
 	return { compatible_path(root .. "/src/main/resources"), compatible_path(root .. "/src/test/resources") }
 end
 
-local memoized_result
----@return string
-maven.get_dependencies_classpath_old = function()
-	if memoized_result then
-		return memoized_result
-	end
-
-	local command = mvn() .. " -q dependency:tree"
-	local dependency_classpath = run(command)
-	write_file("target/neotest-java/classpath.txt", dependency_classpath)
-
-	if string.match(dependency_classpath, "ERROR") then
-		error('error while running command "' .. command .. '" -> ' .. dependency_classpath)
-	end
-
-	memoized_result = dependency_classpath
-	return dependency_classpath
-end
-
 ---@param mod neotest-java.Module
 maven.get_dependencies_classpath = function(mod)
 	local settings_filename = ("%s/pom.xml"):format(mod and mod.base_dir or ".")
@@ -233,6 +214,10 @@ maven.prepare_classpath = function(output_dirs, resources, mod)
 	end
 
 	arguments_file:close()
+end
+
+function maven.get_project_filename()
+	return PROJECT_FILE
 end
 
 ---@type neotest-java.BuildTool

@@ -13,6 +13,7 @@ local lib = require("neotest.lib")
 ---@field source_dir fun(): string
 ---@field get_test_sources fun(root?: string): string[]
 ---@field get_resources fun(): string[]
+---@field get_project_filename fun(): string
 
 local build_tools = { gradle = gradle, maven = maven }
 

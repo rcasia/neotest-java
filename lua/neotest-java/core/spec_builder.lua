@@ -24,7 +24,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local position = tree:data()
 	local root = assert(ch:get_context().root)
 	local absolute_path = position.path
-	local project = Project.from_root_dir(root)
+	local project = assert(Project.from_root_dir(root), "project not detected correctly")
 
 	-- make sure we are in root_dir
 	nio.fn.chdir(root)
@@ -62,7 +62,6 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEPS
-	project:prepare_classpath()
 	for _, mod in ipairs(project:get_modules()) do
 		Compiler.compile_sources2(project, mod)
 		Compiler.compile_test_sources2(project, mod)

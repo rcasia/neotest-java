@@ -2,6 +2,7 @@ local build_tools = require("neotest-java.build_tool")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local Module = require("neotest-java.types.module")
 local scan = require("plenary.scandir")
+local logger = require("neotest-java.logger")
 local Path = require("plenary.path")
 local fun = require("fun")
 local iter = fun.iter
@@ -24,10 +25,13 @@ end
 
 ---@return neotest-java.Module[]
 function Project:get_modules()
-	-- TODO: replace with build_tool.get_project_filename()
-	local project_file = "pom.xml"
+	local project_file = self.build_tool.get_project_filename()
+	logger.debug("Searching for project files: ", project_file)
+	logger.debug("Root directory: ", self.root_dir)
 
-	local dirs = scan.scan_dir(self.root_dir, { search_pattern = project_file, respect_gitignore = true })
+
+	local dirs = scan.scan_dir(self.root_dir, { search_pattern = project_file, respect_gitignore = false })
+	logger.debug("Found project directories: ", dirs)
 
 	---@type table<neotest-java.Module>
 	local modules = {}
@@ -35,6 +39,8 @@ function Project:get_modules()
 		local base_dir = Path:new(dir):parent().filename
 		modules[#modules + 1] = Module.new(base_dir, self.build_tool)
 	end
+
+	logger.debug("Found modules: ", modules)
 
 	return modules
 end
