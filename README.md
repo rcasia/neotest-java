@@ -85,6 +85,3 @@ You can also submit pull requests for any enhancements, bug fixes, or new featur
 
 Your contributions are greatly appreciated. See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
 
-## Limitations
-* Does not support multimodule projects yet https://github.com/rcasia/neotest-java/issues/100
-
