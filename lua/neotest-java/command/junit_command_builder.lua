@@ -82,7 +82,7 @@ local CommandBuilder = {
 	--- @param basedir? string
 	--- @param port? number
 	--- @return { command: string, args: string[] }
-	build_junit = function(self, port, basedir)
+	build_junit = function(self, port)
 		assert(self._test_references, "test_references cannot be nil")
 		assert(self._basedir, "basedir cannot be nil")
 

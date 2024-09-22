@@ -32,19 +32,28 @@ function Project:get_modules()
 	local dirs = scan.scan_dir(self.root_dir, { search_pattern = project_file, respect_gitignore = false })
 	logger.debug("Found project directories: ", dirs)
 
+	local dependencies = self.build_tool.get_module_dependencies(self.root_dir)
+
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, dir in ipairs(dirs) do
 		local base_dir = Path:new(dir):parent().filename
-		modules[#modules + 1] = Module.new(base_dir, self.build_tool)
+		local mod = Module.new(base_dir, self.build_tool)
+		modules[#modules + 1] = mod
+
+		if dependencies[mod.name] then
+			mod.module_dependencies = dependencies[mod.name]
+		end
 	end
 
-	-- sort by dependencies
+	-- sort by module dependencies
 	table.sort(modules, function(a, b)
 		---@type neotest-java.Module
 		local _a, _b = a, b
+		local _a_deps = dependencies[_a.name] or {}
+		local _b_deps = dependencies[_b.name] or {}
 
-		return #_a:get_module_dependencies() < #_b:get_module_dependencies()
+		return #_a_deps < #_b_deps
 	end)
 
 	local base_dirs = {}
@@ -67,7 +76,7 @@ end
 function Project:get_resources()
 	local resources = {}
 	for _, mod in ipairs(self:get_modules()) do
-		table.foreach(mod:get_resources(), function(idx, r)
+		table.foreach(mod:get_resources(), function(_, r)
 			resources[#resources + 1] = r
 		end)
 	end

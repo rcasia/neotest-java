@@ -3,13 +3,10 @@ local nio = require("nio")
 local Job = require("plenary.job")
 local lib = require("neotest.lib")
 local binaries = require("neotest-java.command.binaries")
-local build_tools = require("neotest-java.build_tool")
 local read_file = require("neotest-java.util.read_file")
 local write_file = require("neotest-java.util.write_file")
 local config = require("neotest-java.context_holder").config
-local compatible_path = require("neotest-java.util.compatible_path")
 local ch = require("neotest-java.context_holder")
-local path = require("plenary.path")
 
 local CACHE_FILENAME = "%s/cached_classes.json"
 
@@ -65,7 +62,7 @@ end
 
 ---@param project neotest-java.Project
 ---@param mod neotest-java.Module
-Compiler.compile_sources2 = function(project, mod)
+Compiler.compile_sources = function(mod)
 	-- make sure outputDir is created to operate in it
 	local output_dir = assert(mod:get_output_dir())
 	nio.fn.mkdir(output_dir, "p")
@@ -113,6 +110,7 @@ Compiler.compile_sources2 = function(project, mod)
 				source_compilation_command_exited.set()
 				lib.notify("Error compiling sources", vim.log.levels.ERROR)
 				log.error("compilation error args: java", vim.inspect(table.concat(source_compilation_args, " ")))
+				clear_cached_sources(mod:get_output_dir())
 				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
@@ -122,7 +120,7 @@ Compiler.compile_sources2 = function(project, mod)
 end
 
 ---@param project neotest-java.Project
-Compiler.compile_test_sources2 = function(project, mod)
+Compiler.compile_test_sources = function(mod)
 	local sources = config().incremental_build
 			and filter_unchanged_sources(mod:get_test_sources(), mod:get_output_dir())
 		or mod:get_test_sources()
@@ -167,6 +165,7 @@ Compiler.compile_test_sources2 = function(project, mod)
 			else
 				lib.notify("Error compiling test sources", vim.log.levels.ERROR)
 				log.error("test compilation error args: ", vim.inspect(test_sources_compilation_args))
+				clear_cached_sources(mod:get_output_dir())
 				error("Error compiling test sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,

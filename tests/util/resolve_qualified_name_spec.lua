@@ -1,7 +1,6 @@
 ---@diagnostic disable: undefined-field
 local async = require("nio").tests
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
-local logger = require("neotest-java.logger")
 
 local cwd = vim.fn.getcwd()
 local EXAMPLE_FILEPATH = cwd .. "/tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"

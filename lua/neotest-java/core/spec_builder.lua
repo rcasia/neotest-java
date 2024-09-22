@@ -1,4 +1,3 @@
-local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
@@ -62,8 +61,8 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- COMPILATION STEPS
 	for _, mod in ipairs(project:get_modules()) do
-		Compiler.compile_sources2(project, mod)
-		Compiler.compile_test_sources2(project, mod)
+		Compiler.compile_sources(mod)
+		Compiler.compile_test_sources(mod)
 	end
 
 	-- DAP STRATEGY

@@ -4,12 +4,12 @@ local read_file = require("neotest-java.util.read_file")
 local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
-local run = require("neotest-java.command.run")
 local binaries = require("neotest-java.command.binaries")
 local File = require("neotest.lib.file")
 local nio = require("nio")
 local Path = require("plenary.path")
 local logger = require("neotest-java.logger")
+local find_gradle_module_dependencies = require("neotest-java.util.find_gradle_module_dependencies")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
 local PROJECT_FILENAME = "build.gradle"
@@ -136,11 +136,12 @@ gradle.get_dependencies_classpath = function(mod)
 	local stderr = vim.uv.new_pipe(false)
 
 	local command_finished = nio.control.event()
-	local handle
+	local handle, exit_code
 	handle = assert(vim.uv.spawn(binaries.gradle(), {
 		args = { "dependencies", "--project-dir=" .. mod.base_dir },
 		stdio = { nil, stdout, stderr },
-	}, function(code, signal)
+	}, function(code)
+		exit_code = code
 		stdout:close()
 		stderr:close()
 		handle:close()
@@ -156,6 +157,7 @@ gradle.get_dependencies_classpath = function(mod)
 	end)
 
 	command_finished.wait()
+	assert(exit_code == 0, "could not retrieve classpath dependencies")
 
 	local output = read_file(output_file)
 
@@ -237,6 +239,13 @@ end
 
 function gradle.get_project_filename()
 	return PROJECT_FILENAME
+end
+
+---@param root string
+function gradle.get_module_dependencies(root)
+	assert(root, "root cannot be nil")
+
+	return find_gradle_module_dependencies(root .. "/" .. PROJECT_FILENAME) or {}
 end
 
 ---@type neotest-java.BuildTool

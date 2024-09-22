@@ -1,5 +1,4 @@
 local File = require("neotest.lib.file")
-local Project = require("neotest-java.types.project")
 
 local file_checker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
@@ -10,10 +9,6 @@ local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local lib = require("neotest.lib")
-local timer = require("neotest-java.util.timer")
-local nio = require("nio")
-local module = require("neotest-java.java-modules")
-local Compiler = require("neotest-java.build_tool.compiler")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 

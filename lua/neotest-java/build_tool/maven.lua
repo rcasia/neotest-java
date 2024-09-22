@@ -3,7 +3,6 @@ local read_xml_tag = require("neotest-java.util.read_xml_tag")
 local scan = require("plenary.scandir")
 local mvn = require("neotest-java.command.binaries").mvn
 local logger = require("neotest-java.logger")
-local read_file = require("neotest-java.util.read_file")
 local compatible_path = require("neotest-java.util.compatible_path")
 local File = require("neotest.lib.file")
 local write_file = require("neotest-java.util.write_file")
@@ -221,11 +220,11 @@ function maven.get_project_filename()
 	return PROJECT_FILE
 end
 
----@param mod neotest-java.Module
-function maven.get_module_dependencies(mod)
-	assert(mod, "mod should not be nil")
+---@param root string
+function maven.get_module_dependencies(root)
+	assert(root, "root should not be nil")
 
-	return read_xml_tag(Path:new(mod.base_dir .. "/" .. PROJECT_FILE).filename, "modules.module")
+	return read_xml_tag(Path:new(root .. "/" .. PROJECT_FILE).filename, "modules.module") or {}
 end
 
 ---@type neotest-java.BuildTool

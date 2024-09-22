@@ -3,7 +3,7 @@ local find_gradle_module_dependencies = require("neotest-java.util.find_gradle_m
 
 describe("find_gradle_module_dependencies function", function()
 	async.it("should find module dependencies", function()
-		local filepath = "tests/fixtures/build.gradle"
+		local filepath = "tests/fixtures/build-example.gradle"
 
 		local result = find_gradle_module_dependencies(filepath)
 

@@ -14,7 +14,9 @@ local lib = require("neotest.lib")
 ---@field get_test_sources fun(root?: string): string[]
 ---@field get_resources fun(): string[]
 ---@field get_project_filename fun(): string
+---@field get_module_dependencies fun(root: string): table
 
+---@type table<string, neotest-java.BuildTool>
 local build_tools = { gradle = gradle, maven = maven }
 
 --- will determine the build tool to use

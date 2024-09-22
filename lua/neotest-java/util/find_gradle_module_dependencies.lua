@@ -1,4 +1,3 @@
-local lib = require("neotest.lib")
 local read_file = require("neotest-java.util.read_file")
 
 ---@param filepath string
@@ -9,14 +8,14 @@ local function find_gradle_module_dependencies(filepath)
     function: (identifier) @func (#eq? @func "project")
 		args: (argument_list (string (string_content) @module ))
   )
-.	
-	(closure 
+.
+	(closure
 		(juxt_function_call
-    	function: (identifier) @deps (#eq? @deps "dependencies")
-			args: (argument_list 
-			  (closure 
+			function: (identifier) @deps (#eq? @deps "dependencies")
+			args: (argument_list
+			  (closure
 				  (juxt_function_call
-    				function: (identifier) @compile (#eq? @compile "compile")
+						function: (identifier) @compile (#eq? @compile "compile")
 						args: (argument_list
 							(function_call
 								args: (argument_list (string (string_content) @module )
@@ -28,18 +27,18 @@ local function find_gradle_module_dependencies(filepath)
 			)
 
 		)
-	) 
+	)
 )
 ]]
 
 	local function find_in_text(raw_query, content)
-		local query = vim.treesitter.query.parse("groovy", raw_query)
+		local _query = vim.treesitter.query.parse("groovy", raw_query)
 
 		local lang_tree = vim.treesitter.get_string_parser(content, "groovy")
 		local root = lang_tree:parse()[1]:root()
 
 		local results = {}
-		for _, node, _ in query:iter_captures(root, content, 0, -1) do --luacheck: ignore 512 loop is executed at most once
+		for _, node, _ in _query:iter_captures(root, content, 0, -1) do --luacheck: ignore 512 loop is executed at most once
 			results[#results + 1] = vim.treesitter.get_node_text(node, content)
 		end
 		return results

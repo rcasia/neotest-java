@@ -1,5 +1,4 @@
 local take_just_the_dependency = require("neotest-java.util.just_take_the_dependency")
-local scan = require("plenary.scandir")
 
 describe("take_just_the_dependency", function()
 	local test_cases = {

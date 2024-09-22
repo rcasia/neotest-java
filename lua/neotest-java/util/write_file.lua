@@ -1,4 +1,3 @@
-local File = require("neotest.lib.file")
 local Path = require("plenary.path")
 local nio = require("nio")
 
