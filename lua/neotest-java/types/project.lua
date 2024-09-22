@@ -29,7 +29,6 @@ function Project:get_modules()
 	logger.debug("Searching for project files: ", project_file)
 	logger.debug("Root directory: ", self.root_dir)
 
-
 	local dirs = scan.scan_dir(self.root_dir, { search_pattern = project_file, respect_gitignore = false })
 	logger.debug("Found project directories: ", dirs)
 
@@ -41,7 +40,7 @@ function Project:get_modules()
 	end
 
 	-- sort by dependencies
-	table.sort(modules, function (a, b)
+	table.sort(modules, function(a, b)
 		---@type neotest-java.Module
 		local _a, _b = a, b
 
@@ -50,7 +49,7 @@ function Project:get_modules()
 
 	local base_dirs = {}
 	for _, mod in ipairs(modules) do
-		base_dirs[#base_dirs+1] = mod.base_dir
+		base_dirs[#base_dirs + 1] = mod.base_dir
 	end
 	logger.debug("modules: ", base_dirs)
 

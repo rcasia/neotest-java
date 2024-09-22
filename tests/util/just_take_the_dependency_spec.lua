@@ -48,13 +48,13 @@ describe("take_just_the_dependency", function()
 			expected = "org.springframework.boot:spring-boot-starter:3.1.0",
 		},
 		{
-			input="+--- org.junit.platform:junit-platform-launcher:1.9.2 -> 1.9.3", 
-			expected="org.junit.platform:junit-platform-launcher:1.9.3"
+			input = "+--- org.junit.platform:junit-platform-launcher:1.9.2 -> 1.9.3",
+			expected = "org.junit.platform:junit-platform-launcher:1.9.3",
 		},
 		{
-			input="     |    \\--- org.junit.platform:junit-platform-launcher:1.9.2.RELEASE (*)", 
-			expected="org.junit.platform:junit-platform-launcher:1.9.2.RELEASE"
-		}
+			input = "     |    \\--- org.junit.platform:junit-platform-launcher:1.9.2.RELEASE (*)",
+			expected = "org.junit.platform:junit-platform-launcher:1.9.2.RELEASE",
+		},
 	}
 
 	for _, case in ipairs(test_cases) do

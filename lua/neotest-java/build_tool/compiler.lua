@@ -66,7 +66,6 @@ end
 ---@param project neotest-java.Project
 ---@param mod neotest-java.Module
 Compiler.compile_sources2 = function(project, mod)
-
 	-- make sure outputDir is created to operate in it
 	local output_dir = assert(mod:get_output_dir())
 	nio.fn.mkdir(output_dir, "p")
@@ -176,6 +175,5 @@ Compiler.compile_test_sources2 = function(project, mod)
 	test_compilation_command_exited.wait()
 	assert(status_code == 0, "Error compiling test sources")
 end
-
 
 return Compiler

@@ -9,6 +9,7 @@ local File = require("neotest.lib.file")
 local write_file = require("neotest-java.util.write_file")
 local fun = require("fun")
 local take_just_the_dependency = require("neotest-java.util.just_take_the_dependency")
+local Path = require("plenary.path")
 local iter = fun.iter
 local totable = fun.totable
 
@@ -218,6 +219,13 @@ end
 
 function maven.get_project_filename()
 	return PROJECT_FILE
+end
+
+---@param mod neotest-java.Module
+function maven.get_module_dependencies(mod)
+	assert(mod, "mod should not be nil")
+
+	return read_xml_tag(Path:new(mod.base_dir .. "/" .. PROJECT_FILE).filename, "modules.module")
 end
 
 ---@type neotest-java.BuildTool

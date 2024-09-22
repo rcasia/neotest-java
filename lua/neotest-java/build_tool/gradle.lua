@@ -1,6 +1,6 @@
 local fun = require("fun")
 local compatible_path = require("neotest-java.util.compatible_path")
-local read_file       = require("neotest-java.util.read_file")
+local read_file = require("neotest-java.util.read_file")
 local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
@@ -88,8 +88,8 @@ gradle.get_sources = function(root)
 	if File.exists(source_directory) then
 		logger.debug("Scanning sources in " .. source_directory)
 		sources = scan.scan_dir(gradle.source_dir(root), {
-		search_pattern = JAVA_FILE_PATTERN,
-	})
+			search_pattern = JAVA_FILE_PATTERN,
+		})
 	end
 
 	local generated_sources = {}
@@ -127,10 +127,10 @@ gradle.get_dependencies_classpath = function(mod)
 	-- create dir if not exists
 	nio.fn.mkdir(output_dir, "p")
 
-	local output_file = compatible_path(output_dir .."/dependencies.txt")
+	local output_file = compatible_path(output_dir .. "/dependencies.txt")
 
 	logger.debug("dependency file: " .. output_file)
-	local file = assert(io.open(output_file, 'w'))
+	local file = assert(io.open(output_file, "w"))
 
 	local stdout = vim.uv.new_pipe(false)
 	local stderr = vim.uv.new_pipe(false)
@@ -138,8 +138,8 @@ gradle.get_dependencies_classpath = function(mod)
 	local command_finished = nio.control.event()
 	local handle
 	handle = assert(vim.uv.spawn(binaries.gradle(), {
-		args = {"dependencies", "--project-dir=" .. mod.base_dir},
-		stdio = {nil, stdout, stderr},
+		args = { "dependencies", "--project-dir=" .. mod.base_dir },
+		stdio = { nil, stdout, stderr },
 	}, function(code, signal)
 		stdout:close()
 		stderr:close()
@@ -193,7 +193,6 @@ gradle.prepare_classpath = function(output_dirs, resources, mod)
 	output_dirs = output_dirs and output_dirs or {}
 	resources = resources or gradle.get_resources()
 
-
 	local classpath = gradle.get_dependencies_classpath(mod)
 
 	for i, dir in ipairs(output_dirs) do
@@ -202,16 +201,12 @@ gradle.prepare_classpath = function(output_dirs, resources, mod)
 
 	-- add module dependencies
 	for _, dep in ipairs(mod:get_module_dependencies()) do
-		output_dirs[#output_dirs+1] = compatible_path(dep .. "/build/neotest-java/classes")
+		output_dirs[#output_dirs + 1] = compatible_path(dep .. "/build/neotest-java/classes")
 	end
 
 	local classpath_arguments = ([[
 		-cp %s:%s:%s
-	]]):format(
-		table.concat(resources, ":"),
-		classpath,
-		table.concat(output_dirs, ":")
-	)
+	]]):format(table.concat(resources, ":"), classpath, table.concat(output_dirs, ":"))
 
 	--write manifest file
 	local arguments_filepath
@@ -223,7 +218,7 @@ gradle.prepare_classpath = function(output_dirs, resources, mod)
 
 	nio.fn.mkdir(Path:new(arguments_filepath):parent():absolute(), "p")
 
-		local arguments_file = io.open(arguments_filepath, "w")
+	local arguments_file = io.open(arguments_filepath, "w")
 		or error("Could not open file for writing: " .. arguments_filepath)
 	local buffer = ""
 	for i = 1, #classpath_arguments do

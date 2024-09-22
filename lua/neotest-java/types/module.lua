@@ -46,26 +46,23 @@ function Module:prepare_classpath()
 	self._build_tool.prepare_classpath({ output_dir }, resources, self)
 end
 
-
 local function replace_plain(s, search, replacement)
-    local start_pos, end_pos = string.find(s, search, 1, true)
-    if start_pos then
-        return s:sub(1, start_pos - 1) .. replacement .. s:sub(end_pos + 1)
-    else
-        return s  -- Return the original string if the search string is not found
-    end
+	local start_pos, end_pos = string.find(s, search, 1, true)
+	if start_pos then
+		return s:sub(1, start_pos - 1) .. replacement .. s:sub(end_pos + 1)
+	else
+		return s -- Return the original string if the search string is not found
+	end
 end
 
 ---@return string[]
 function Module:get_module_dependencies()
-	-- assert(self.base_dir:match("sample-"), "did not match")
-	
-	if  self.base_dir:find("api") then
-		return {replace_plain(self.base_dir, "sample-api", "sample-common")}
+	if self.base_dir:find("api") then
+		return { replace_plain(self.base_dir, "sample-api", "sample-common") }
 	end
 
-	if  self.base_dir:find("admin") then
-		return {replace_plain(self.base_dir, "sample-admin", "sample-common")}
+	if self.base_dir:find("admin") then
+		return { replace_plain(self.base_dir, "sample-admin", "sample-common") }
 	end
 	return {}
 end
