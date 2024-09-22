@@ -78,7 +78,7 @@ Compiler.compile_sources = function(mod)
 	--TODO: only prepare if the pom.xml has changed
 	mod:prepare_classpath()
 
-	lib.notify("Compiling main sources for " .. mod.base_dir)
+	lib.notify("Compiling main sources for " .. mod.name)
 
 	local compilation_errors = {}
 	local status_code = 0
@@ -110,16 +110,18 @@ Compiler.compile_sources = function(mod)
 				source_compilation_command_exited.set()
 				lib.notify("Error compiling sources", vim.log.levels.ERROR)
 				log.error("compilation error args: java", vim.inspect(table.concat(source_compilation_args, " ")))
-				clear_cached_sources(mod:get_output_dir())
 				error("Error compiling sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
 	}):start()
 	source_compilation_command_exited.wait()
-	assert(status_code == 0, "Error compiling sources")
+	if status_code ~= 0 then
+		clear_cached_sources(mod:get_output_dir())
+		error("Error compiling sources")
+	end
 end
 
----@param project neotest-java.Project
+---@param mod neotest-java.Module
 Compiler.compile_test_sources = function(mod)
 	local sources = config().incremental_build
 			and filter_unchanged_sources(mod:get_test_sources(), mod:get_output_dir())
@@ -129,7 +131,7 @@ Compiler.compile_test_sources = function(mod)
 		return -- skipping as there are no sources to compile
 	end
 
-	lib.notify("Compiling test sources")
+	lib.notify("Compiling test sources for module: " .. mod.name)
 
 	local compilation_errors = {}
 	local status_code = 0
@@ -165,14 +167,16 @@ Compiler.compile_test_sources = function(mod)
 			else
 				lib.notify("Error compiling test sources", vim.log.levels.ERROR)
 				log.error("test compilation error args: ", vim.inspect(test_sources_compilation_args))
-				clear_cached_sources(mod:get_output_dir())
 				error("Error compiling test sources: " .. table.concat(compilation_errors, "\n"))
 			end
 		end,
 	}):start()
 
 	test_compilation_command_exited.wait()
-	assert(status_code == 0, "Error compiling test sources")
+	if status_code ~= 0 then
+		clear_cached_sources(mod:get_output_dir())
+		error("Error compiling sources")
+	end
 end
 
 return Compiler

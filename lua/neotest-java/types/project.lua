@@ -5,6 +5,8 @@ local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local Path = require("plenary.path")
 local fun = require("fun")
+local ignore_path_patterns = require("neotest-java.types.ignore_path_patterns")
+local should_ignore_path = require("neotest-java.util.should_ignore_path")
 local iter = fun.iter
 local totable = fun.totable
 
@@ -29,7 +31,16 @@ function Project:get_modules()
 	logger.debug("Searching for project files: ", project_file)
 	logger.debug("Root directory: ", self.root_dir)
 
-	local dirs = scan.scan_dir(self.root_dir, { search_pattern = project_file, respect_gitignore = false })
+	-- NOTE: flag respect_gitignore does not work with "build.gradle"
+	local dirs = scan.scan_dir(self.root_dir, {
+		search_pattern = function(path)
+			return not should_ignore_path(path)
+		end,
+		respect_gitignore = false,
+	})
+
+	assert(dirs and #dirs > 0, "should find at least 1 module")
+
 	logger.debug("Found project directories: ", dirs)
 
 	local dependencies = self.build_tool.get_module_dependencies(self.root_dir)
@@ -117,6 +128,7 @@ function Project:find_module_by_filepath(filepath)
 		end
 	end
 
+	logger.error("no module found for filepath: " .. filepath)
 	return matching_module
 end
 

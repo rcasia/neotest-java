@@ -2,6 +2,7 @@ local build_tools = require("neotest-java.build_tool")
 local binaries = require("neotest-java.command.binaries")
 local compatible_path = require("neotest-java.util.compatible_path")
 local java = binaries.java
+local logger = require("neotest-java.logger")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -76,6 +77,7 @@ local CommandBuilder = {
 	end,
 
 	basedir = function(self, basedir)
+		logger.debug("assigned basedir: " .. basedir)
 		self._basedir = basedir
 	end,
 
