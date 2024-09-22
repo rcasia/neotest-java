@@ -2,6 +2,7 @@ local build_tools = require("neotest-java.build_tool")
 local binaries = require("neotest-java.command.binaries")
 local compatible_path = require("neotest-java.util.compatible_path")
 local java = binaries.java
+local logger = require("neotest-java.logger")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -75,10 +76,16 @@ local CommandBuilder = {
 		self._reports_dir = reports_dir
 	end,
 
+	basedir = function(self, basedir)
+		logger.debug("assigned basedir: " .. basedir)
+		self._basedir = basedir
+	end,
+
 	--- @param port? number
 	--- @return { command: string, args: string[] }
 	build_junit = function(self, port)
 		assert(self._test_references, "test_references cannot be nil")
+		assert(self._basedir, "basedir cannot be nil")
 
 		local build_tool = build_tools.get(self._project_type)
 
@@ -100,7 +107,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				"@" .. compatible_path(("%s/cp_arguments.txt"):format(build_tool.get_output_dir())),
+				"@" .. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",

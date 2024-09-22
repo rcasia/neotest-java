@@ -1,13 +1,14 @@
-local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
-local compiler = require("neotest-java.build_tool.compiler")
 local path = require("plenary.path")
 local compatible_path = require("neotest-java.util.compatible_path")
+local Project = require("neotest-java.types.project")
+local Compiler = require("neotest-java.build_tool.compiler")
+local ch = require("neotest-java.context_holder")
 
 local SpecBuilder = {}
 
@@ -19,8 +20,9 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
-	local root = assert(root_finder.find_root(position.path))
+	local root = assert(ch:get_context().root)
 	local absolute_path = position.path
+	local project = assert(Project.from_root_dir(root), "project not detected correctly")
 
 	-- make sure we are in root_dir
 	nio.fn.chdir(root)
@@ -35,6 +37,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir = string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
 	command:reports_dir(compatible_path(reports_dir))
+	command:basedir(project:find_module_by_filepath(position.path).base_dir)
 
 	-- TEST SELECTORS
 	if position.type == "dir" then
@@ -57,8 +60,10 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEPS
-	compiler.compile_sources(project_type)
-	compiler.compile_test_sources(project_type)
+	for _, mod in ipairs(project:get_modules()) do
+		Compiler.compile_sources(mod)
+		Compiler.compile_test_sources(mod)
+	end
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then

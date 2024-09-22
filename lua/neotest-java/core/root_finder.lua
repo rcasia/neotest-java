@@ -18,6 +18,7 @@ function RootFinder.find_root(dir)
 
 	for _, matcher in ipairs(matchers) do
 		local root = lib.files.match_root_pattern(matcher)(dir)
+
 		if root then
 			log.debug("Found root: " .. root)
 			return root

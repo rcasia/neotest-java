@@ -1,12 +1,18 @@
 local fun = require("fun")
 local compatible_path = require("neotest-java.util.compatible_path")
+local read_file = require("neotest-java.util.read_file")
 local iter = fun.iter
 local totable = fun.totable
 local scan = require("plenary.scandir")
-local run = require("neotest-java.command.run")
 local binaries = require("neotest-java.command.binaries")
+local File = require("neotest.lib.file")
+local nio = require("nio")
+local Path = require("plenary.path")
+local logger = require("neotest-java.logger")
+local find_gradle_module_dependencies = require("neotest-java.util.find_gradle_module_dependencies")
 
 local JAVA_FILE_PATTERN = ".+%.java$"
+local PROJECT_FILENAME = "build.gradle"
 
 local function find_file_in_dir(filename, dir)
 	return totable(
@@ -61,24 +67,38 @@ local function take_just_the_dependency(line)
 	return dependency
 end
 
+---@class neotest-java.GradleBuildTool : neotest-java.BuildTool
 local gradle = {}
 
-gradle.source_dir = function()
-	return compatible_path("src/main/java")
+gradle.source_dir = function(root)
+	root = root and root or "."
+	return compatible_path(root .. "/src/main/java")
 end
 
-gradle.get_output_dir = function()
-	return compatible_path("build/neotest-java")
+gradle.get_output_dir = function(root)
+	root = root and root or "."
+	return compatible_path(root .. "/build/neotest-java")
 end
 
-gradle.get_sources = function()
-	local sources = scan.scan_dir(gradle.source_dir(), {
-		search_pattern = JAVA_FILE_PATTERN,
-	})
+gradle.get_sources = function(root)
+	root = root and root or "."
 
-	local generated_sources = scan.scan_dir("build", {
-		search_pattern = JAVA_FILE_PATTERN,
-	})
+	local sources = {}
+	local source_directory = gradle.source_dir(root)
+	if File.exists(source_directory) then
+		logger.debug("Scanning sources in " .. source_directory)
+		sources = scan.scan_dir(gradle.source_dir(root), {
+			search_pattern = JAVA_FILE_PATTERN,
+		})
+	end
+
+	local generated_sources = {}
+	local generated_sources_dir = root .. "/build"
+	if File.exists(generated_sources_dir) then
+		generated_sources = scan.scan_dir(generated_sources_dir, {
+			search_pattern = JAVA_FILE_PATTERN,
+		})
+	end
 
 	for _, source in ipairs(generated_sources) do
 		table.insert(sources, source)
@@ -87,29 +107,61 @@ gradle.get_sources = function()
 	return sources
 end
 
-gradle.get_test_sources = function()
-	local test_sources = scan.scan_dir(compatible_path("src/test/java"), {
+gradle.get_test_sources = function(root)
+	root = root and root or "."
+
+	local test_sources = scan.scan_dir(compatible_path(root .. "/src/test/java"), {
 		search_pattern = JAVA_FILE_PATTERN,
 	})
 	return test_sources
 end
 
-gradle.get_resources = function()
-	return { compatible_path("src/main/resources"), compatible_path("src/test/resources") }
+gradle.get_resources = function(root)
+	root = root or "."
+	return { compatible_path(root .. "/src/main/resources"), compatible_path(root .. "/src/test/resources") }
 end
 
-gradle.get_dependencies_classpath = function()
+---@param mod neotest-java.Module
+gradle.get_dependencies_classpath = function(mod)
+	local output_dir = mod:get_output_dir()
 	-- create dir if not exists
-	run("mkdir -p " .. gradle.get_output_dir())
+	nio.fn.mkdir(output_dir, "p")
 
-	-- '< /dev/null' is necessary
-	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	-- FIX: this will work only with unix systems
-	local suc =
-		os.execute(binaries.gradle() .. " dependencies > build/neotest-java" .. "/dependencies.txt " .. "< /dev/null")
-	assert(suc, "failed to run")
+	local output_file = compatible_path(output_dir .. "/dependencies.txt")
 
-	local output = run("cat " .. compatible_path(gradle.get_output_dir() .. "/dependencies.txt"))
+	logger.debug("dependency file: " .. output_file)
+	local file = assert(io.open(output_file, "w"))
+
+	local stdout = vim.uv.new_pipe(false)
+	local stderr = vim.uv.new_pipe(false)
+
+	local command_finished = nio.control.event()
+	local handle, exit_code
+	handle = assert(vim.uv.spawn(binaries.gradle(), {
+		args = { "dependencies", "--project-dir=" .. mod.base_dir },
+		stdio = { nil, stdout, stderr },
+	}, function(code)
+		exit_code = code
+		stdout:close()
+		stderr:close()
+		handle:close()
+		file:close()
+		command_finished.set()
+	end))
+
+	stdout:read_start(function(err, data)
+		assert(not err, err)
+		if data then
+			file:write(data)
+		end
+	end)
+
+	command_finished.wait()
+	assert(exit_code == 0, "could not retrieve classpath dependencies")
+
+	local output = read_file(output_file)
+
+	logger.debug("base_dir", vim.inspect(mod.base_dir))
 	local output_lines = vim.split(output, "\n")
 
 	local jars = iter(output_lines)
@@ -138,18 +190,36 @@ gradle.get_dependencies_classpath = function()
 	return result
 end
 
-gradle.prepare_classpath = function()
-	local classpath = gradle.get_dependencies_classpath()
+---@param mod neotest-java.Module
+gradle.prepare_classpath = function(output_dirs, resources, mod)
+	output_dirs = output_dirs and output_dirs or {}
+	resources = resources or gradle.get_resources()
+
+	local classpath = gradle.get_dependencies_classpath(mod)
+
+	for i, dir in ipairs(output_dirs) do
+		output_dirs[i] = compatible_path(dir .. "/classes")
+	end
+
+	-- add module dependencies
+	for _, dep in ipairs(mod:get_module_dependencies()) do
+		output_dirs[#output_dirs + 1] = compatible_path(dep .. "/build/neotest-java/classes")
+	end
+
 	local classpath_arguments = ([[
 		-cp %s:%s:%s
-	]]):format(
-		table.concat(gradle.get_resources(), ":"),
-		classpath,
-		compatible_path(gradle.get_output_dir() .. "/classes")
-	)
+	]]):format(table.concat(resources, ":"), classpath, table.concat(output_dirs, ":"))
 
 	--write manifest file
-	local arguments_filepath = compatible_path("build/neotest-java/cp_arguments.txt")
+	local arguments_filepath
+	if mod then
+		arguments_filepath = compatible_path(mod:get_output_dir() .. "/cp_arguments.txt")
+	else
+		arguments_filepath = compatible_path("build/neotest-java/cp_arguments.txt")
+	end
+
+	nio.fn.mkdir(Path:new(arguments_filepath):parent():absolute(), "p")
+
 	local arguments_file = io.open(arguments_filepath, "w")
 		or error("Could not open file for writing: " .. arguments_filepath)
 	local buffer = ""
@@ -165,6 +235,17 @@ gradle.prepare_classpath = function()
 	end
 
 	arguments_file:close()
+end
+
+function gradle.get_project_filename()
+	return PROJECT_FILENAME
+end
+
+---@param root string
+function gradle.get_module_dependencies(root)
+	assert(root, "root cannot be nil")
+
+	return find_gradle_module_dependencies(root .. "/" .. PROJECT_FILENAME) or {}
 end
 
 ---@type neotest-java.BuildTool
