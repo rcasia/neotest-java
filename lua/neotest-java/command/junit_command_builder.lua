@@ -81,7 +81,6 @@ local CommandBuilder = {
 		self._basedir = basedir
 	end,
 
-	--- @param basedir? string
 	--- @param port? number
 	--- @return { command: string, args: string[] }
 	build_junit = function(self, port)
@@ -108,9 +107,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				-- "@" .. compatible_path(("%s/cp_arguments.txt"):format(build_tool.get_output_dir())),
-				"@"
-					.. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
+				"@" .. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",

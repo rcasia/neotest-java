@@ -5,7 +5,6 @@ local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local Path = require("plenary.path")
 local fun = require("fun")
-local ignore_path_patterns = require("neotest-java.types.ignore_path_patterns")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
 local iter = fun.iter
 local totable = fun.totable
@@ -34,7 +33,7 @@ function Project:get_modules()
 	-- NOTE: flag respect_gitignore does not work with "build.gradle"
 	local dirs = scan.scan_dir(self.root_dir, {
 		search_pattern = function(path)
-			return not should_ignore_path(path)
+			return not should_ignore_path(path) and path:find(self.build_tool.get_project_filename())
 		end,
 		respect_gitignore = false,
 	})

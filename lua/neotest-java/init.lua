@@ -8,7 +8,6 @@ local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
-local lib = require("neotest.lib")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -24,12 +23,13 @@ local check_junit_jar = function(filepath)
 	)
 end
 
----@type neotest-java.Timer
-local test_timer = nil
-
 ---@type neotest.Adapter
 local NeotestJavaAdapter = {
 	name = "neotest-java",
+	filter_dir = dir_filter.filter_dir,
+	is_test_file = file_checker.is_test_file,
+	discover_positions = position_discoverer.discover_positions,
+	results = result_builder.build_results,
 	root = function(dir)
 		local root = root_finder.find_root(dir)
 		if root then
@@ -37,11 +37,7 @@ local NeotestJavaAdapter = {
 		end
 		return root
 	end,
-	filter_dir = dir_filter.filter_dir,
-	is_test_file = file_checker.is_test_file,
-	discover_positions = position_discoverer.discover_positions,
 	build_spec = function(args)
-		-- test_timer = timer.start()
 		check_junit_jar(ch.get_context().config.junit_jar)
 
 		-- TODO: find a way to avoid to make this steps every time
@@ -55,15 +51,6 @@ local NeotestJavaAdapter = {
 
 		-- build spec
 		return spec_builder.build_spec(args, project_type, ch.get_context().config)
-	end,
-	results = function(spec, result, tree)
-		local results = result_builder.build_results(spec, result, tree)
-
-		if test_timer then
-			lib.notify("Tests lasted " .. test_timer:stop() .. " ms.")
-		end
-
-		return results
 	end,
 };
 
