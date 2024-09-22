@@ -127,24 +127,35 @@ gradle.get_dependencies_classpath = function(mod)
 	-- create dir if not exists
 	nio.fn.mkdir(output_dir, "p")
 
-	-- '< /dev/null' is necessary
-	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
-	-- FIX: this will work only with unix systems
-	--
 	local output_file = compatible_path(output_dir .."/dependencies.txt")
-	local command = table.concat({
-		binaries.gradle(),
-		"dependencies",
-		"--project-dir=" .. mod.base_dir,
-		" > ",
-		output_file,
-		" < ",
-		"/dev/null"
-	}, " ")
 
 	logger.debug("dependency file: " .. output_file)
-	local suc = os.execute(command)
-	assert(suc, "failed to run: " .. command)
+	local file = assert(io.open(output_file, 'w'))
+
+	local stdout = vim.uv.new_pipe(false)
+	local stderr = vim.uv.new_pipe(false)
+
+	local command_finished = nio.control.event()
+	local handle
+	handle = assert(vim.uv.spawn(binaries.gradle(), {
+		args = {"dependencies", "--project-dir=" .. mod.base_dir},
+		stdio = {nil, stdout, stderr},
+	}, function(code, signal)
+		stdout:close()
+		stderr:close()
+		handle:close()
+		file:close()
+		command_finished.set()
+	end))
+
+	stdout:read_start(function(err, data)
+		assert(not err, err)
+		if data then
+			file:write(data)
+		end
+	end)
+
+	command_finished.wait()
 
 	local output = read_file(output_file)
 
