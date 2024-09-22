@@ -11,6 +11,7 @@ local ch = require("neotest-java.context_holder")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
+
 local check_junit_jar = function(filepath)
 	local exists, _ = File.exists(filepath)
 	assert(
