@@ -83,6 +83,7 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 	local report_filepaths = scan.scan_dir(spec.context.reports_dir, {
 		search_pattern = REPORT_FILE_NAMES_PATTERN,
 	})
+	log.debug("Found report files: ", report_filepaths)
 	local testcases_in_xml = flat_map(function(filepath)
 		local ok, data = pcall(function()
 			return read_file(filepath)
@@ -91,7 +92,6 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 			lib.notify("Error reading file: " .. filepath)
 			return {}
 		end
-		log.debug("Test report file: " .. filepath)
 
 		local xml_data = xml.parse(data)
 

@@ -40,7 +40,19 @@ function Project:get_modules()
 		modules[#modules + 1] = Module.new(base_dir, self.build_tool)
 	end
 
-	logger.debug("Found modules: ", modules)
+	-- sort by dependencies
+	table.sort(modules, function (a, b)
+		---@type neotest-java.Module
+		local _a, _b = a, b
+
+		return #_a:get_module_dependencies() < #_b:get_module_dependencies()
+	end)
+
+	local base_dirs = {}
+	for _, mod in ipairs(modules) do
+		base_dirs[#base_dirs+1] = mod.base_dir
+	end
+	logger.debug("modules: ", base_dirs)
 
 	return modules
 end

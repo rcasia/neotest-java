@@ -66,12 +66,9 @@ end
 ---@param project neotest-java.Project
 ---@param mod neotest-java.Module
 Compiler.compile_sources2 = function(project, mod)
-	--TODO: only prepare if the pom.xml has changed
-	mod:prepare_classpath()
 
 	-- make sure outputDir is created to operate in it
 	local output_dir = assert(mod:get_output_dir())
-	local output_dir_parent = path:new(output_dir):parent().filename
 	nio.fn.mkdir(output_dir, "p")
 
 	local sources = config().incremental_build and filter_unchanged_sources(mod:get_sources(), mod:get_output_dir())
@@ -81,6 +78,9 @@ Compiler.compile_sources2 = function(project, mod)
 		log.debug("continue without recompiling main sources module in " .. mod.base_dir)
 		return -- skipping as there are no sources to compile
 	end
+
+	--TODO: only prepare if the pom.xml has changed
+	mod:prepare_classpath()
 
 	lib.notify("Compiling main sources for " .. mod.base_dir)
 

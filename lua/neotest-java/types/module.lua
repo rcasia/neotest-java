@@ -1,3 +1,6 @@
+local Path = require("plenary.path")
+local logger = require("neotest-java.logger")
+
 ---@class neotest-java.Module
 ---@field base_dir string
 ---@field _build_tool neotest-java.BuildTool
@@ -41,6 +44,30 @@ function Module:prepare_classpath()
 	local output_dir = self:get_output_dir()
 	local resources = self:get_resources()
 	self._build_tool.prepare_classpath({ output_dir }, resources, self)
+end
+
+
+local function replace_plain(s, search, replacement)
+    local start_pos, end_pos = string.find(s, search, 1, true)
+    if start_pos then
+        return s:sub(1, start_pos - 1) .. replacement .. s:sub(end_pos + 1)
+    else
+        return s  -- Return the original string if the search string is not found
+    end
+end
+
+---@return string[]
+function Module:get_module_dependencies()
+	-- assert(self.base_dir:match("sample-"), "did not match")
+	
+	if  self.base_dir:find("api") then
+		return {replace_plain(self.base_dir, "sample-api", "sample-common")}
+	end
+
+	if  self.base_dir:find("admin") then
+		return {replace_plain(self.base_dir, "sample-admin", "sample-common")}
+	end
+	return {}
 end
 
 return Module

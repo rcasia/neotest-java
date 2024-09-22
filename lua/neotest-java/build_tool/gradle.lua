@@ -130,11 +130,25 @@ gradle.get_dependencies_classpath = function(mod)
 	-- '< /dev/null' is necessary
 	-- https://github.com/gradle/gradle/issues/15941#issuecomment-1191510921
 	-- FIX: this will work only with unix systems
-	local suc =
-		os.execute(binaries.gradle() .. " dependencies --project-dir=".. mod.base_dir .." > "..  output_dir.."/dependencies.txt " .. "< /dev/null")
-	assert(suc, "failed to run")
+	--
+	local output_file = compatible_path(output_dir .."/dependencies.txt")
+	local command = table.concat({
+		binaries.gradle(),
+		"dependencies",
+		"--project-dir=" .. mod.base_dir,
+		" > ",
+		output_file,
+		" < ",
+		"/dev/null"
+	}, " ")
 
-	local output = read_file(compatible_path(output_dir .. "/dependencies.txt"))
+	logger.debug("dependency file: " .. output_file)
+	local suc = os.execute(command)
+	assert(suc, "failed to run: " .. command)
+
+	local output = read_file(output_file)
+
+	logger.debug("base_dir", vim.inspect(mod.base_dir))
 	local output_lines = vim.split(output, "\n")
 
 	local jars = iter(output_lines)
@@ -163,6 +177,7 @@ gradle.get_dependencies_classpath = function(mod)
 	return result
 end
 
+---@param mod neotest-java.Module
 gradle.prepare_classpath = function(output_dirs, resources, mod)
 	output_dirs = output_dirs and output_dirs or {}
 	resources = resources or gradle.get_resources()
@@ -172,6 +187,11 @@ gradle.prepare_classpath = function(output_dirs, resources, mod)
 
 	for i, dir in ipairs(output_dirs) do
 		output_dirs[i] = compatible_path(dir .. "/classes")
+	end
+
+	-- add module dependencies
+	for _, dep in ipairs(mod:get_module_dependencies()) do
+		output_dirs[#output_dirs+1] = compatible_path(dep .. "/build/neotest-java/classes")
 	end
 
 	local classpath_arguments = ([[
