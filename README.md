@@ -16,7 +16,7 @@
 ## ⭐ Features
 - ✅ Maven and Gradle projects
 - ✅ Multimodule projects
-- ✅ Debugging tests with `nvim-dap`
+- ✅ Debugging tests with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap)
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
@@ -34,6 +34,7 @@
   return {
     {
       "rcasia/neotest-java",
+      ft = "java",
       init = function()
         -- override the default keymaps.
         -- needed until neotest-java is integrated in LazyVim
@@ -100,7 +101,7 @@
 ```lua
 {
   ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
-  junit_jar = nil, -- default: :/nvim/neotest-java/junit-platform-console-standalone-[version].jar
+  junit_jar = nil, -- default: /nvim/neotest-java/junit-platform-console-standalone-[version].jar
   incremental_build = true
 }
 ```
