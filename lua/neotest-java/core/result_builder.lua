@@ -6,6 +6,8 @@ local log = require("neotest-java.logger")
 local scan = require("plenary.scandir")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
+local Path        = require("plenary.path")
+local nio         = require("nio")
 local SKIPPED = JunitResult.SKIPPED
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
@@ -72,6 +74,17 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 	if spec.context.strategy == "dap" then
 		spec.context.terminated_command_event.wait()
 	end
+
+	local coverage_file = Path:new("/home/rcasia/jacoco.exe")
+	local jacoco_cli = "/home/rcasia/Downloads/org.jacoco.cli-0.8.9-nodeps.jar"
+	local coverage_output = "/home/rcasia/jacoco.xml"
+	local classfiles = "target/neotest-java/classes"
+	if coverage_file:exists() then
+		vim.system(({"java", "-jar", jacoco_cli, "report", coverage_file.filename, "--xml", coverage_output, "--classfiles", classfiles})):wait()
+	end
+
+	require('coverage').load(true)
+	require('coverage').summary()
 
 	---@type table<string, neotest.Result>
 	local results = {}
