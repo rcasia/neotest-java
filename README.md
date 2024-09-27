@@ -10,8 +10,10 @@
   <a href="https://luarocks.org/modules/rcasia/neotest-java">
     <img alt="LuaRocks" src="https://img.shields.io/luarocks/v/rcasia/neotest-java">
   </a>
-  <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rcasia/neotest-java">
 
+  <a href="https://github.com/rcasia/neotest-java">
+    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rcasia/neotest-java">
+  </a>
 </section>
 
 ![image](https://github.com/user-attachments/assets/d1d77980-faab-4110-9b7c-ae6911a3d42c)
