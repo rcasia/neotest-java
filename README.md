@@ -80,7 +80,7 @@
   ```lua
   {
     "nvim-neotest/neotest",
-    ft = "java"
+    ft = "java",
     dependencies = {
       "rcasia/neotest-java",
     },
