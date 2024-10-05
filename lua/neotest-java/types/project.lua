@@ -42,29 +42,13 @@ function Project:get_modules()
 
 	logger.debug("Found project directories: ", dirs)
 
-	local dependencies = self.build_tool.get_module_dependencies(self.root_dir)
-
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, dir in ipairs(dirs) do
 		local base_dir = Path:new(dir):parent().filename
 		local mod = Module.new(base_dir, self.build_tool)
 		modules[#modules + 1] = mod
-
-		if dependencies[mod.name] then
-			mod.module_dependencies = dependencies[mod.name]
-		end
 	end
-
-	-- sort by module dependencies
-	table.sort(modules, function(a, b)
-		---@type neotest-java.Module
-		local _a, _b = a, b
-		local _a_deps = dependencies[_a.name] or {}
-		local _b_deps = dependencies[_b.name] or {}
-
-		return #_a_deps < #_b_deps
-	end)
 
 	local base_dirs = {}
 	for _, mod in ipairs(modules) do
@@ -73,31 +57,6 @@ function Project:get_modules()
 	logger.debug("modules: ", base_dirs)
 
 	return modules
-end
-
-function Project:get_output_dirs()
-	return totable(iter(self:get_modules())
-		--
-		:map(function(mod)
-			return mod:get_output_dir()
-		end))
-end
-
-function Project:get_resources()
-	local resources = {}
-	for _, mod in ipairs(self:get_modules()) do
-		table.foreach(mod:get_resources(), function(_, r)
-			resources[#resources + 1] = r
-		end)
-	end
-
-	return resources
-end
-
-function Project:prepare_classpath()
-	local output_dirs = self:get_output_dirs()
-	local resources = self:get_resources()
-	self.build_tool.prepare_classpath(output_dirs, resources)
 end
 
 function Project:find_module_by_filepath(filepath)

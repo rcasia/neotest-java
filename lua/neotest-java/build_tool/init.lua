@@ -6,13 +6,7 @@ local Job = require("plenary.job")
 local lib = require("neotest.lib")
 
 ---@class neotest-java.BuildTool
----@field get_dependencies_classpath fun(): string
 ---@field get_output_dir fun(root?: string): string
----@field prepare_classpath fun()
----@field get_sources fun(root?: string): string[]
----@field source_dir fun(): string
----@field get_test_sources fun(root?: string): string[]
----@field get_resources fun(): string[]
 ---@field get_project_filename fun(): string
 ---@field get_module_dependencies fun(root: string): table
 
