@@ -7,7 +7,6 @@ local nio = require("nio")
 local path = require("plenary.path")
 local compatible_path = require("neotest-java.util.compatible_path")
 local Project = require("neotest-java.types.project")
-local Compiler = require("neotest-java.build_tool.compiler")
 local ch = require("neotest-java.context_holder")
 
 local SpecBuilder = {}
@@ -59,11 +58,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 	end
 
-	-- COMPILATION STEPS
-	-- for _, mod in ipairs(project:get_modules()) do
-	-- 	Compiler.compile_sources(mod)
-	-- 	Compiler.compile_test_sources(mod)
-	-- end
+	-- COMPILATION STEP
 	local wait = nio.control.event()
 	nio.run(function (success, ...)
 	nio.scheduler()
