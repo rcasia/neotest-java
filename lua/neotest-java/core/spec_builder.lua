@@ -35,7 +35,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	vim.uv.fs_mkdir(output_dir, 493)
 
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir = string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
+	local reports_dir = compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
 	command:reports_dir(compatible_path(reports_dir))
 	command:basedir(project:find_module_by_filepath(position.path).base_dir)
 
