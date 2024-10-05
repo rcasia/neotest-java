@@ -60,10 +60,17 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEPS
-	for _, mod in ipairs(project:get_modules()) do
-		Compiler.compile_sources(mod)
-		Compiler.compile_test_sources(mod)
-	end
+	-- for _, mod in ipairs(project:get_modules()) do
+	-- 	Compiler.compile_sources(mod)
+	-- 	Compiler.compile_test_sources(mod)
+	-- end
+	local wait = nio.control.event()
+	nio.run(function (success, ...)
+	nio.scheduler()
+		require("jdtls").compile("full")
+		wait.set()
+	end)
+	wait.wait()
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then

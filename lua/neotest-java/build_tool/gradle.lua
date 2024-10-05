@@ -77,7 +77,7 @@ end
 
 gradle.get_output_dir = function(root)
 	root = root and root or "."
-	return compatible_path(root .. "/build/neotest-java")
+	return compatible_path(root .. "/bin")
 end
 
 gradle.get_sources = function(root)
@@ -93,7 +93,7 @@ gradle.get_sources = function(root)
 	end
 
 	local generated_sources = {}
-	local generated_sources_dir = root .. "/build"
+	local generated_sources_dir = root .. "/bin"
 	if File.exists(generated_sources_dir) then
 		generated_sources = scan.scan_dir(generated_sources_dir, {
 			search_pattern = JAVA_FILE_PATTERN,

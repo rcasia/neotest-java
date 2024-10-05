@@ -72,7 +72,7 @@ end
 maven.get_output_dir = function(root)
 	root = root and root or "."
 	-- TODO: read from pom.xml <build><directory>
-	return compatible_path(root .. "/target/neotest-java")
+	return compatible_path(root .. "/target/classes")
 end
 
 maven.get_sources = function(root)

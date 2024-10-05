@@ -3,6 +3,7 @@ local binaries = require("neotest-java.command.binaries")
 local compatible_path = require("neotest-java.util.compatible_path")
 local java = binaries.java
 local logger = require("neotest-java.logger")
+local classpath = require("neotest-java.command.jdtls").get_classpath
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -107,7 +108,8 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				"@" .. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
+				-- "@" .. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
+				("-cp %s"):format(vim.iter(classpath()):join(":")),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",
