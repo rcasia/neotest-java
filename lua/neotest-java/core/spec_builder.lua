@@ -16,6 +16,12 @@ local SpecBuilder = {}
 ---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, config)
+	-- check there is an active java client
+	local bufnr = nio.api.nvim_get_current_buf()
+	local has_jdtls_client = #nio.lsp.get_clients({ bufnr = bufnr, name = "jdtls" }) ~= 0
+
+	assert(has_jdtls_client, "there is no jdtls client attached to this buffer")
+
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
