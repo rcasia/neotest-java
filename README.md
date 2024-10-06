@@ -40,6 +40,12 @@
     {
       "rcasia/neotest-java",
       ft = "java",
+      dependencies = {
+        "mfussenegger/nvim-jdtls",
+        "mfussenegger/nvim-dap", -- for the debugger
+        "rcarriga/nvim-dap-ui", -- recommended
+        "theHamsta/nvim-dap-virtual-text", -- recommended
+      },
       init = function()
         -- override the default keymaps.
         -- needed until neotest-java is integrated in LazyVim
@@ -78,18 +84,34 @@
   <summary><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> plugin manager</summary>
 
   ```lua
-  {
-    "nvim-neotest/neotest",
-    ft = "java",
-    dependencies = {
+  return {
+    {
       "rcasia/neotest-java",
-    },
-    opts = {
-      adapters = {
-        ["neotest-java"] = {},
+      ft = "java",
+      dependencies = {
+        "mfussenegger/nvim-jdtls",
+        "mfussenegger/nvim-dap", -- for the debugger
+        "rcarriga/nvim-dap-ui", -- recommended
+        "theHamsta/nvim-dap-virtual-text", -- recommended
       },
     },
-  },
+    {
+      "nvim-neotest/neotest",
+      dependencies = {
+        "nvim-neotest/nvim-nio",
+        "nvim-lua/plenary.nvim",
+        "antoinemadec/FixCursorHold.nvim",
+        "nvim-treesitter/nvim-treesitter"
+      },
+      opts = {
+        adapters = {
+          ["neotest-java"] = {
+            -- config here
+          },
+        },
+      },
+    },
+  }
   ```
 
 </details>
@@ -105,8 +127,8 @@
 
 ```lua
 {
-  ignore_wrapper = false, -- whether to ignore maven/gradle wrapper
-  junit_jar = nil, -- default: /nvim/neotest-java/junit-platform-console-standalone-[version].jar
+  ignore_wrapper = false, -- deprecated
+  junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
   incremental_build = true
 }
 ```

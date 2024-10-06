@@ -44,3 +44,6 @@ jobs:
             plenary.nvim
             nvim-nio
             tree-sitter-java
+            nvim-dap
+            nvim-dap-ui
+
