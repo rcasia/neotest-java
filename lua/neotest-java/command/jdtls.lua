@@ -1,6 +1,8 @@
 local nio = require("nio")
+local write_file = require("neotest-java.util.write_file")
+local compatible_path = require("neotest-java.util.compatible_path")
 
-M = {}
+local M = {}
 
 M.get_classpath = function()
 	local bufnr = vim.api.nvim_get_current_buf()
@@ -29,6 +31,14 @@ M.get_classpath = function()
 	end
 
 	return runtime_classpaths
+end
+
+M.get_classpath_file_argument = function(report_dir)
+	local classpath = table.concat(M.get_classpath(), ":")
+	local temp_file = compatible_path(report_dir .. "/.cp")
+	write_file(temp_file, ("-cp %s"):format(classpath))
+
+	return ("@%s"):format(temp_file)
 end
 
 return M

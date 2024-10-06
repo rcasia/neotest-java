@@ -1,7 +1,7 @@
 local binaries = require("neotest-java.command.binaries")
 local java = binaries.java
 local logger = require("neotest-java.logger")
-local classpath = require("neotest-java.command.jdtls").get_classpath
+local jdtls = require("neotest-java.command.jdtls")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -104,7 +104,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				("-cp %s"):format(vim.iter(classpath()):join(":")),
+				("%s"):format(jdtls.get_classpath_file_argument(self._reports_dir)),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",
