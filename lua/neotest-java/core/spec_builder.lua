@@ -66,13 +66,11 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEP
-	local wait = nio.control.event()
-	nio.run(function(success, ...)
+	local compile_mode = ch.config().incremental_build and "incremental" or "full"
+	nio.run(function(_)
 		nio.scheduler()
-		require("jdtls").compile("full")
-		wait.set()
-	end)
-	wait.wait()
+		require("jdtls").compile(compile_mode)
+	end):wait()
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
