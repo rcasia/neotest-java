@@ -5,6 +5,7 @@ local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local Path = require("plenary.path")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
+local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 
 ---@class neotest-java.Project
 ---@field root_dir string
@@ -54,37 +55,6 @@ function Project:get_modules()
 	logger.debug("modules: ", base_dirs)
 
 	return modules
-end
-
-function Project:find_module_by_filepath(filepath)
-	-- Get the absolute path of the file
-	local filepath_abs = Path:new(filepath):absolute()
-	local modules = self:get_modules()
-
-	local matching_module = nil
-	local longest_match_length = -1
-
-	-- Iterate over each module
-	for _, mod in ipairs(modules) do
-		-- Get the absolute path of the module's base directory
-		local basedir_abs = Path:new(mod.base_dir):absolute()
-
-		-- Check if the file path starts with the module's base directory
-		if filepath_abs:sub(1, #basedir_abs) == basedir_abs then
-			-- Ensure that the next character is a path separator or end of string
-			local next_char = filepath_abs:sub(#basedir_abs + 1, #basedir_abs + 1)
-			if next_char == Path.path.sep or next_char == "" then
-				-- Update if this module's basedir is longer (more specific)
-				if #basedir_abs > longest_match_length then
-					longest_match_length = #basedir_abs
-					matching_module = mod
-				end
-			end
-		end
-	end
-
-	logger.error("no module found for filepath: " .. filepath)
-	return matching_module
 end
 
 return Project

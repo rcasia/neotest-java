@@ -16,8 +16,6 @@ M.get_java_home = function()
 	}
 	require("jdtls.util").execute_command(cmd, function(err1, resp)
 		assert(not err1, vim.inspect(err1))
-
-		print(vim.inspect(resp))
 		future.set(resp)
 	end, bufnr)
 

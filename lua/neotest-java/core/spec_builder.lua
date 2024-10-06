@@ -1,6 +1,6 @@
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
-local log = require("neotest-java.logger")
+local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
@@ -8,6 +8,7 @@ local path = require("plenary.path")
 local compatible_path = require("neotest-java.util.compatible_path")
 local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
+local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 
 local SpecBuilder = {}
 
@@ -37,6 +38,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local root = assert(ch:get_context().root)
 	local absolute_path = position.path
 	local project = assert(Project.from_root_dir(root), "project not detected correctly")
+	local modules = project:get_modules()
 
 	-- make sure we are in root_dir
 	nio.fn.chdir(root)
@@ -52,7 +54,14 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local reports_dir =
 		compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
 	command:reports_dir(compatible_path(reports_dir))
-	command:basedir(project:find_module_by_filepath(position.path).base_dir)
+
+	local module_dirs = vim.iter(modules)
+		:map(function(mod)
+			return mod.base_dir
+		end)
+		:totable()
+	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module base_dir not found")
+	command:basedir(base_dir)
 
 	-- TEST SELECTORS
 	if position.type == "dir" then
@@ -76,10 +85,12 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
+	logger.debug(("compilation in %s mode"):format(compile_mode))
 	nio.run(function(_)
 		nio.scheduler()
 		jdtls.compile(compile_mode)
 	end):wait()
+	logger.debug("compilation complete!")
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
@@ -87,7 +98,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 		-- PREPARE DEBUG TEST COMMAND
 		local junit = command:build_junit(port)
-		log.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
+		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
 
 		return {
@@ -108,7 +119,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- NORMAL STRATEGY
-	log.info("junit command: ", command:build_to_string())
+	logger.info("junit command: ", command:build_to_string())
 	return {
 		command = command:build_to_string(),
 		cwd = root,
