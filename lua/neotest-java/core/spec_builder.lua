@@ -16,6 +16,15 @@ local SpecBuilder = {}
 ---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, config)
+	-- check that required dependencies are present
+	local ok_jdtls, jdtls = pcall(require, "jdtls")
+	assert(ok_jdtls, "neotest-java requires nvim-jdtls to tests")
+
+	if args.strategy == "dap" then
+		local ok_dap, _ = pcall(require, "dap")
+		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
+	end
+
 	-- check there is an active java client
 	local bufnr = nio.api.nvim_get_current_buf()
 	local has_jdtls_client = #nio.lsp.get_clients({ bufnr = bufnr, name = "jdtls" }) ~= 0
@@ -69,7 +78,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
 	nio.run(function(_)
 		nio.scheduler()
-		require("jdtls").compile(compile_mode)
+		jdtls.compile(compile_mode)
 	end):wait()
 
 	-- DAP STRATEGY
