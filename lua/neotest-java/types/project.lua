@@ -5,7 +5,6 @@ local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local Path = require("plenary.path")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
-local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 
 ---@class neotest-java.Project
 ---@field root_dir string

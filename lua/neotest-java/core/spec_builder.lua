@@ -27,7 +27,6 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- check there is an active java client
-	local bufnr = nio.api.nvim_get_current_buf()
 	local has_jdtls_client = #nio.lsp.get_clients({ name = "jdtls" }) ~= 0
 
 	assert(has_jdtls_client, "there is no jdtls client attached.")

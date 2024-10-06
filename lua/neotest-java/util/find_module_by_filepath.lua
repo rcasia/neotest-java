@@ -1,4 +1,3 @@
-local Path = require("plenary.path")
 local logger = require("neotest-java.logger")
 
 ---@param filepath string
