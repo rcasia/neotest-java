@@ -1,5 +1,4 @@
 local compatible_path = require("neotest-java.util.compatible_path")
-local JAVA_FILE_PATTERN = ".+%.java$"
 local PROJECT_FILENAME = "build.gradle"
 
 ---@class neotest-java.GradleBuildTool : neotest-java.BuildTool

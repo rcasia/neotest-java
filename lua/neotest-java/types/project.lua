@@ -4,10 +4,7 @@ local Module = require("neotest-java.types.module")
 local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local Path = require("plenary.path")
-local fun = require("fun")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
-local iter = fun.iter
-local totable = fun.totable
 
 ---@class neotest-java.Project
 ---@field root_dir string
