@@ -4,6 +4,28 @@ local compatible_path = require("neotest-java.util.compatible_path")
 
 local M = {}
 
+M.get_java_home = function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local uri = vim.uri_from_bufnr(bufnr)
+	local future = nio.control.future()
+
+	local setting = "org.eclipse.jdt.ls.core.vm.location"
+	local cmd = {
+		command = "java.project.getSettings",
+		arguments = { uri, { setting } },
+	}
+	require("jdtls.util").execute_command(cmd, function(err1, resp)
+		assert(not err1, vim.inspect(err1))
+
+		print(vim.inspect(resp))
+		future.set(resp)
+	end, bufnr)
+
+	local java_exec = future.wait()
+
+	return java_exec[setting]
+end
+
 M.get_classpath = function()
 	local bufnr = vim.api.nvim_get_current_buf()
 	local uri = vim.uri_from_bufnr(bufnr)
