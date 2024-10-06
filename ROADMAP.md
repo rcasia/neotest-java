@@ -10,7 +10,7 @@ The goal of this project is to achieve:
 v1.0.0
 
 - [ ] Smooth feedback when there is a compilation error
-- [ ] Compile with nvim-jdtls when available
+- [x] Compile with nvim-jdtls when available
 - [ ] Select and run certain testcases of parameterized tests
 - [ ] Integrate with [nvim-coverage](https://github.com/andythigpen/nvim-coverage)
 

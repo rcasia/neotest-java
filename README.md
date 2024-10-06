@@ -127,7 +127,6 @@
 
 ```lua
 {
-  ignore_wrapper = false, -- deprecated
   junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
   incremental_build = true
 }
