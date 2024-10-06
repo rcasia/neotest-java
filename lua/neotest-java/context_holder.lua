@@ -3,7 +3,6 @@ local compatible_path = require("neotest-java.util.compatible_path")
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
-	ignore_wrapper = false,
 	junit_jar = compatible_path(vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar"),
 	incremental_build = true,
 }
@@ -30,7 +29,6 @@ return {
 }
 
 ---@class neotest-java.ConfigOpts
----@field ignore_wrapper boolean
 ---@field junit_jar string
 ---@field incremental_build boolean
 

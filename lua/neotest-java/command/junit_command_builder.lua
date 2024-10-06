@@ -1,8 +1,7 @@
-local build_tools = require("neotest-java.build_tool")
 local binaries = require("neotest-java.command.binaries")
-local compatible_path = require("neotest-java.util.compatible_path")
 local java = binaries.java
 local logger = require("neotest-java.logger")
+local jdtls = require("neotest-java.command.jdtls")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -87,8 +86,6 @@ local CommandBuilder = {
 		assert(self._test_references, "test_references cannot be nil")
 		assert(self._basedir, "basedir cannot be nil")
 
-		local build_tool = build_tools.get(self._project_type)
-
 		local selectors = {}
 		for _, v in ipairs(self._test_references) do
 			if v.type == "test" then
@@ -107,7 +104,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				"@" .. compatible_path(("%s/%s/cp_arguments.txt"):format(self._basedir, build_tool.get_output_dir())),
+				("%s"):format(jdtls.get_classpath_file_argument(self._reports_dir)),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",

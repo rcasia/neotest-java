@@ -68,6 +68,7 @@ local ResultBuilder = {}
 ---@param tree neotest.Tree
 ---@return table<string, neotest.Result>
 function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212 unused argument
+	assert(result.code == 0 or result.code == 1, "there was an error while running command")
 	-- wait for the debug test to finish
 	if spec.context.strategy == "dap" then
 		spec.context.terminated_command_event.wait()
@@ -84,6 +85,9 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 		search_pattern = REPORT_FILE_NAMES_PATTERN,
 	})
 	log.debug("Found report files: ", report_filepaths)
+
+	assert(report_filepaths ~= 0, "no report file could be generated")
+
 	local testcases_in_xml = flat_map(function(filepath)
 		local ok, data = pcall(function()
 			return read_file(filepath)
