@@ -24,7 +24,12 @@ M.get_java_home = function()
 	return java_exec[setting]
 end
 
-M.get_classpath = function()
+---@param additional_classpath_entries string[]
+M.get_classpath = function(additional_classpath_entries)
+	additional_classpath_entries = additional_classpath_entries or {}
+
+	local classpaths = {}
+
 	local bufnr = vim.api.nvim_get_current_buf()
 	local uri = vim.uri_from_bufnr(bufnr)
 	local runtime_classpath_future = nio.control.future()
@@ -46,15 +51,21 @@ M.get_classpath = function()
 	local runtime_classpaths = runtime_classpath_future.wait()
 	local test_classpaths = test_classpath_future.wait()
 
+	for _, v in ipairs(additional_classpath_entries) do
+		classpaths[#classpaths + 1] = v
+	end
+	for _, v in ipairs(runtime_classpaths) do
+		classpaths[#classpaths + 1] = v
+	end
 	for _, v in ipairs(test_classpaths) do
-		runtime_classpaths[#runtime_classpaths + 1] = v
+		classpaths[#classpaths + 1] = v
 	end
 
-	return runtime_classpaths
+	return classpaths
 end
 
-M.get_classpath_file_argument = function(report_dir)
-	local classpath = table.concat(M.get_classpath(), ":")
+M.get_classpath_file_argument = function(report_dir, additional_classpath_entries)
+	local classpath = table.concat(M.get_classpath(additional_classpath_entries), ":")
 	local temp_file = compatible_path(report_dir .. "/.cp")
 	write_file(temp_file, ("-cp %s"):format(classpath))
 
