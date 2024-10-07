@@ -10,9 +10,15 @@ local find_module_by_filepath = function(module_dirs, filepath)
 		return nil
 	end
 
+	-- Normalize paths to use forward slashes for Windows compatibility
+	filepath = filepath:gsub("\\", "/")
+	local normalized_module_dirs = vim.tbl_map(function(dir)
+		return dir:gsub("\\", "/")
+	end, module_dirs)
+
 	local matches = {}
 
-	for _, module_dir in ipairs(module_dirs) do
+	for _, module_dir in ipairs(normalized_module_dirs) do
 		-- Escape any special characters in module_dir for pattern matching
 		local escaped_module_dir = module_dir:gsub("([^%w])", "%%%1")
 
