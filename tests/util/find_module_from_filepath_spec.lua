@@ -11,6 +11,12 @@ describe("find_module_by_filepath function", function()
 			expected = "domain-module",
 		},
 		{
+			description = "Standard case with module in the path for windows",
+			module_dirs = { "rest-module", "grpc-module", "infrastructure-module", "domain-module" },
+			filepath = ".\\code\\domain-module\\src\\test\\org\\app\\Test.java",
+			expected = "domain-module",
+		},
+		{
 			description = "Module not present in the path",
 			module_dirs = { "rest-module", "grpc-module", "infrastructure-module", "domain-module" },
 			filepath = "./code/unknown-module/src/test/org/app/Test.java",
