@@ -1,17 +1,16 @@
-local Path = require("plenary.path")
 local nio = require("nio")
+local compatible_path = require("neotest-java.util.compatible_path")
+local Path = require("plenary.path")
 
 ---@param filepath string
 ---@param content string
 local function write_file(filepath, content)
 	-- for os compatibibility
-	local _filepath = Path:new(filepath)
+	local _filepath = compatible_path(filepath)
 	-- create parent directories if they don't exist
-	nio.fn.mkdir(_filepath:parent():absolute(), "p")
+	nio.fn.mkdir(Path:new(_filepath):parent():absolute(), "p")
 
-	local compatible_path = _filepath:absolute()
-
-	local file = io.open(compatible_path, "w") or error("Could not open file for writing: " .. compatible_path)
+	local file = io.open(_filepath, "w") or error("Could not open file for writing: " .. _filepath)
 	local buffer = ""
 	for i = 1, #content do
 		buffer = buffer .. content:sub(i, i)
