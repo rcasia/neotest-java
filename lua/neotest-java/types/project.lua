@@ -3,8 +3,9 @@ local detect_project_type = require("neotest-java.util.detect_project_type")
 local Module = require("neotest-java.types.module")
 local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
-local Path = require("plenary.path")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
+local compatible_path = require("neotest-java.util.compatible_path")
+local Path = require("plenary.path")
 
 ---@class neotest-java.Project
 ---@field root_dir string
@@ -42,7 +43,7 @@ function Project:get_modules()
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, dir in ipairs(dirs) do
-		local base_dir = Path:new(dir):parent().filename
+		local base_dir = compatible_path(Path:new(dir):parent().filename)
 		local mod = Module.new(base_dir, self.build_tool)
 		modules[#modules + 1] = mod
 	end

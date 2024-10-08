@@ -44,7 +44,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- make sure outputDir is created to operate in it
 	local output_dir = build_tools.get(project_type).get_output_dir()
-	local output_dir_parent = path:new(output_dir):parent().filename
+	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
 	vim.uv.fs_mkdir(output_dir_parent, 493)
 	vim.uv.fs_mkdir(output_dir, 493)
