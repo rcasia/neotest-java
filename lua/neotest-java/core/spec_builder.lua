@@ -1,15 +1,17 @@
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
-local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
+local Project = require("neotest-java.types.project")
+local build_tools = require("neotest-java.build_tool")
+local ch = require("neotest-java.context_holder")
+local compatible_path = require("neotest-java.util.compatible_path")
+local compile = require("neotest-java.command.compile")
+local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
-local build_tools = require("neotest-java.build_tool")
-local nio = require("nio")
+local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
+
 local path = require("plenary.path")
-local compatible_path = require("neotest-java.util.compatible_path")
-local Project = require("neotest-java.types.project")
-local ch = require("neotest-java.context_holder")
-local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
-local compilers = require("neotest-java.core.spec_builder.compiler")
+local lib = require("neotest.lib")
+local nio = require("nio")
 
 local SpecBuilder = {}
 
@@ -76,9 +78,20 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg =
-		compilers.jdtls.compile({ cwd = base_dir, classpath_file_dir = output_dir, compile_mode = compile_mode })
-	command:classpath_file_arg(classpath_file_arg)
+	logger.debug(("compilation in %s mode"):format(compile_mode))
+
+    lib.notify("Compiling source & test files...")
+    local result = compile(compile_mode)
+    if result == 0 then
+        lib.notify("Compiling project files has failed", vim.log.levels.WARN)
+    elseif result == 1 then
+        lib.notify("Compiled project files successfully", vim.log.levels.INFO)
+    elseif result == 2 then
+        lib.notify("Compiled project files with errors", vim.log.levels.WARN)
+    else
+        lib.notify("Compilation of project files has been canceled", vim.log.levels.INFO)
+    end
+	logger.debug("compilation complete!")
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
