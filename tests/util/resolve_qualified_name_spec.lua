@@ -55,4 +55,11 @@ describe("resolve_qualified_name", function()
 			assert.are.same(case.expected, result)
 		end)
 	end
+
+	a.it("it should error when file does not exist", function()
+		local bad_example_filepath = "some-fake-filename"
+		assert.has_error(function()
+			resolve_qualified_name(bad_example_filepath)
+		end, string.format("file does not exist: %s", bad_example_filepath))
+	end)
 end)
