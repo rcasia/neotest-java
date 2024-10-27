@@ -31,7 +31,17 @@ describe("resolve_qualified_name", function()
 			input = [[
     package com.example;
 
-    public class ExampleTest {}
+    class ExampleTest {}
+
+    ]],
+			expected = "com.example.ExampleTest",
+		},
+		{
+			input = [[
+    package com.example;
+
+    class SomeConfig {}
+    class ExampleTest {}
 
     ]],
 			expected = "com.example.ExampleTest",
