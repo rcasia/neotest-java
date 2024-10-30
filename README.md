@@ -41,7 +41,6 @@
       "rcasia/neotest-java",
       ft = "java",
       dependencies = {
-        "mfussenegger/nvim-jdtls",
         "mfussenegger/nvim-dap", -- for the debugger
         "rcarriga/nvim-dap-ui", -- recommended
         "theHamsta/nvim-dap-virtual-text", -- recommended
@@ -89,7 +88,6 @@
       "rcasia/neotest-java",
       ft = "java",
       dependencies = {
-        "mfussenegger/nvim-jdtls",
         "mfussenegger/nvim-dap", -- for the debugger
         "rcarriga/nvim-dap-ui", -- recommended
         "theHamsta/nvim-dap-virtual-text", -- recommended
@@ -127,10 +125,22 @@
 
 ```lua
 {
-  junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
-  incremental_build = true
+    junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
+    incremental_build = true
+    java_runtimes = {
+        -- there are no runtimes defined by default, if you wish to have neotest-java resolve them based on your environment define them here, one could also define environment variables with the same key/names i.e. `JAVA_HOME_8` or `JAVA_HOME_11` or `JAVA_HOME_17` etc in your zshenv or equivalent.
+        ["JAVA_HOME_8"] = "/absolute/path/to/jdk8/home/directory",
+        ["JAVA_HOME_11"] = "/absolute/path/to/jdk11/home/directory",
+        ["JAVA_HOME_17"] = "/absolute/path/to/jdk17/home/directory",
+    },
 }
+
 ```
+
+`Note that neotest-java would try it's best to determine the current project's runtime based on the currently running lsp servers,
+neotest-java supports both native neovim lsp and coc.nvim, it would try to fallback to your project configuration, supports both maven
+(reading from pom.xml) & gradle (reading from build.gradle or gradle.properties). In case the runtime is found but the location of it is not
+defined, neotest-java would prompt the user to input the absolute directory for the specific runtime version (only once).`
 
 ## :octocat: Contributing
 

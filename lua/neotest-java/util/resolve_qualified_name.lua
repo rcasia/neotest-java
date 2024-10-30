@@ -1,6 +1,7 @@
 local read_file = require("neotest-java.util.read_file")
 local TEST_CLASS_PATTERNS = require("neotest-java.types.test_class_patterns")
 
+---@return string | nil
 local function resolve_qualified_name(filename)
 	---@param raw_query string
 	---@param content string
@@ -44,7 +45,7 @@ local function resolve_qualified_name(filename)
 
 	-- as there can be different class names
 	-- searches for the one the mathces the test class patterns
-	local name = ""
+	local name = nil
 	for _, _name in ipairs(names) do
 		for _, pattern in ipairs(TEST_CLASS_PATTERNS) do
 			if _name:find(pattern) then
@@ -54,7 +55,7 @@ local function resolve_qualified_name(filename)
 		end
 	end
 
-	return package_line .. "." .. name
+	return name and (package_line .. "." .. name) or nil
 end
 
 return resolve_qualified_name

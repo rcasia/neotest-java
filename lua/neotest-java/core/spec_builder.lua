@@ -1,14 +1,17 @@
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
-local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
+local Project = require("neotest-java.types.project")
+local build_tools = require("neotest-java.build_tool")
+local ch = require("neotest-java.context_holder")
+local compatible_path = require("neotest-java.util.compatible_path")
+local compile = require("neotest-java.command.compile")
+local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
-local build_tools = require("neotest-java.build_tool")
-local nio = require("nio")
+local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
+
 local path = require("plenary.path")
-local compatible_path = require("neotest-java.util.compatible_path")
-local Project = require("neotest-java.types.project")
-local ch = require("neotest-java.context_holder")
-local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
+local lib = require("neotest.lib")
+local nio = require("nio")
 
 local SpecBuilder = {}
 
@@ -17,19 +20,10 @@ local SpecBuilder = {}
 ---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, config)
-	-- check that required dependencies are present
-	local ok_jdtls, jdtls = pcall(require, "jdtls")
-	assert(ok_jdtls, "neotest-java requires nvim-jdtls to tests")
-
 	if args.strategy == "dap" then
 		local ok_dap, _ = pcall(require, "dap")
 		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
 	end
-
-	-- check there is an active java client
-	local has_jdtls_client = #nio.lsp.get_clients({ name = "jdtls" }) ~= 0
-
-	assert(has_jdtls_client, "there is no jdtls client attached.")
 
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
@@ -66,29 +60,37 @@ function SpecBuilder.build_spec(args, project_type, config)
 	if position.type == "dir" then
 		for _, child in tree:iter() do
 			if child.type == "file" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "file")
+				command:test_reference(resolve_qualified_name(child.path), child.name, "file")
 			end
 		end
 	elseif position.type == "namespace" then
 		for _, child in tree:iter() do
 			if child.type == "test" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "test")
+				command:test_reference(resolve_qualified_name(child.path), child.name, "test")
 			end
 		end
 	elseif position.type == "file" then
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualified_name(absolute_path), position.name, "file")
 	elseif position.type == "test" then
 		-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualified_name(absolute_path), position.name, "file")
 	end
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
 	logger.debug(("compilation in %s mode"):format(compile_mode))
-	nio.run(function(_)
-		nio.scheduler()
-		jdtls.compile(compile_mode)
-	end):wait()
+
+    lib.notify("Compiling source & test files...")
+    local result = compile(compile_mode)
+    if result == 0 then
+        lib.notify("Compiling project files has failed", vim.log.levels.WARN)
+    elseif result == 1 then
+        lib.notify("Compiled project files successfully", vim.log.levels.INFO)
+    elseif result == 2 then
+        lib.notify("Compiled project files with errors", vim.log.levels.WARN)
+    else
+        lib.notify("Compilation of project files has been canceled", vim.log.levels.INFO)
+    end
 	logger.debug("compilation complete!")
 
 	-- DAP STRATEGY

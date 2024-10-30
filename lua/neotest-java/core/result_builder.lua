@@ -125,7 +125,11 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 			goto continue
 		end
 
-		local unique_key = build_unique_key(resolve_qualified_name(node.path), node.name)
+        local qualified_name = resolve_qualified_name(node.path)
+        if not qualified_name or #qualified_name == 0 then
+            goto continue
+        end
+		local unique_key = build_unique_key(qualified_name, node.name)
 
 		if is_parameterized then
 			local jtestcases = extract_parameterized_tests(testcases, unique_key)
