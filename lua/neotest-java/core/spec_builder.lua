@@ -7,7 +7,7 @@ local compile = require("neotest-java.command.compile")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
-local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
+local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 
 local path = require("plenary.path")
 local lib = require("neotest.lib")
@@ -60,20 +60,20 @@ function SpecBuilder.build_spec(args, project_type, config)
 	if position.type == "dir" then
 		for _, child in tree:iter() do
 			if child.type == "file" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "file")
+				command:test_reference(resolve_qualified_name(child.path), child.name, "file")
 			end
 		end
 	elseif position.type == "namespace" then
 		for _, child in tree:iter() do
 			if child.type == "test" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "test")
+				command:test_reference(resolve_qualified_name(child.path), child.name, "test")
 			end
 		end
 	elseif position.type == "file" then
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualified_name(absolute_path), position.name, "file")
 	elseif position.type == "test" then
 		-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualified_name(absolute_path), position.name, "file")
 	end
 
 	-- COMPILATION STEP

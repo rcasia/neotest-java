@@ -13,10 +13,13 @@ local CommandBuilder = {
 		return setmetatable({}, self)
 	end,
 
-	---@param qualified_name string example: com.example.ExampleTest
+	---@param qualified_name string | nil example: com.example.ExampleTest
 	---@param node_name? string example: shouldNotFail
 	---@return CommandBuilder
 	test_reference = function(self, qualified_name, node_name, type)
+        if not qualified_name or #qualified_name == 0 then
+            return self
+        end
 		self._test_references = self._test_references or {}
 
 		if type == "dir" then

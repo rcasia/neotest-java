@@ -1,6 +1,7 @@
 local read_file = require("neotest-java.util.read_file")
 local TEST_CLASS_PATTERNS = require("neotest-java.types.test_class_patterns")
 
+---@return string | nil
 local function resolve_qualified_name(filename)
 	---@param raw_query string
 	---@param content string
@@ -57,7 +58,7 @@ local function resolve_qualified_name(filename)
 	end
 	assert(name, "test class name not found") -- should not happen
 
-	return package_line .. name
+	return name and (package_line .. "." .. name) or nil
 end
 
 return resolve_qualified_name
