@@ -46,6 +46,12 @@ describe("resolve_qualified_name", function()
     ]],
 			expected = "com.example.ExampleTest",
 		},
+		{
+			input = [[
+    class ExampleTest {}
+    ]],
+			expected = "ExampleTest",
+		},
 	}
 
 	for _, case in ipairs(testcases) do
