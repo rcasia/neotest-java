@@ -46,6 +46,9 @@ end
 ---@param file_path string
 ---@return boolean
 function FileChecker.is_test_file(file_path)
+	if not vim.endswith(file_path, ".java") then
+		return false
+	end
 	return fileNameMatchesPattern(file_path)
 		or (packagePathMatchesPattern(file_path) and fileBodyContainsPattern(file_path))
 end
