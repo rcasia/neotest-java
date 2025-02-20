@@ -3,7 +3,7 @@ local Project = require("neotest-java.types.project")
 local build_tools = require("neotest-java.build_tool")
 local ch = require("neotest-java.context_holder")
 local compatible_path = require("neotest-java.util.compatible_path")
-local compile = require("neotest-java.command.compile")
+local build = require("neotest-java.command.project")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
@@ -77,13 +77,13 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEP
-	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	logger.debug(("compilation in %s mode"):format(compile_mode))
+	local build_mode = ch.config().incremental_build and "incremental" or "full"
+	logger.debug(("buidling in %s mode"):format(build_mode))
 
-    lib.notify("Compiling source & test files...")
-    local result = compile(compile_mode)
+    lib.notify("Building project...")
+    local result = build(build_mode)
     if result == 0 then
-        lib.notify("Compiling project files has failed", vim.log.levels.WARN)
+        lib.notify("Compiling project files has failed", vim.log.levels.ERROR)
     elseif result == 1 then
         lib.notify("Compiled project files successfully", vim.log.levels.INFO)
     elseif result == 2 then
@@ -91,7 +91,7 @@ function SpecBuilder.build_spec(args, project_type, config)
     else
         lib.notify("Compilation of project files has been canceled", vim.log.levels.INFO)
     end
-	logger.debug("compilation complete!")
+	logger.debug("building complete!")
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
