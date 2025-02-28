@@ -8,6 +8,7 @@ local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
+local lib = require("neotest.lib")
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -31,7 +32,7 @@ local NeotestJavaAdapter = {
 	discover_positions = position_discoverer.discover_positions,
 	results = result_builder.build_results,
 	root = function(dir)
-		local root = root_finder.find_root(dir)
+		local root = root_finder.find_root(dir, lib.files.match_root_pattern)
 		if root then
 			ch.set_root(root)
 		end
