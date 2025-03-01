@@ -49,6 +49,47 @@ describe("ResultBuilder", function()
 		assert.match("no report file could be generated", err)
 	end)
 
+	async.it("ignores report file when cannot be read", function()
+		--given
+		local scan_dir = function()
+			return { "TEST-someTest.xml" }
+		end
+		local read_file = function()
+			error("cannot read file")
+		end
+
+		local runSpec = {
+			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
+			context = {
+				reports_dir = MAVEN_REPORTS_DIR,
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		local expected = {
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
+				status = "skipped",
+				output = TEMPNAME,
+			},
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+				status = "skipped",
+				output = TEMPNAME,
+			},
+		}
+		--when
+		local results = result_builder.build_results(runSpec, strategyResult, tree, scan_dir, read_file)
+
+		-- then
+		assert.are.same(expected, results)
+	end)
+
 	async.it("builds the results for maven", function()
 		--given
 		local scan_dir = function()

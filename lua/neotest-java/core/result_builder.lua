@@ -1,5 +1,4 @@
 local xml = require("neotest.lib.xml")
-local read_file = require("neotest-java.util.read_file")
 local flat_map = require("neotest-java.util.flat_map")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
@@ -8,6 +7,7 @@ local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
+
 --- @param classname string name of class
 --- @param testname string name of test
 --- @return string unique_key based on classname and testname
@@ -51,10 +51,12 @@ local ResultBuilder = {}
 ---@param spec neotest.RunSpec
 ---@param result neotest.StrategyResult
 ---@param tree neotest.Tree
----@param scan neotest.Scan
+---@param scan fun(dir: string, opts: table): string[]
+---@param read_file fun(filepath: string): string
 ---@return table<string, neotest.Result>
-function ResultBuilder.build_results(spec, result, tree, scan) -- luacheck: ignore 212 unused argument
+function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- luacheck: ignore 212 unused argument
 	scan = scan or require("plenary.scandir").scan_dir
+	read_file = read_file or require("neotest-java.util.read_file")
 
 	assert(result.code == 0 or result.code == 1, "there was an error while running command")
 	-- wait for the debug test to finish
@@ -69,7 +71,6 @@ function ResultBuilder.build_results(spec, result, tree, scan) -- luacheck: igno
 	---@type table<string, neotest-java.JunitResult>
 	local testcases_junit = {}
 
-	-- FIX: IO operation
 	local report_filepaths = scan(spec.context.reports_dir, {
 		search_pattern = REPORT_FILE_NAMES_PATTERN,
 	})
