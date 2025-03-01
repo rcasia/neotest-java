@@ -61,7 +61,12 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 	scan = scan or require("plenary.scandir").scan_dir
 	read_file = read_file or require("neotest-java.util.read_file")
 
-	assert(result.code == 0 or result.code == 1, "there was an error while running command")
+	-- if the test command failed, return an error
+	if result.code ~= 0 and result.code ~= 1 then
+		local node = tree:data()
+		return { [node.id] = JunitResult.ERROR(node.id, result.output) }
+	end
+
 	-- wait for the debug test to finish
 	if spec.context.strategy == "dap" then
 		spec.context.terminated_command_event.wait()
