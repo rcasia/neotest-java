@@ -9,6 +9,11 @@ local MAVEN_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/maven-demo/target/s
 
 local GRADLE_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/gradle-groovy-demo/build/test-results/test"
 
+local SUCCESSFUL_RESULT = {
+	code = 0,
+	output = "output",
+}
+
 describe("ResultBuilder", function()
 	async.before_each(function()
 		-- mock the tempname function to return a fixed value
@@ -34,16 +39,11 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local _, err = pcall(result_builder.build_results, runSpec, strategyResult, tree, scan_dir)
+		local _, err = pcall(result_builder.build_results, runSpec, SUCCESSFUL_RESULT, tree, scan_dir)
 
 		-- then
 		assert.match("no report file could be generated", err)
@@ -65,11 +65,6 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
@@ -84,7 +79,7 @@ describe("ResultBuilder", function()
 			},
 		}
 		--when
-		local results = result_builder.build_results(runSpec, strategyResult, tree, scan_dir, read_file)
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		-- then
 		assert.are.same(expected, results)
@@ -102,16 +97,11 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = result_builder.build_results(runSpec, strategyResult, tree, scan_dir)
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir)
 
 		--then
 		local expected = {
@@ -139,16 +129,11 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
@@ -176,16 +161,11 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
@@ -214,17 +194,12 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir
 			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
@@ -250,17 +225,12 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir
 			.. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
@@ -286,16 +256,11 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
@@ -317,17 +282,12 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir
 			.. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
@@ -373,11 +333,6 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
 		local file_path = current_dir
 			.. "tests/fixtures/"
 			.. project_dir
@@ -385,7 +340,7 @@ describe("ResultBuilder", function()
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
 
 		--then
 		local expected = {
