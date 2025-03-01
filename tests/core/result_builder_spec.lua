@@ -444,4 +444,69 @@ describe("ResultBuilder", function()
 		--then
 		assert.are.same(expected, results)
 	end)
+
+	async.it("should build results for nested tests", function()
+		local file_content = [[
+			package com.example;
+
+			import org.junit.jupiter.api.Nested;
+			import org.junit.jupiter.api.Test;
+
+			class NestedTest {
+
+				@Test
+				void plainTest() {
+
+				}
+
+				@Nested
+				class Level2 {
+
+					@Test
+					void nestedTest() {
+
+					}
+				}
+
+			}
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="plainTest()" classname="com.example.NestedTest" time="0.004">
+						<system-out></system-out>
+					</testcase>
+					<testcase name="nestedTest()" classname="com.example.NestedTest$Level2" time="0">
+						<system-out></system-out>
+					</testcase>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
+
+		local expected = {
+			[file_path .. "::NestedTest::Level2::nestedTest"] = {
+				status = "passed",
+				output = TEMPNAME,
+			},
+			[file_path .. "::NestedTest::plainTest"] = {
+				status = "passed",
+				output = TEMPNAME,
+			},
+		}
+
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		--then
+		assert.are.same(expected, results)
+	end)
 end)

@@ -12,6 +12,9 @@ local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 --- @param testname string name of test
 --- @return string unique_key based on classname and testname
 local build_unique_key = function(classname, testname)
+	-- replace all $ for ::
+	classname = classname:gsub("%$", "::")
+
 	return classname .. "::" .. testname
 end
 
@@ -115,7 +118,24 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 			goto continue
 		end
 
-		local unique_key = build_unique_key(resolve_qualified_name(node.path), node.name)
+		local qualified_name = resolve_qualified_name(node.path)
+
+		-- node.id contains something like: "com/example/MyTest.java::MyTest::MyInnerTest::test"
+		local pattern = "::([^:]+)" -- will match all the nested classes and test method name
+		local nested_classes = vim.iter(node.id:gmatch(pattern)):totable()
+
+		local inner_classes = vim
+			.iter(nested_classes)
+			--
+			:skip(1) -- skip the base class
+			:rskip(1) -- skip the test method name
+			:join("::")
+
+		if inner_classes ~= "" then
+			qualified_name = qualified_name .. "::" .. inner_classes
+		end
+
+		local unique_key = build_unique_key(qualified_name, node.name)
 
 		if is_parameterized then
 			local jtestcases = extract_parameterized_tests(testcases, unique_key)
