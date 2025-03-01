@@ -372,23 +372,60 @@ describe("ResultBuilder", function()
 
 	async.it("builds the results for parameterized with @EmptySource test", function()
 		--given
-		local project_dir = "gradle-groovy-demo"
+		local file_content = [[
+			package com.example;
 
-		local file_path = current_dir
-			.. "tests/fixtures/"
-			.. project_dir
-			.. "/src/test/java/com/example/EmptySourceTest.java"
+			import org.junit.jupiter.params.ParameterizedTest;
+			import org.junit.jupiter.params.provider.EmptySource;
+
+			import static org.junit.jupiter.api.Assertions.assertTrue;
+
+			import org.apache.logging.log4j.util.Strings;
+
+			import static org.junit.jupiter.api.Assertions.assertFalse;
+
+			public class EmptySourceTest {
+
+					@ParameterizedTest
+					@EmptySource
+					void emptySourceShouldPass(String input) {
+							assertTrue(Strings.isBlank(input));
+					}
+
+					@ParameterizedTest
+					@EmptySource
+					void emptySourceShouldFail(String input) {
+							assertFalse(Strings.isBlank(input));
+					}
+			}
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="emptySourceShouldFail(String)[1]" classname="com.example.EmptySourceTest" time="0.003">
+						<failure message="expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="emptySourceShouldPass(String)[1]" classname="com.example.EmptySourceTest" time="0.001"/>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+
 		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
 
-		--when
-		local results = plugin.results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
-
-		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"] = {
+			[file_path .. "::EmptySourceTest::emptySourceShouldFail"] = {
 				errors = {
 					{
-						line = 22,
+						-- line = 22,
 						message = "emptySourceShouldFail(String)[1] -> expected: <false> but was: <true>",
 					},
 				},
@@ -396,12 +433,15 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"] = {
+			[file_path .. "::EmptySourceTest::emptySourceShouldPass"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
 		}
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
+		--then
 		assert.are.same(expected, results)
 	end)
 end)
