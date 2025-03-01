@@ -1,5 +1,6 @@
 local async = require("nio").tests
 local plugin = require("neotest-java")
+local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
@@ -20,8 +21,12 @@ describe("ResultBuilder", function()
 		require("nio").fn.tempname = tempname_fn
 	end)
 
-	async.it("builds the results for maven", function()
+	async.it("throws error when no report files found", function()
 		--given
+		local scan_dir = function()
+			return {}
+		end
+
 		local runSpec = {
 			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
 			context = {
@@ -38,7 +43,34 @@ describe("ResultBuilder", function()
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local _, err = pcall(result_builder.build_results, runSpec, strategyResult, tree, scan_dir)
+
+		-- then
+		assert.match("no report file could be generated", err)
+	end)
+
+	async.it("builds the results for maven", function()
+		--given
+		local scan_dir = function()
+			return {}
+		end
+		local runSpec = {
+			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
+			context = {
+				reports_dir = MAVEN_REPORTS_DIR,
+			},
+		}
+
+		local strategyResult = {
+			code = 0,
+			output = "output",
+		}
+
+		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
+		local tree = plugin.discover_positions(file_path)
+
+		--when
+		local results = result_builder.build_results(runSpec, strategyResult, tree, scan_dir)
 
 		--then
 		local expected = {

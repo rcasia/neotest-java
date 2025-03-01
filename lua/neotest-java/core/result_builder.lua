@@ -3,7 +3,6 @@ local read_file = require("neotest-java.util.read_file")
 local flat_map = require("neotest-java.util.flat_map")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
-local scan = require("plenary.scandir")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
 local SKIPPED = JunitResult.SKIPPED
@@ -52,8 +51,11 @@ local ResultBuilder = {}
 ---@param spec neotest.RunSpec
 ---@param result neotest.StrategyResult
 ---@param tree neotest.Tree
+---@param scan neotest.Scan
 ---@return table<string, neotest.Result>
-function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212 unused argument
+function ResultBuilder.build_results(spec, result, tree, scan) -- luacheck: ignore 212 unused argument
+	scan = scan or require("plenary.scandir").scan_dir
+
 	assert(result.code == 0 or result.code == 1, "there was an error while running command")
 	-- wait for the debug test to finish
 	if spec.context.strategy == "dap" then
@@ -68,12 +70,12 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 	local testcases_junit = {}
 
 	-- FIX: IO operation
-	local report_filepaths = scan.scan_dir(spec.context.reports_dir, {
+	local report_filepaths = scan(spec.context.reports_dir, {
 		search_pattern = REPORT_FILE_NAMES_PATTERN,
 	})
 	log.debug("Found report files: ", report_filepaths)
 
-	assert(report_filepaths ~= 0, "no report file could be generated")
+	assert(#report_filepaths ~= 0, "no report file could be generated")
 
 	local testcases_in_xml = flat_map(function(filepath)
 		local ok, data = pcall(function()
