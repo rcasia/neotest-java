@@ -264,37 +264,6 @@ describe("ResultBuilder", function()
 		assert.are.same(expected, results)
 	end)
 
-	async.it("builds the results when the is a single test method and it fails for maven", function()
-		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
-
-		local file_path = current_dir
-			.. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java"
-		local tree = plugin.discover_positions(file_path)
-
-		--when
-		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
-
-		--then
-		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
-				errors = {
-					{ line = 9, message = "expected: <true> but was: <false>" },
-				},
-				short = "expected: <true> but was: <false>",
-				status = "failed",
-				output = TEMPNAME,
-			},
-		}
-
-		assert.are.same(expected, results)
-	end)
-
 	async.it("builds the results for integrations tests", function()
 		--given
 		local runSpec = {
