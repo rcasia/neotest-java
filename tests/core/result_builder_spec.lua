@@ -168,24 +168,63 @@ describe("ResultBuilder", function()
 		assert.are.same(expected, results)
 	end)
 
-	async.it("builds the results for a maven test that has an error at start", function()
+	async.it("builds the results for a test that has an error at start", function()
 		--given
+		local file_content = [[
+
+			package com.example;
+
+			import static org.junit.jupiter.api.Assertions.assertEquals;
+
+			import org.junit.jupiter.api.Test;
+			import org.springframework.beans.factory.annotation.Value;
+			import org.springframework.boot.test.context.SpringBootTest;
+
+			import com.example.demo.DemoApplication;
+
+			@SpringBootTest(classes = { DemoApplication.class })
+			public class ErroneousTest {
+					@Value("${foo.property}") String requiredProperty;
+
+					@Test
+					void shouldFailOnError(){
+						assertEquals("test", requiredProperty);
+					}
+			}
+
+		]]
+		local file_path = create_tempfile_with_test(file_content)
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return [[
+				<testsuite>
+					<testcase name="shouldFailOnError" classname="com.example.ErroneousTest" time="0.001">
+						<error message="Error creating bean with name &apos;com.example.ErroneousTest&apos;: Injection of autowired dependencies failed" type="org.springframework.beans.factory.BeanCreationException">
+							ERROR OUTPUT TEXT
+						</error>
+						<system-out>
+							SYSTEM OUTPUT TEXT
+						</system-out>
+					</testcase>
+				</testsuite>
+			]]
+		end
 		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
+			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
 			context = {
 				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
-		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java"
-		local tree = plugin.discover_positions(file_path)
-
 		--when
-		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::ErroneousTest::shouldFailOnError"] = {
+			[file_path .. "::ErroneousTest::shouldFailOnError"] = {
 				errors = {
 					{
 						message = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
