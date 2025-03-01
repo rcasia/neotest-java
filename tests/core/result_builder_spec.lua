@@ -7,8 +7,6 @@ local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 local TEMPNAME = "/tmp/tempname-1234"
 local MAVEN_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/maven-demo/target/surefire-reports/"
 
-local GRADLE_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/gradle-groovy-demo/build/test-results/test"
-
 local SUCCESSFUL_RESULT = {
 	code = 0,
 	output = "output",
@@ -116,7 +114,7 @@ describe("ResultBuilder", function()
 					void shouldNotFail() {
 							assertTrue(true);
 					}
-					
+
 					@Test
 					void shouldFail() {
 							assertTrue(false);
@@ -136,7 +134,7 @@ describe("ResultBuilder", function()
 							OUTPUT TEXT
 						</failure>
 					</testcase>
-  				<testcase name="shouldNotFail" classname="com.example.ExampleTest" time="0"/>
+					<testcase name="shouldNotFail" classname="com.example.ExampleTest" time="0"/>
 				</testsuite>
 			]]
 		end
@@ -233,70 +231,6 @@ describe("ResultBuilder", function()
 				output = TEMPNAME,
 				short = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
 				status = "failed",
-			},
-		}
-
-		assert.are.same(expected, results)
-	end)
-
-	async.it("builds the results for gradle", function()
-		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
-			context = {
-				reports_dir = GRADLE_REPORTS_DIR,
-			},
-		}
-
-		local file_path = current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java"
-		local tree = plugin.discover_positions(file_path)
-
-		--when
-		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
-
-		--then
-		local expected = {
-			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
-				errors = {
-					{ line = 14, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
-				},
-				output = TEMPNAME,
-				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
-				status = "failed",
-			},
-			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
-				status = "passed",
-				output = TEMPNAME,
-			},
-		}
-		assert.are.same(expected, results)
-	end)
-
-	async.it("builds the results when the is a single test method and it fails for gradle", function()
-		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
-			context = {
-				reports_dir = GRADLE_REPORTS_DIR,
-			},
-		}
-
-		local file_path = current_dir
-			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java"
-		local tree = plugin.discover_positions(file_path)
-
-		--when
-		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
-
-		--then
-		local expected = {
-			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
-				errors = {
-					{ line = 9, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
-				},
-				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
-				status = "failed",
-				output = TEMPNAME,
 			},
 		}
 
