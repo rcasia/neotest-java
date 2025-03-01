@@ -239,22 +239,52 @@ describe("ResultBuilder", function()
 
 	async.it("builds the results for integrations tests", function()
 		--given
+		local file_content = [[
+
+			package com.example.demo;
+
+			import org.junit.jupiter.api.Test;
+			import org.springframework.boot.test.context.SpringBootTest;
+
+			@SpringBootTest
+			class RepositoryIT {
+
+				@Test
+				void shouldWorkProperly() {
+				}
+
+			}
+
+		]]
+		local file_path = create_tempfile_with_test(file_content)
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return [[
+				<testsuite>
+					<testcase name="shouldWorkProperly" classname="com.example.demo.RepositoryIT" time="0.439">
+						<system-out>
+							SYSTEM OUTPUT TEXT
+						</system-out>
+					</testcase>
+				</testsuite>
+			]]
+		end
 		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
+			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
 			context = {
 				reports_dir = MAVEN_REPORTS_DIR,
 			},
 		}
 
-		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java"
-		local tree = plugin.discover_positions(file_path)
-
 		--when
-		local results = plugin.results(runSpec, SUCCESSFUL_RESULT, tree)
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::RepositoryIT::shouldWorkProperly"] = {
+			[file_path .. "::RepositoryIT::shouldWorkProperly"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
