@@ -276,34 +276,81 @@ describe("ResultBuilder", function()
 		assert.are.same(expected, results)
 	end)
 
-	async.it("builds the results for parameterized test with @CsvSource for maven", function()
+	async.it("builds results for parameterized test with @CsvSource", function()
 		--given
+		local file_content = [[
+			package com.example;
 
-		local file_path = current_dir
-			.. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java"
+			import org.junit.jupiter.params.ParameterizedTest;
+			import org.junit.jupiter.params.provider.CsvSource;
+
+			import static org.junit.jupiter.api.Assertions.assertTrue;
+
+			public class ParameterizedMethodTest {
+
+					@ParameterizedTest
+					@CsvSource({
+									"1,1,2",
+									"1,2,3",
+									"2,3,5",
+									"15,15,30"
+					})
+					void parameterizedMethodShouldNotFail(Integer a, Integer b, Integer result) {
+							assertTrue(a + b == result);
+					}
+
+					@ParameterizedTest
+					@CsvSource({
+									"1,2",
+									"3,4",
+									"4,4"
+					})
+					void parameterizedMethodShouldFail(Integer a, Integer b) {
+							assertTrue(a == b);
+					}
+			}
+
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[1]" classname="com.example.ParameterizedMethodTest" time="0.001">
+						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[2]" classname="com.example.ParameterizedMethodTest" time="0.001">
+						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[3]" classname="com.example.ParameterizedMethodTest" time="0.001"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[1]" classname="com.example.ParameterizedMethodTest" time="0.001"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[2]" classname="com.example.ParameterizedMethodTest" time="0"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[3]" classname="com.example.ParameterizedMethodTest" time="0"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[4]" classname="com.example.ParameterizedMethodTest" time="0"/>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+
 		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
 
-		--when
-		local results = plugin.results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
-
-		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
+			[file_path .. "::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
 				errors = {
-					-- {
-					-- 	line = 27,
-					-- 	message = "expected: <true> but was: <false>",
-					-- },
-					-- {
-					-- 	line = 27,
-					-- 	message = "expected: <true> but was: <false>",
-					-- },
 					{
-						line = 27,
+						-- line = 27,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>",
 					},
 					{
-						line = 27,
+						-- line = 27,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
 					},
 				},
@@ -311,12 +358,15 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
+			[file_path .. "::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
 		}
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
+		--then
 		assert.are.same(expected, results)
 	end)
 
