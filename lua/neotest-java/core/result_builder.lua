@@ -80,7 +80,6 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 
 	local testcases_in_xml = flat_map(function(filepath)
 		local ok, data = pcall(function()
-			-- FIX: IO operation
 			return read_file(filepath)
 		end)
 		if not ok then
@@ -88,7 +87,6 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 			return {}
 		end
 
-		-- FIX: IO operation
 		local xml_data = xml.parse(data)
 
 		local testcases_in_xml = xml_data.testsuite.testcase

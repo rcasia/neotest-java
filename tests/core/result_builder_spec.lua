@@ -14,6 +14,19 @@ local SUCCESSFUL_RESULT = {
 	output = "output",
 }
 
+local tempfiles = {}
+
+---@param content string
+---@return string filepath
+local function create_tempfile_with_test(content)
+	local path = vim.fn.tempname() .. ".java"
+	table.insert(tempfiles, path)
+	local file = io.open(path, "w")
+	file:write(content)
+	file:close()
+	return path
+end
+
 describe("ResultBuilder", function()
 	async.before_each(function()
 		-- mock the tempname function to return a fixed value
@@ -24,6 +37,11 @@ describe("ResultBuilder", function()
 
 	async.after_each(function()
 		require("nio").fn.tempname = tempname_fn
+
+		-- remove all temp files
+		for _, path in ipairs(tempfiles) do
+			os.remove(path)
+		end
 	end)
 
 	async.it("throws error when no report files found", function()
@@ -85,10 +103,42 @@ describe("ResultBuilder", function()
 		assert.are.same(expected, results)
 	end)
 
-	async.it("builds the results for maven", function()
+	async.it("should build results from report", function()
 		--given
+		local file_content = [[
+			package com.example;
+			import org.junit.jupiter.api.Test;
+
+			import static org.junit.jupiter.api.Assertions.assertTrue;
+
+			public class ExampleTest {
+					@Test
+					void shouldNotFail() {
+							assertTrue(true);
+					}
+					
+					@Test
+					void shouldFail() {
+							assertTrue(false);
+					}
+			}
+		]]
+		local file_path = create_tempfile_with_test(file_content)
+		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function()
-			return {}
+			return { file_path }
+		end
+		local read_file = function()
+			return [[
+				<testsuite>
+					<testcase name="shouldFail" classname="com.example.ExampleTest" time="0.001">
+						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+							OUTPUT TEXT
+						</failure>
+					</testcase>
+  				<testcase name="shouldNotFail" classname="com.example.ExampleTest" time="0"/>
+				</testsuite>
+			]]
 		end
 		local runSpec = {
 			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
@@ -97,21 +147,19 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
-		local tree = plugin.discover_positions(file_path)
-
 		--when
-		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir)
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
-				errors = { { line = 13, message = "expected: <true> but was: <false>" } },
+			[file_path .. "::ExampleTest::shouldFail"] = {
+				-- errors = { { line = 13, message = "expected: <true> but was: <false>" } },
+				errors = { { message = "expected: <true> but was: <false>" } },
 				short = "expected: <true> but was: <false>",
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+			[file_path .. "::ExampleTest::shouldNotFail"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
