@@ -4,6 +4,8 @@ local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name
 local log = require("neotest-java.logger")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
+local find_nested_classes = require("neotest-java.util.find_nested_classes")
+
 local SKIPPED = JunitResult.SKIPPED
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
@@ -125,16 +127,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 
 		local qualified_name = resolve_qualified_name(node.path)
 
-		-- node.id contains something like: "com/example/MyTest.java::MyTest::MyInnerTest::test"
-		local pattern = "::([^:]+)" -- will match all the nested classes and test method name
-		local nested_classes = vim.iter(node.id:gmatch(pattern)):totable()
-
-		local inner_classes = vim
-			.iter(nested_classes)
-			--
-			:skip(1) -- skip the base class
-			:rskip(1) -- skip the test method name
-			:join("::")
+		local inner_classes = find_nested_classes(node.id)
 
 		if inner_classes ~= "" then
 			qualified_name = qualified_name .. "::" .. inner_classes
