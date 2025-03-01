@@ -7,6 +7,13 @@ local PositionsDiscoverer = {}
 ---@param file_path string Absolute file path
 ---@return neotest.Tree | nil
 function PositionsDiscoverer.discover_positions(file_path)
+	local annotations = { "Test", "ParameterizedTest", "CartesianTest" }
+	local a = vim.iter(annotations)
+		:map(function(v)
+			return string.format([["%s"]], v)
+		end)
+		:join(" ")
+
 	local query = [[
 
        ;; Test class
@@ -14,12 +21,12 @@ function PositionsDiscoverer.discover_positions(file_path)
           name: (identifier) @namespace.name
         ) @namespace.definition
 
-      ;; @Test and @ParameterizedTest functions
+      ;; annotated functions
       (method_declaration
         (modifiers
           (marker_annotation
             name: (identifier) @annotation
-              (#any-of? @annotation "Test" "ParameterizedTest" "CartesianTest")
+              (#any-of? @annotation ]] .. a .. [[)
             )
         )
         name: (identifier) @test.name
