@@ -121,13 +121,8 @@ describe("ResultBuilder", function()
 					}
 			}
 		]]
-		local file_path = create_tempfile_with_test(file_content)
-		local tree = plugin.discover_positions(file_path)
-		local scan_dir = function()
-			return { file_path }
-		end
-		local read_file = function()
-			return [[
+
+		local report_file = [[
 				<testsuite>
 					<testcase name="shouldFail" classname="com.example.ExampleTest" time="0.001">
 						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
@@ -136,7 +131,15 @@ describe("ResultBuilder", function()
 					</testcase>
 					<testcase name="shouldNotFail" classname="com.example.ExampleTest" time="0"/>
 				</testsuite>
-			]]
+		]]
+
+		local file_path = create_tempfile_with_test(file_content)
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
 		end
 		local runSpec = {
 			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
@@ -145,10 +148,6 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
-
-		--then
 		local expected = {
 			[file_path .. "::ExampleTest::shouldFail"] = {
 				-- errors = { { line = 13, message = "expected: <true> but was: <false>" } },
@@ -163,6 +162,10 @@ describe("ResultBuilder", function()
 			},
 		}
 
+		--when
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		--then
 		assert.are.same(expected, results)
 	end)
 
@@ -191,13 +194,7 @@ describe("ResultBuilder", function()
 			}
 
 		]]
-		local file_path = create_tempfile_with_test(file_content)
-		local tree = plugin.discover_positions(file_path)
-		local scan_dir = function()
-			return { file_path }
-		end
-		local read_file = function()
-			return [[
+		local report_file = [[
 				<testsuite>
 					<testcase name="shouldFailOnError" classname="com.example.ErroneousTest" time="0.001">
 						<error message="Error creating bean with name &apos;com.example.ErroneousTest&apos;: Injection of autowired dependencies failed" type="org.springframework.beans.factory.BeanCreationException">
@@ -209,6 +206,14 @@ describe("ResultBuilder", function()
 					</testcase>
 				</testsuite>
 			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
 		end
 		local runSpec = {
 			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
@@ -217,10 +222,6 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
-
-		--then
 		local expected = {
 			[file_path .. "::ErroneousTest::shouldFailOnError"] = {
 				errors = {
@@ -234,6 +235,10 @@ describe("ResultBuilder", function()
 			},
 		}
 
+		--when
+		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		--then
 		assert.are.same(expected, results)
 	end)
 
@@ -256,13 +261,8 @@ describe("ResultBuilder", function()
 			}
 
 		]]
-		local file_path = create_tempfile_with_test(file_content)
-		local tree = plugin.discover_positions(file_path)
-		local scan_dir = function()
-			return { file_path }
-		end
-		local read_file = function()
-			return [[
+
+		local report_file = [[
 				<testsuite>
 					<testcase name="shouldWorkProperly" classname="com.example.demo.RepositoryIT" time="0.439">
 						<system-out>
@@ -271,6 +271,21 @@ describe("ResultBuilder", function()
 					</testcase>
 				</testsuite>
 			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+		local expected = {
+			[file_path .. "::RepositoryIT::shouldWorkProperly"] = {
+				status = "passed",
+				output = TEMPNAME,
+			},
+		}
+
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
 		end
 		local runSpec = {
 			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
@@ -283,13 +298,6 @@ describe("ResultBuilder", function()
 		local results = result_builder.build_results(runSpec, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
-		local expected = {
-			[file_path .. "::RepositoryIT::shouldWorkProperly"] = {
-				status = "passed",
-				output = TEMPNAME,
-			},
-		}
-
 		assert.are.same(expected, results)
 	end)
 
