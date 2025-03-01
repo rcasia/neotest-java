@@ -2,30 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@v1.18.0
 
-    - name: Setup Maven Action
-      uses: s4u/setup-maven-action@v1.18.0
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
 
-    - uses: rhysd/action-setup-vim@v1
-      with:
-        neovim: true
+      - name: Install dependencies
+        run: make install
 
-    - name: Install dependencies
-      run: make install
-
-    - name: Prepare demo repositories
-      run: make prepare-demo
-
-    - name: Run tests
-      run: make test
-
+      - name: Run tests
+        run: make test

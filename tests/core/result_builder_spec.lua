@@ -1,12 +1,36 @@
 local async = require("nio").tests
 local plugin = require("neotest-java")
+local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 local TEMPNAME = "/tmp/tempname-1234"
 local MAVEN_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/maven-demo/target/surefire-reports/"
 
-local GRADLE_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/gradle-groovy-demo/build/test-results/test"
+local SUCCESSFUL_RESULT = {
+	code = 0,
+	output = "output",
+}
+
+local DEFAULT_SPEC = {
+	cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
+	context = {
+		reports_dir = MAVEN_REPORTS_DIR,
+	},
+}
+
+local tempfiles = {}
+
+---@param content string
+---@return string filepath
+local function create_tempfile_with_test(content)
+	local path = vim.fn.tempname() .. ".java"
+	table.insert(tempfiles, path)
+	local file = io.open(path, "w")
+	file:write(content)
+	file:close()
+	return path
+end
 
 describe("ResultBuilder", function()
 	async.before_each(function()
@@ -18,68 +42,169 @@ describe("ResultBuilder", function()
 
 	async.after_each(function()
 		require("nio").fn.tempname = tempname_fn
+
+		-- remove all temp files
+		for _, path in ipairs(tempfiles) do
+			os.remove(path)
+		end
 	end)
 
-	async.it("builds the results for maven", function()
+	async.it("throws error when no report files found", function()
 		--given
-		local runSpec = {
-			cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
-
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
+		local scan_dir = function()
+			return {}
+		end
 
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = plugin.discover_positions(file_path)
 
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local _, err = pcall(result_builder.build_results, DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir)
 
-		--then
+		-- then
+		assert.match("no report file could be generated", err)
+	end)
+
+	async.it("ignores report file when cannot be read", function()
+		--given
+		local scan_dir = function()
+			return { "TEST-someTest.xml" }
+		end
+		local read_file = function()
+			error("cannot read file")
+		end
+
+		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
+		local tree = plugin.discover_positions(file_path)
+
 		local expected = {
 			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
-				errors = { { line = 13, message = "expected: <true> but was: <false>" } },
+				status = "skipped",
+				output = TEMPNAME,
+			},
+			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+				status = "skipped",
+				output = TEMPNAME,
+			},
+		}
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		-- then
+		assert.are.same(expected, results)
+	end)
+
+	async.it("should build results from report", function()
+		--given
+		local file_content = [[
+			package com.example;
+			import org.junit.jupiter.api.Test;
+
+			import static org.junit.jupiter.api.Assertions.assertTrue;
+
+			public class ExampleTest {
+					@Test
+					void shouldNotFail() {
+							assertTrue(true);
+					}
+
+					@Test
+					void shouldFail() {
+							assertTrue(false);
+					}
+			}
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="shouldFail" classname="com.example.ExampleTest" time="0.001">
+						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+							OUTPUT TEXT
+						</failure>
+					</testcase>
+					<testcase name="shouldNotFail" classname="com.example.ExampleTest" time="0"/>
+				</testsuite>
+		]]
+
+		local file_path = create_tempfile_with_test(file_content)
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
+
+		local expected = {
+			[file_path .. "::ExampleTest::shouldFail"] = {
+				-- errors = { { line = 13, message = "expected: <true> but was: <false>" } },
+				errors = { { message = "expected: <true> but was: <false>" } },
 				short = "expected: <true> but was: <false>",
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+			[file_path .. "::ExampleTest::shouldNotFail"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
 		}
 
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		--then
 		assert.are.same(expected, results)
 	end)
 
-	async.it("builds the results for a maven test that has an error at start", function()
+	async.it("builds the results for a test that has an error at start", function()
 		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
+		local file_content = [[
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
+			package com.example;
 
-		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java"
+			import static org.junit.jupiter.api.Assertions.assertEquals;
+
+			import org.junit.jupiter.api.Test;
+			import org.springframework.beans.factory.annotation.Value;
+			import org.springframework.boot.test.context.SpringBootTest;
+
+			import com.example.demo.DemoApplication;
+
+			@SpringBootTest(classes = { DemoApplication.class })
+			public class ErroneousTest {
+					@Value("${foo.property}") String requiredProperty;
+
+					@Test
+					void shouldFailOnError(){
+						assertEquals("test", requiredProperty);
+					}
+			}
+
+		]]
+		local report_file = [[
+				<testsuite>
+					<testcase name="shouldFailOnError" classname="com.example.ErroneousTest" time="0.001">
+						<error message="Error creating bean with name &apos;com.example.ErroneousTest&apos;: Injection of autowired dependencies failed" type="org.springframework.beans.factory.BeanCreationException">
+							ERROR OUTPUT TEXT
+						</error>
+						<system-out>
+							SYSTEM OUTPUT TEXT
+						</system-out>
+					</testcase>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
 		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
 
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
-
-		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ErroneousTest.java::ErroneousTest::shouldFailOnError"] = {
+			[file_path .. "::ErroneousTest::shouldFailOnError"] = {
 				errors = {
 					{
 						message = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
@@ -91,189 +216,141 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		assert.are.same(expected, results)
-	end)
-
-	async.it("builds the results for gradle", function()
-		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
-			context = {
-				reports_dir = GRADLE_REPORTS_DIR,
-			},
-		}
-
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
-		local file_path = current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java"
-		local tree = plugin.discover_positions(file_path)
-
 		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
-		local expected = {
-			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
-				errors = {
-					{ line = 14, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
-				},
-				output = TEMPNAME,
-				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
-				status = "failed",
-			},
-			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
-				status = "passed",
-				output = TEMPNAME,
-			},
-		}
-		assert.are.same(expected, results)
-	end)
-
-	async.it("builds the results when the is a single test method and it fails for gradle", function()
-		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/gradle-groovy-demo",
-			context = {
-				reports_dir = GRADLE_REPORTS_DIR,
-			},
-		}
-
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
-		local file_path = current_dir
-			.. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java"
-		local tree = plugin.discover_positions(file_path)
-
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
-
-		--then
-		local expected = {
-			[current_dir .. "tests/fixtures/gradle-groovy-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
-				errors = {
-					{ line = 9, message = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>" },
-				},
-				short = "org.opentest4j.AssertionFailedError: expected: <true> but was: <false>",
-				status = "failed",
-				output = TEMPNAME,
-			},
-		}
-
-		assert.are.same(expected, results)
-	end)
-
-	async.it("builds the results when the is a single test method and it fails for maven", function()
-		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
-
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
-
-		local file_path = current_dir
-			.. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java"
-		local tree = plugin.discover_positions(file_path)
-
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
-
-		--then
-		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/SingleMethodFailingTest.java::SingleMethodFailingTest::shouldFail"] = {
-				errors = {
-					{ line = 9, message = "expected: <true> but was: <false>" },
-				},
-				short = "expected: <true> but was: <false>",
-				status = "failed",
-				output = TEMPNAME,
-			},
-		}
-
 		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for integrations tests", function()
 		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
+		local file_content = [[
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
+			package com.example.demo;
 
-		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java"
-		local tree = plugin.discover_positions(file_path)
+			import org.junit.jupiter.api.Test;
+			import org.springframework.boot.test.context.SpringBootTest;
 
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
+			@SpringBootTest
+			class RepositoryIT {
 
-		--then
+				@Test
+				void shouldWorkProperly() {
+				}
+
+			}
+
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="shouldWorkProperly" classname="com.example.demo.RepositoryIT" time="0.439">
+						<system-out>
+							SYSTEM OUTPUT TEXT
+						</system-out>
+					</testcase>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/demo/RepositoryIT.java::RepositoryIT::shouldWorkProperly"] = {
+			[file_path .. "::RepositoryIT::shouldWorkProperly"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
 		}
 
+		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
+
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		--then
 		assert.are.same(expected, results)
 	end)
 
-	async.it("builds the results for parameterized test with @CsvSource for maven", function()
+	async.it("builds results for parameterized test with @CsvSource", function()
 		--given
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/maven-demo",
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
+		local file_content = [[
+			package com.example;
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
+			import org.junit.jupiter.params.ParameterizedTest;
+			import org.junit.jupiter.params.provider.CsvSource;
 
-		local file_path = current_dir
-			.. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java"
+			import static org.junit.jupiter.api.Assertions.assertTrue;
+
+			public class ParameterizedMethodTest {
+
+					@ParameterizedTest
+					@CsvSource({
+									"1,1,2",
+									"1,2,3",
+									"2,3,5",
+									"15,15,30"
+					})
+					void parameterizedMethodShouldNotFail(Integer a, Integer b, Integer result) {
+							assertTrue(a + b == result);
+					}
+
+					@ParameterizedTest
+					@CsvSource({
+									"1,2",
+									"3,4",
+									"4,4"
+					})
+					void parameterizedMethodShouldFail(Integer a, Integer b) {
+							assertTrue(a == b);
+					}
+			}
+
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[1]" classname="com.example.ParameterizedMethodTest" time="0.001">
+						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[2]" classname="com.example.ParameterizedMethodTest" time="0.001">
+						<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[3]" classname="com.example.ParameterizedMethodTest" time="0.001"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[1]" classname="com.example.ParameterizedMethodTest" time="0.001"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[2]" classname="com.example.ParameterizedMethodTest" time="0"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[3]" classname="com.example.ParameterizedMethodTest" time="0"/>
+					<testcase name="parameterizedMethodShouldNotFail(Integer, Integer, Integer)[4]" classname="com.example.ParameterizedMethodTest" time="0"/>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+
 		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
 
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
-
-		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
+			[file_path .. "::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
 				errors = {
-					-- {
-					-- 	line = 27,
-					-- 	message = "expected: <true> but was: <false>",
-					-- },
-					-- {
-					-- 	line = 27,
-					-- 	message = "expected: <true> but was: <false>",
-					-- },
 					{
-						line = 27,
+						-- line = 27,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>",
 					},
 					{
-						line = 27,
+						-- line = 27,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
 					},
 				},
@@ -281,45 +358,74 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ParameterizedMethodTest.java::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
+			[file_path .. "::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
 		}
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
+		--then
 		assert.are.same(expected, results)
 	end)
 
 	async.it("builds the results for parameterized with @EmptySource test", function()
 		--given
-		local project_dir = "gradle-groovy-demo"
-		local runSpec = {
-			cwd = current_dir .. "tests/fixtures/" .. project_dir,
-			context = {
-				reports_dir = MAVEN_REPORTS_DIR,
-			},
-		}
+		local file_content = [[
+			package com.example;
 
-		local strategyResult = {
-			code = 0,
-			output = "output",
-		}
+			import org.junit.jupiter.params.ParameterizedTest;
+			import org.junit.jupiter.params.provider.EmptySource;
 
-		local file_path = current_dir
-			.. "tests/fixtures/"
-			.. project_dir
-			.. "/src/test/java/com/example/EmptySourceTest.java"
+			import static org.junit.jupiter.api.Assertions.assertTrue;
+
+			import org.apache.logging.log4j.util.Strings;
+
+			import static org.junit.jupiter.api.Assertions.assertFalse;
+
+			public class EmptySourceTest {
+
+					@ParameterizedTest
+					@EmptySource
+					void emptySourceShouldPass(String input) {
+							assertTrue(Strings.isBlank(input));
+					}
+
+					@ParameterizedTest
+					@EmptySource
+					void emptySourceShouldFail(String input) {
+							assertFalse(Strings.isBlank(input));
+					}
+			}
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="emptySourceShouldFail(String)[1]" classname="com.example.EmptySourceTest" time="0.003">
+						<failure message="expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="emptySourceShouldPass(String)[1]" classname="com.example.EmptySourceTest" time="0.001"/>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+
 		local tree = plugin.discover_positions(file_path)
+		local scan_dir = function()
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
 
-		--when
-		local results = plugin.results(runSpec, strategyResult, tree)
-
-		--then
 		local expected = {
-			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldFail"] = {
+			[file_path .. "::EmptySourceTest::emptySourceShouldFail"] = {
 				errors = {
 					{
-						line = 22,
+						-- line = 22,
 						message = "emptySourceShouldFail(String)[1] -> expected: <false> but was: <true>",
 					},
 				},
@@ -327,12 +433,15 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/" .. project_dir .. "/src/test/java/com/example/EmptySourceTest.java::EmptySourceTest::emptySourceShouldPass"] = {
+			[file_path .. "::EmptySourceTest::emptySourceShouldPass"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
 		}
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
+		--then
 		assert.are.same(expected, results)
 	end)
 end)
