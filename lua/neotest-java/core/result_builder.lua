@@ -16,20 +16,6 @@ local build_unique_key = function(classname, testname)
 	return classname .. "::" .. testname
 end
 
-local function is_array(tbl)
-	if not tbl then
-		return false
-	end
-	local index = 1
-	for k, _ in pairs(tbl) do
-		if k ~= index then
-			return false
-		end
-		index = index + 1
-	end
-	return true
-end
-
 local function is_parameterized_test(testcases, name)
 	-- regex to match the name with some parameters and index at the end
 	-- example: subtractAMinusBEqualsC(int, int, int)[1]
@@ -81,6 +67,7 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 	---@type table<string, neotest-java.JunitResult>
 	local testcases_junit = {}
 
+	-- FIX: IO operation
 	local report_filepaths = scan.scan_dir(spec.context.reports_dir, {
 		search_pattern = REPORT_FILE_NAMES_PATTERN,
 	})
@@ -90,6 +77,7 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 
 	local testcases_in_xml = flat_map(function(filepath)
 		local ok, data = pcall(function()
+			-- FIX: IO operation
 			return read_file(filepath)
 		end)
 		if not ok then
@@ -97,10 +85,11 @@ function ResultBuilder.build_results(spec, result, tree) -- luacheck: ignore 212
 			return {}
 		end
 
+		-- FIX: IO operation
 		local xml_data = xml.parse(data)
 
 		local testcases_in_xml = xml_data.testsuite.testcase
-		if not is_array(testcases_in_xml) then
+		if not vim.isarray(testcases_in_xml) then
 			testcases_in_xml = { testcases_in_xml }
 		end
 		return testcases_in_xml
