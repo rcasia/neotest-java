@@ -51,6 +51,14 @@ function JunitResult.SKIPPED(id)
 	}
 end
 
+---@return neotest.Result
+function JunitResult.ERROR(id, output)
+	return {
+		status = "failed",
+		output = output or create_file_with_content({ id, "This test execution had an unexpected error." }),
+	}
+end
+
 function JunitResult:new(testcase)
 	self.__index = self
 	return setmetatable({ testcase = testcase }, self)
