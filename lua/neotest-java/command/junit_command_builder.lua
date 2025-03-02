@@ -1,8 +1,6 @@
 local binaries = require("neotest-java.command.binaries")
 local java = binaries.java
 local logger = require("neotest-java.logger")
-local jdtls = require("neotest-java.command.jdtls")
-local scan = require("plenary.scandir")
 
 --- @class CommandBuilder
 local CommandBuilder = {
@@ -103,11 +101,6 @@ local CommandBuilder = {
 			end
 		end
 		assert(#selectors ~= 0, "junit command has to have a selector")
-
-		local resources = scan.scan_dir(self._basedir, {
-			only_dirs = true,
-			search_pattern = "test/resources$",
-		})
 
 		local junit_command = {
 			command = java(),
