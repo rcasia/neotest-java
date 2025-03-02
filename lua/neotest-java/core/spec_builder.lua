@@ -9,6 +9,7 @@ local compatible_path = require("neotest-java.util.compatible_path")
 local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
+local _jdtls = require("neotest-java.command.jdtls")
 
 local SpecBuilder = {}
 
@@ -17,6 +18,8 @@ local SpecBuilder = {}
 ---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, config)
+	local scan = require("plenary.scandir")
+
 	-- check that required dependencies are present
 	local ok_jdtls, jdtls = pcall(require, "jdtls")
 	assert(ok_jdtls, "neotest-java requires nvim-jdtls to tests")
@@ -83,13 +86,27 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEP
+	---@param compile_mode string "incremental" | "full"
+	---@return string classpath_file_arg
+	local function compile(compile_mode)
+		logger.debug(("compilation in %s mode"):format(compile_mode))
+		nio.run(function(_)
+			nio.scheduler()
+			jdtls.compile(compile_mode)
+		end):wait()
+		logger.debug("compilation complete!")
+
+		local resources = scan.scan_dir(base_dir, {
+			only_dirs = true,
+			search_pattern = "test/resources$",
+		})
+
+		return _jdtls.get_classpath_file_argument(reports_dir, resources)
+	end
+
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	logger.debug(("compilation in %s mode"):format(compile_mode))
-	nio.run(function(_)
-		nio.scheduler()
-		jdtls.compile(compile_mode)
-	end):wait()
-	logger.debug("compilation complete!")
+	local classpath_file_arg = compile(compile_mode)
+	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
