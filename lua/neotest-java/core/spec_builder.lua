@@ -12,6 +12,11 @@ local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name
 local path = require("plenary.path")
 local lib = require("neotest.lib")
 local nio = require("nio")
+local compatible_path = require("neotest-java.util.compatible_path")
+local Project = require("neotest-java.types.project")
+local ch = require("neotest-java.context_holder")
+local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
+local _jdtls = require("neotest-java.command.jdtls")
 
 local SpecBuilder = {}
 
@@ -20,6 +25,12 @@ local SpecBuilder = {}
 ---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, config)
+	local scan = require("plenary.scandir")
+
+	-- check that required dependencies are present
+	local ok_jdtls, jdtls = pcall(require, "jdtls")
+	assert(ok_jdtls, "neotest-java requires nvim-jdtls to tests")
+
 	if args.strategy == "dap" then
 		local ok_dap, _ = pcall(require, "dap")
 		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
@@ -92,6 +103,14 @@ function SpecBuilder.build_spec(args, project_type, config)
         lib.notify("Compilation of project files has been canceled", vim.log.levels.INFO)
     end
 	logger.debug("building complete!")
+
+    local resources = scan.scan_dir(base_dir, {
+        only_dirs = true,
+        search_pattern = "test/resources$",
+    })
+    local classpath_file_arg = _jdtls.get_classpath_file_argument(reports_dir, resources)
+	-- local classpath_file_arg = compile(compile_mode)
+	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
