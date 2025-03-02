@@ -81,11 +81,16 @@ local CommandBuilder = {
 		self._basedir = basedir
 	end,
 
+	classpath_file_arg = function(self, classpath_file_arg)
+		self._classpath_file_arg = classpath_file_arg
+	end,
+
 	--- @param port? number
 	--- @return { command: string, args: string[] }
 	build_junit = function(self, port)
 		assert(self._test_references, "test_references cannot be nil")
 		assert(self._basedir, "basedir cannot be nil")
+		assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
 
 		local selectors = {}
 		for _, v in ipairs(self._test_references) do
@@ -110,7 +115,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				("%s"):format(jdtls.get_classpath_file_argument(self._reports_dir, resources)),
+				("%s"):format(self._classpath_file_arg),
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",
