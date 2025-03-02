@@ -9,7 +9,7 @@ local compatible_path = require("neotest-java.util.compatible_path")
 local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
-local compiler = require("neotest-java.core.spec_builder.compiler")
+local compilers = require("neotest-java.core.spec_builder.compiler")
 
 local SpecBuilder = {}
 
@@ -77,7 +77,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
 	local classpath_file_arg =
-		compiler.jdtls({ cwd = base_dir, classpath_file_dir = output_dir, compile_mode = compile_mode })
+		compilers.jdtls.compile({ cwd = base_dir, classpath_file_dir = output_dir, compile_mode = compile_mode })
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
