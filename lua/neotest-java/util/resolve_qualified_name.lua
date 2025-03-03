@@ -46,7 +46,7 @@ local function resolve_qualified_name(filename)
 
 	-- as there can be different class names
 	-- searches for the one the mathces the test class patterns
-	local name = ""
+	local name = nil
 	for _, _name in ipairs(names) do
 		for _, pattern in ipairs(TEST_CLASS_PATTERNS) do
 			if _name:find(pattern) then
@@ -55,6 +55,7 @@ local function resolve_qualified_name(filename)
 			end
 		end
 	end
+	assert(name, "test class name not found") -- should not happen
 
 	return package_line .. name
 end
