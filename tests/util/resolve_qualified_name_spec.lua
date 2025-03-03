@@ -62,10 +62,22 @@ describe("resolve_qualified_name", function()
 		end)
 	end
 
-	a.it("it should error when file does not exist", function()
+	a.it("should error when file does not exist", function()
 		local bad_example_filepath = "some-fake-filename"
 		assert.has_error(function()
 			resolve_qualified_name(bad_example_filepath)
 		end, string.format("file does not exist: %s", bad_example_filepath))
+	end)
+
+	a.it("should error when class name is not found", function()
+		local bad_example_filepath = create_tmp_file([[
+		package com.example;
+
+		class Configuration { }
+
+		]])
+		assert.has_error(function()
+			resolve_qualified_name(bad_example_filepath)
+		end, "test class name not found")
 	end)
 end)
