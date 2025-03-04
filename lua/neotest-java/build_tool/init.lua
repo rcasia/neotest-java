@@ -1,5 +1,6 @@
 local maven = require("neotest-java.build_tool.maven")
 local gradle = require("neotest-java.build_tool.gradle")
+local ant = require("neotest-java.build_tool.ant")
 local log = require("neotest-java.logger")
 local nio = require("nio")
 local Job = require("plenary.job")
@@ -11,7 +12,7 @@ local lib = require("neotest.lib")
 ---@field get_module_dependencies fun(root: string): table
 
 ---@type table<string, neotest-java.BuildTool>
-local build_tools = { gradle = gradle, maven = maven }
+local build_tools = { gradle = gradle, maven = maven, ant = ant }
 
 --- will determine the build tool to use
 ---@return neotest-java.BuildTool
