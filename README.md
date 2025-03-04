@@ -19,7 +19,7 @@
 ![image](https://github.com/user-attachments/assets/d1d77980-faab-4110-9b7c-ae6911a3d42c)
 
 ## ⭐ Features
-- ✅ Maven and Gradle projects
+- ✅ Maven, Gradle, and Ant projects
 - ✅ Multimodule projects
 - ✅ Debugging tests with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap)
 
