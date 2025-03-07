@@ -123,9 +123,10 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 			goto continue
 		end
 
-        local qualified_name = resolve_qualified_name(node.path)
-        if not qualified_name or #qualified_name == 0 then
-            goto continue
+		local qualified_name = resolve_qualified_name(node.path)
+		if not qualified_name or #qualified_name == 0 then
+			goto continue
+		end
 
 		-- node.id contains something like: "com/example/MyTest.java::MyTest::MyInnerTest::test"
 		local pattern = "::([^:]+)" -- will match all the nested classes and test method name

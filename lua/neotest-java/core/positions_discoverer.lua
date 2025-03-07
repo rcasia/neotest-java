@@ -8,7 +8,8 @@ local PositionsDiscoverer = {}
 ---@return neotest.Tree | nil
 function PositionsDiscoverer.discover_positions(file_path)
 	local annotations = { "Test", "ParameterizedTest", "TestFactory", "CartesianTest" }
-	local a = vim.iter(annotations)
+	local a = vim
+		.iter(annotations)
 		:map(function(v)
 			return string.format([["%s"]], v)
 		end)

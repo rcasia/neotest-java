@@ -1,22 +1,19 @@
-local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local Project = require("neotest-java.types.project")
+local CommandBuilder = require("neotest-java.command.junit_command_builder")
+
 local build_tools = require("neotest-java.build_tool")
-local ch = require("neotest-java.context_holder")
-local compatible_path = require("neotest-java.util.compatible_path")
-local build = require("neotest-java.command.project")
-local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
+local compiler = require("neotest-java.core.spec_builder.compiler")
 
 local path = require("plenary.path")
-local lib = require("neotest.lib")
 local nio = require("nio")
+local scan = require("plenary.scandir")
 local compatible_path = require("neotest-java.util.compatible_path")
-local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
-local compilers = require("neotest-java.core.spec_builder.compiler")
+local _jdtls = require("neotest-java.command.jdtls")
 
 local SpecBuilder = {}
 
@@ -49,11 +46,11 @@ function SpecBuilder.build_spec(args, project_type, config)
 	vim.uv.fs_mkdir(output_dir, 493)
 
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir =
-		compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
+	local reports_dir = compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
 	command:reports_dir(compatible_path(reports_dir))
 
-	local module_dirs = vim.iter(modules)
+	local module_dirs = vim
+		.iter(modules)
 		:map(function(mod)
 			return mod.base_dir
 		end)
@@ -82,25 +79,23 @@ function SpecBuilder.build_spec(args, project_type, config)
 	end
 
 	-- COMPILATION STEP
-	local build_mode = ch.config().incremental_build and "incremental" or "full"
-	logger.debug(("buidling in %s mode"):format(build_mode))
+	config = ch.config()
+	local build_type = config.incremental_build
+	local target_type = config.build_target or "project"
+	local mode = build_type and "incremental" or "full"
 
-    lib.notify("Building project...")
-    local result = build(build_mode)
-    if result == 0 then
-        lib.notify("Compiling project files has failed", vim.log.levels.ERROR)
-    elseif result == 1 then
-        lib.notify("Compiled project files successfully", vim.log.levels.INFO)
-    elseif result == 2 then
-        lib.notify("Compiled project files with errors", vim.log.levels.WARN)
-    else
-        lib.notify("Compilation of project files has been canceled", vim.log.levels.INFO)
-    end
-	logger.debug("building complete!")
+	compiler.compile({
+		cwd = base_dir,
+		compile_mode = mode,
+		compile_target = target_type,
+	})
 
-    local classpath_file_arg =
-    compilers.jdtls.compile({ cwd = base_dir, classpath_file_dir = output_dir, compile_mode = build_mode })
-	-- local classpath_file_arg = compile(compile_mode)
+	local resources = scan.scan_dir(base_dir, {
+		only_dirs = true,
+		search_pattern = "test/resources$",
+	})
+
+	local classpath_file_arg = _jdtls.get_classpath_file_argument(output_dir, resources)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
