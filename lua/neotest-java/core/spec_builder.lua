@@ -1,15 +1,19 @@
+local Project = require("neotest-java.types.project")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
-local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
+
+local build_tools = require("neotest-java.build_tool")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
-local build_tools = require("neotest-java.build_tool")
-local nio = require("nio")
+local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
+local compiler = require("neotest-java.core.spec_builder.compiler")
+
 local path = require("plenary.path")
+local nio = require("nio")
+local scan = require("plenary.scandir")
 local compatible_path = require("neotest-java.util.compatible_path")
-local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
-local compilers = require("neotest-java.core.spec_builder.compiler")
+local _jdtls = require("neotest-java.command.jdtls")
 
 local SpecBuilder = {}
 
@@ -42,11 +46,11 @@ function SpecBuilder.build_spec(args, project_type, config)
 	vim.uv.fs_mkdir(output_dir, 493)
 
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir =
-		compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
+	local reports_dir = compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
 	command:reports_dir(compatible_path(reports_dir))
 
-	local module_dirs = vim.iter(modules)
+	local module_dirs = vim
+		.iter(modules)
 		:map(function(mod)
 			return mod.base_dir
 		end)
@@ -58,26 +62,40 @@ function SpecBuilder.build_spec(args, project_type, config)
 	if position.type == "dir" then
 		for _, child in tree:iter() do
 			if child.type == "file" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "file")
+				command:test_reference(resolve_qualified_name(child.path), child.name, "file")
 			end
 		end
 	elseif position.type == "namespace" then
 		for _, child in tree:iter() do
 			if child.type == "test" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "test")
+				command:test_reference(resolve_qualified_name(child.path), child.name, "test")
 			end
 		end
 	elseif position.type == "file" then
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualified_name(absolute_path), position.name, "file")
 	elseif position.type == "test" then
 		-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualified_name(absolute_path), position.name, "file")
 	end
 
 	-- COMPILATION STEP
-	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg =
-		compilers.jdtls.compile({ cwd = base_dir, classpath_file_dir = output_dir, compile_mode = compile_mode })
+	config = ch.config()
+	local build_type = config.incremental_build
+	local target_type = config.build_target or "project"
+	local mode = build_type and "incremental" or "full"
+
+	compiler.compile({
+		cwd = base_dir,
+		compile_mode = mode,
+		compile_target = target_type,
+	})
+
+	local resources = scan.scan_dir(base_dir, {
+		only_dirs = true,
+		search_pattern = "test/resources$",
+	})
+
+	local classpath_file_arg = _jdtls.get_classpath_file_argument(output_dir, resources)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY

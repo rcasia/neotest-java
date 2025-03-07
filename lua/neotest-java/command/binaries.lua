@@ -1,6 +1,6 @@
+local logger = require("neotest-java.logger")
 local jdtls = require("neotest-java.command.jdtls")
 local compatible_path = require("neotest-java.util.compatible_path")
-local logger = require("neotest-java.logger")
 
 local binaries = {
 
@@ -11,7 +11,7 @@ local binaries = {
 			return compatible_path(jdtls_java_home .. "/bin/java")
 		end
 
-		logger.warn("JAVA_HOME setting not found in jdtls. Using defualt binary: java")
+		logger.warn("Unable to detect JAVA_HOME. Using defualt binary in path: java")
 		return "java"
 	end,
 
@@ -22,7 +22,7 @@ local binaries = {
 			return compatible_path(jdtls_java_home .. "/bin/javac")
 		end
 
-		logger.warn("JAVA_HOME setting not found in jdtls. Using default: javac")
+		logger.warn("Unable to detect JAVA_HOME. Using defualt binary in path: javac")
 		return "javac"
 	end,
 }

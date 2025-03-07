@@ -1,6 +1,7 @@
 local read_file = require("neotest-java.util.read_file")
 local TEST_CLASS_PATTERNS = require("neotest-java.types.test_class_patterns")
 
+---@return string | nil
 local function resolve_qualified_name(filename)
 	---@param raw_query string
 	---@param content string
@@ -55,9 +56,9 @@ local function resolve_qualified_name(filename)
 			end
 		end
 	end
-	assert(name, "test class name not found") -- should not happen
-
-	return package_line .. name
+	-- !!!!! this is incorrect, there are files that might not match the test class patterns, under test/ which are mostly helper classes, this has to be looked into
+	-- assert(name, "test class name not found") -- should not happen
+	return name and (package_line .. name) or nil
 end
 
 return resolve_qualified_name
