@@ -21,7 +21,7 @@
 ## ⭐ Features
 - ✅ Maven and Gradle projects
 - ✅ Multimodule projects
-- ✅ Debugging tests with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap)
+- ✅ Integrated with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) test debugging.
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
@@ -29,11 +29,11 @@
 
 ##### Install in 3 steps :athletic_shoe:
 
-1. Make sure you have installed nvim-treesitter parsers. Use `:TSInstall java groovy`
+1. Make sure you have installed nvim-treesitter parsers. Use `:TSInstall java`
 2. Add neotest-java to your config:
 
 <details>
-  <summary><a href="https://github.com/LazyVim/LazyVim">LazyVim</a> distro installation</summary>
+  <summary><a href="https://github.com/LazyVim/LazyVim">LazyVim</a> distro installation example</summary>
 
   ```lua
   return {
@@ -80,8 +80,8 @@
 ```
 
 </details>
-<details open>
-  <summary><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> plugin manager</summary>
+<details>
+  <summary><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> plugin manager example</summary>
 
   ```lua
   return {
