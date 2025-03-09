@@ -9,7 +9,8 @@ local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local lib = require("neotest.lib")
-local junit_version = "1.10.1"
+
+local junit_version = ch.config().default_version
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 

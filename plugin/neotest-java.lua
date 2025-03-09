@@ -2,7 +2,8 @@ local exists = require("neotest.lib.file").exists
 local job = require("plenary.job")
 local logger = require("neotest.logging")
 local lib = require("neotest.lib")
-local junit_version = "1.10.1"
+local ch = require("neotest-java.context_holder")
+local junit_version = ch.config().default_version
 
 local options = {
 	setup = function()
