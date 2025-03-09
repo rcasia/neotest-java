@@ -2,10 +2,14 @@ local exists = require("neotest.lib.file").exists
 local job = require("plenary.job")
 local logger = require("neotest.logging")
 local lib = require("neotest.lib")
+local junit_version = "1.10.1"
 
 local options = {
 	setup = function()
-		local filepath = vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar"
+		local filepath = ("%s/neotest-java/junit-platform-console-standalone-%s.jar"):format(
+			vim.fn.stdpath("data"),
+			junit_version
+		)
 		if exists(filepath) then
 			lib.notify("Already setup!")
 			return
@@ -19,7 +23,10 @@ local options = {
 				args = {
 					"--output",
 					filepath,
-					"https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.1/junit-platform-console-standalone-1.10.1.jar",
+					("https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar"):format(
+						junit_version,
+						junit_version
+					),
 					"--create-dirs",
 				},
 				on_stderr = function(_, data)

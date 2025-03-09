@@ -9,6 +9,7 @@ local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local lib = require("neotest.lib")
+local junit_version = "1.10.1"
 
 local detect_project_type = require("neotest-java.util.detect_project_type")
 
@@ -19,8 +20,8 @@ local check_junit_jar = function(filepath)
 		([[
     Junit Platform Console Standalone jar not found at %s
     Please run the following command to download it: NeotestJava setup
-    Or alternatively, download it from https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.10.1/junit-platform-console-standalone-1.10.1.jar
-  ]]):format(filepath)
+    Or alternatively, download it from https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar
+  ]]):format(filepath, junit_version, junit_version)
 	)
 end
 

@@ -1,9 +1,13 @@
 local log = require("neotest-java.logger")
 local compatible_path = require("neotest-java.util.compatible_path")
+local DEFAULT_VERSION = "1.10.1"
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
-	junit_jar = compatible_path(vim.fn.stdpath("data") .. "/neotest-java/junit-platform-console-standalone-1.10.1.jar"),
+	junit_jar = compatible_path("%s/neotest-java/junit-platform-console-standalone-%s.jar"):format(
+		vim.fn.stdpath("data"),
+		DEFAULT_VERSION
+	),
 	incremental_build = true,
 }
 
