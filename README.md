@@ -21,7 +21,7 @@
 ## ⭐ Features
 - ✅ Maven and Gradle projects
 - ✅ Multimodule projects
-- ✅ Integrated with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) test debugging.
+- ✅ Integrated with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for test debugging.
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
