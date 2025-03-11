@@ -93,7 +93,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 			strategy = {
 				type = "java",
 				request = "attach",
-				name = "neotest-java debug test",
+				name = ("neotest-java (on port %s)"):format(port),
 				port = port,
 			},
 			cwd = root,
