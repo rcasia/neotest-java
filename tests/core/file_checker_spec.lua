@@ -8,6 +8,7 @@ describe("file_checker", function()
 			"src/test/java/neotest/RepositoryTests.java",
 			"src/test/java/neotest/NeotestIT.java",
 			"src/test/java/neotest/ProductAceptanceTests.java",
+			"src/test/java/neotest/domain/ProductAceptanceTests.java",
 		}
 
 		for _, file_path in ipairs(test_files) do
