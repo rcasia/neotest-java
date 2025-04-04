@@ -1,3 +1,4 @@
+local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local a = require("nio").tests
 local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 
