@@ -1,3 +1,5 @@
+---@module "neotest"
+
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local resolve_qualfied_name = require("neotest-java.util.resolve_qualified_name")
 local logger = require("neotest-java.logger")
