@@ -17,8 +17,5 @@ jobs:
         with:
           neovim: true
 
-      - name: Install dependencies
-        run: make install
-
       - name: Run tests
         run: make test
