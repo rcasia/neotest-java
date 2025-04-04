@@ -1,3 +1,4 @@
+local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
 local plugin = require("neotest-java")
 local result_builder = require("neotest-java.core.result_builder")
