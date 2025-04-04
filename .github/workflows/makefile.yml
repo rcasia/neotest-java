@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Maven Action
-        uses: s4u/setup-maven-action@v1.18.0
-
       - uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
