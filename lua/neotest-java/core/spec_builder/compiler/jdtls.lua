@@ -6,18 +6,24 @@ local scan = require("plenary.scandir")
 ---@type NeotestJavaCompiler
 local jdtls_compiler = {
 	compile = function(args)
-		-- check that required dependencies are present
-		local ok_jdtls, jdtls = pcall(require, "jdtls")
-		assert(ok_jdtls, "neotest-java requires nvim-jdtls to tests")
-
 		-- check there is an active java client
-		local has_jdtls_client = #nio.lsp.get_clients({ name = "jdtls" }) ~= 0
-		assert(has_jdtls_client, "there is no jdtls client attached.")
+		local clients = vim.lsp.get_clients({ name = "jdtls" })
+		local client = assert(clients and clients[1], "there is no jdtls client attached.")
 
 		logger.debug(("compilation in %s mode"):format(args.compile_mode))
 		nio.run(function(_)
 			nio.scheduler()
-			jdtls.compile(args.compile_mode)
+			local bufnr = 0 --TODO: set bufnr to the java file being compiled
+			client:request(
+				"java/buildWorkspace",
+				{ forceRebuild = args.compile_mode == "full" },
+				function(err, result, ctx)
+					if err then
+						logger.error("compilation failed: " .. vim.inspect(err))
+					end
+				end,
+				bufnr
+			)
 		end):wait()
 		logger.debug("compilation complete!")
 
