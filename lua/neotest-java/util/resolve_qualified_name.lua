@@ -1,6 +1,18 @@
 local read_file = require("neotest-java.util.read_file")
 local TEST_CLASS_PATTERNS = require("neotest-java.types.test_class_patterns")
 
+local CLASSNAME_QUERY = [[
+    ((class_declaration (identifier) @target))
+]]
+
+local PACKAGE_QUERY = [[
+
+      ((package_declaration (scoped_identifier) @package.name))
+
+      ((package_declaration (identifier) @package.name))
+
+]]
+
 local function resolve_qualified_name(filename)
 	---@param raw_query string
 	---@param content string
@@ -26,23 +38,10 @@ local function resolve_qualified_name(filename)
 		error(string.format("file does not exist: %s", filename))
 	end
 
-	-- get the package name
-	local package_query = [[
-
-      ((package_declaration (scoped_identifier) @package.name))
-
-      ((package_declaration (identifier) @package.name))
-
-  ]]
-
-	local class_name_query = [[
-    ((class_declaration (identifier) @target))
-  ]]
-
-	local package_lines = find_in_text(package_query, content)
+	local package_lines = find_in_text(PACKAGE_QUERY, content)
 
 	local package_line = (package_lines and package_lines[1]) and (package_lines[1] .. ".") or ""
-	local names = find_in_text(class_name_query, content)
+	local names = find_in_text(CLASSNAME_QUERY, content)
 
 	-- as there can be different class names
 	-- searches for the one the mathces the test class patterns
