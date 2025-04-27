@@ -19,6 +19,7 @@
 ![image](https://github.com/user-attachments/assets/d1d77980-faab-4110-9b7c-ae6911a3d42c)
 
 ## ⭐ Features
+
 - ✅ Maven and Gradle projects
 - ✅ Multimodule projects
 - ✅ Integrated with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for test debugging.
@@ -105,9 +106,9 @@
       },
       opts = {
         adapters = {
-          ["neotest-java"] = {
+          require("neotest-java")({
             -- config here
-          },
+          }),
         },
       },
     },
@@ -120,8 +121,7 @@
 
 > [!NOTE]
 > It will download the JUnit standalone jar from
-> https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone
-
+> <https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone>
 
 ## :gear: Configuration
 
