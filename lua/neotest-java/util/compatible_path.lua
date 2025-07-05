@@ -16,7 +16,7 @@ local function compatible_path(path)
 	path = path:gsub("%./", sep):gsub("%.\\", sep):gsub("/", sep):gsub("\\", sep)
 
 	-- normalize the path and remove duplicate separators
-	return (relative_prefix .. vim.fs.normalize(path)):gsub(sep .. "+", sep)
+	return (relative_prefix .. path):gsub(sep .. "+", sep)
 end
 
 return compatible_path
