@@ -10,10 +10,10 @@ hooks:
 	cp -f ./git-hooks/* .git/hooks/
 
 test: install
-	./scripts/test
+	bash scripts/test
 
 test-fail-fast: install
-	./scripts/test --fail-fast
+	bash scripts/test --fail-fast
 
 prepare-demo:
 	# it is expected to fail because there are failing tests
