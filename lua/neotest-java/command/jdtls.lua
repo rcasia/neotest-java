@@ -1,11 +1,32 @@
 local nio = require("nio")
 local write_file = require("neotest-java.util.write_file")
 local compatible_path = require("neotest-java.util.compatible_path")
+local logger = require("neotest-java.logger")
 
 local M = {}
 
+--- @param dir? string
+--- @return string | nil
+local function find_any_java_file(dir)
+	return assert(
+		vim.iter(nio.fn.globpath(dir or ".", "**/*.java", false, true)):next(),
+		"No Java file found in the current directory."
+	)
+end
+
+--- @param path string
+--- @return number bufnr
+local function preload_file_for_lsp(path)
+	assert(path, "path cannot be nil")
+	local buf = vim.fn.bufadd(path) -- allocates buffer ID
+	vim.fn.bufload(path) -- preload lines
+
+	return buf
+end
+
 M.get_java_home = function()
-	local bufnr = vim.api.nvim_get_current_buf()
+	local any_java_file = assert(find_any_java_file(), "No Java file found in the current directory.")
+	local bufnr = preload_file_for_lsp(any_java_file)
 	local uri = vim.uri_from_bufnr(bufnr)
 	local future = nio.control.future()
 
@@ -30,7 +51,8 @@ M.get_classpath = function(additional_classpath_entries)
 
 	local classpaths = {}
 
-	local bufnr = vim.api.nvim_get_current_buf()
+	local any_java_file = assert(find_any_java_file(), "No Java file found in the current directory.")
+	local bufnr = preload_file_for_lsp(any_java_file)
 	local uri = vim.uri_from_bufnr(bufnr)
 	local runtime_classpath_future = nio.control.future()
 	local test_classpath_future = nio.control.future()
@@ -42,12 +64,14 @@ M.get_classpath = function(additional_classpath_entries)
 			command = "java.project.getClasspaths",
 			arguments = { uri, options },
 		}
+		-- TODO: look for a way to use vim.lsp.Client innstead of jdtls.util.execute_command
 		require("jdtls.util").execute_command(cmd, function(err1, resp)
 			assert(not err1, vim.inspect(err1))
 
 			future.set(resp.classpaths)
 		end, bufnr)
 	end
+
 	local runtime_classpaths = runtime_classpath_future.wait()
 	local test_classpaths = test_classpath_future.wait()
 
@@ -60,6 +84,8 @@ M.get_classpath = function(additional_classpath_entries)
 	for _, v in ipairs(test_classpaths) do
 		classpaths[#classpaths + 1] = v
 	end
+
+	logger.debug(("classpath entries: %d"):format(#classpaths))
 
 	return classpaths
 end
