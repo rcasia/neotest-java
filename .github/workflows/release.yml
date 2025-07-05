@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  statuses: write
+  contents: write
 
 jobs:
   release:
