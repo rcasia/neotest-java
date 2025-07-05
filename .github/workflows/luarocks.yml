@@ -4,12 +4,11 @@ name: Push to Luarocks
 on:
   push:
     tags:
-      - '*'
+      - "*"
   release:
     types:
       - created
-    tags:
-      - '*'
+
   pull_request: # Tests installing the generated rockspec on PR without uploading
   workflow_dispatch:
 
@@ -46,4 +45,3 @@ jobs:
             tree-sitter-java
             nvim-dap
             nvim-dap-ui
-
