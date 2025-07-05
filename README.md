@@ -96,23 +96,25 @@
         "theHamsta/nvim-dap-virtual-text", -- recommended
       },
     },
-    {
-      "nvim-neotest/neotest",
+   {
+    "nvim-neotest/neotest",
       dependencies = {
         "nvim-neotest/nvim-nio",
         "nvim-lua/plenary.nvim",
         "antoinemadec/FixCursorHold.nvim",
-        "nvim-treesitter/nvim-treesitter"
-      },
-      opts = {
+        "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("neotest").setup({
         adapters = {
           require("neotest-java")({
             -- config here
           }),
         },
-      },
-    },
+      })
+    end,
   }
+ }
   ```
 
 </details>
