@@ -45,6 +45,14 @@ describe("compatible_path", function()
 
 		for _, case in ipairs(testcases) do
 			it(("(unix) case: %s -> %s"):format(case.description, case.input), function()
+				vim.fn.has = function(arg) -- luacheck: ignore 122 Setting a read-only field of a global variable
+					print("mocking vim.fn.has with arg: " .. arg)
+					if arg == "win64" or arg == "win32" then
+						return 0
+					else
+						return 1
+					end
+				end
 				assert.same(case.expected, compatible_path(case.input), case.description)
 			end)
 		end
@@ -82,14 +90,15 @@ describe("compatible_path", function()
 
 		for _, case in ipairs(testcases) do
 			-- mock vim.fn.has to simulate to be on windows
-			vim.fn.has = function(arg) -- luacheck: ignore 122 Setting a read-only field of a global variable
-				if arg == "win64" or arg == "win32" then
-					return 1
-				else
-					return 0
-				end
-			end
 			it(("(windows) case: %s -> %s "):format(case.description, case.input), function()
+				vim.fn.has = function(arg) -- luacheck: ignore 122 Setting a read-only field of a global variable
+					print("mocking vim.fn.has with arg: " .. arg)
+					if arg == "win64" or arg == "win32" then
+						return 1
+					else
+						return 0
+					end
+				end
 				local result = compatible_path(case.input)
 				assert.same(case.expected, result, case.description)
 			end)
