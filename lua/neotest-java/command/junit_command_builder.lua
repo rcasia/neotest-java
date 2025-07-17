@@ -102,9 +102,14 @@ local CommandBuilder = {
 		end
 		assert(#selectors ~= 0, "junit command has to have a selector")
 
+		--TODO: put this in config
+		local jacoco_jar = "/home/rcasia/Downloads/org.jacoco.agent-0.8.9-runtime.jar"
+		local jacoco_output = "/home/rcasia/jacoco.exe"
+
 		local junit_command = {
 			command = java(),
 			args = {
+				("-javaagent:%s=output=file,destfile=%s,append=false"):format(jacoco_jar, jacoco_output),
 				"-jar",
 				self._junit_jar,
 				"execute",
