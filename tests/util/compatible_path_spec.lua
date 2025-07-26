@@ -1,4 +1,5 @@
 local compatible_path = require("neotest-java.util.compatible_path")
+local compatible_path_parent = require("neotest-java.util.compatible_path_parent")
 
 describe("compatible_path", function()
 	local original_vim_fn_has
@@ -20,26 +21,31 @@ describe("compatible_path", function()
 				description = "basic case",
 				input = "\\PP\\expense-app-v3\\expenses-domain\\target",
 				expected = "/PP/expense-app-v3/expenses-domain/target",
+				expected_parent = "/PP/expense-app-v3/expenses-domain",
 			},
 			{
 				description = "relative path",
 				input = "expenses-domain\\target",
 				expected = "expenses-domain/target",
+				expected_parent = "expenses-domain",
 			},
 			{
 				description = "relative path with dot",
 				input = ".\\expenses-domain\\target",
 				expected = "./expenses-domain/target",
+				expected_parent = "./expenses-domain",
 			},
 			{
 				description = "with a dot between file separators",
 				input = "\\PP\\expense-app-v3\\expenses-domain\\.\\target",
 				expected = "/PP/expense-app-v3/expenses-domain/target",
+				expected_parent = "/PP/expense-app-v3/expenses-domain",
 			},
 			{
 				description = "mixed file separators",
 				input = "\\PP\\expense-app-v3/expenses-domain\\./target",
 				expected = "/PP/expense-app-v3/expenses-domain/target",
+				expected_parent = "/PP/expense-app-v3/expenses-domain",
 			},
 		}
 
@@ -54,6 +60,11 @@ describe("compatible_path", function()
 					end
 				end
 				assert.same(case.expected, compatible_path(case.input), case.description)
+				assert.same(
+					case.expected_parent,
+					compatible_path_parent(case.input),
+					case.description .. " parent path"
+				)
 			end)
 		end
 	end
@@ -65,26 +76,31 @@ describe("compatible_path", function()
 				description = "basic case for win",
 				input = "/PP/expense-app-v3/expenses-domain/target",
 				expected = "\\PP\\expense-app-v3\\expenses-domain\\target",
+				expected_parent = "\\PP\\expense-app-v3\\expenses-domain",
 			},
 			{
 				description = "relative path",
 				input = "expenses-domain/target",
 				expected = "expenses-domain\\target",
+				expected_parent = "expenses-domain",
 			},
 			{
 				description = "relative path with dot",
 				input = "./expenses-domain/target",
 				expected = ".\\expenses-domain\\target",
+				expected_parent = ".\\expenses-domain",
 			},
 			{
 				description = "with a dot between file separators",
 				input = "/PP/expense-app-v3/expenses-domain/./target",
 				expected = "\\PP\\expense-app-v3\\expenses-domain\\target",
+				expected_parent = "\\PP\\expense-app-v3\\expenses-domain",
 			},
 			{
 				description = "mixed file separators",
 				input = "/PP/expense-app-v3\\expenses-domain\\./target",
 				expected = "\\PP\\expense-app-v3\\expenses-domain\\target",
+				expected_parent = "\\PP\\expense-app-v3\\expenses-domain",
 			},
 		}
 
@@ -101,6 +117,11 @@ describe("compatible_path", function()
 				end
 				local result = compatible_path(case.input)
 				assert.same(case.expected, result, case.description)
+				assert.same(
+					case.expected_parent,
+					compatible_path_parent(case.input),
+					case.description .. " parent path"
+				)
 			end)
 		end
 	end
