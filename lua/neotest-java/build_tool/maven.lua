@@ -1,4 +1,5 @@
 local compatible_path = require("neotest-java.util.compatible_path")
+local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 
 local PROJECT_FILE = "pom.xml"
 
@@ -13,6 +14,21 @@ end
 
 function maven.get_project_filename()
 	return PROJECT_FILE
+end
+
+--- @param roots string[]
+function maven.get_spring_property_filepaths(roots)
+	local base_dirs = vim.iter(roots)
+		:map(function(root)
+			return {
+				maven.get_output_dir(root) .. "/classes",
+				maven.get_output_dir(root) .. "/test-classes",
+			}
+		end)
+		:flatten()
+		:totable()
+
+	return generate_spring_property_filepaths(base_dirs)
 end
 
 ---@type neotest-java.BuildTool

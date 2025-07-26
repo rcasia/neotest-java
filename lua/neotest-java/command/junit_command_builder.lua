@@ -83,12 +83,18 @@ local CommandBuilder = {
 		self._classpath_file_arg = classpath_file_arg
 	end,
 
+	--- @param property_filepaths string[]
+	spring_property_filepaths = function(self, property_filepaths)
+		self._spring_property_filepaths = property_filepaths
+	end,
+
 	--- @param port? number
 	--- @return { command: string, args: string[] }
 	build_junit = function(self, port)
 		assert(self._test_references, "test_references cannot be nil")
 		assert(self._basedir, "basedir cannot be nil")
 		assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
+		assert(self._spring_property_filepaths, "_spring_property_filepaths cannot be nil")
 
 		local selectors = {}
 		for _, v in ipairs(self._test_references) do
@@ -105,6 +111,7 @@ local CommandBuilder = {
 		local junit_command = {
 			command = java(),
 			args = {
+				"-Dspring.config.additional-location=" .. table.concat(self._spring_property_filepaths, ","),
 				"-jar",
 				self._junit_jar,
 				"execute",
