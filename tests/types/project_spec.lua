@@ -6,13 +6,13 @@ describe("project", function()
 		{
 			input = "./tests/fixtures/maven-demo",
 			expected = {
-				"maven-demo",
+				{ name = "maven-demo", base_dir = "./tests/fixtures/maven-demo" },
 			},
 		},
 		{
 			input = "./tests/fixtures/gradle-groovy-demo",
 			expected = {
-				"gradle-groovy-demo",
+				{ name = "gradle-groovy-demo", base_dir = "./tests/fixtures/gradle-groovy-demo" },
 			},
 		},
 	}
@@ -21,7 +21,7 @@ describe("project", function()
 			local project = Project.from_root_dir(testcase.input)
 			local results = {}
 			for _, mod in ipairs(project:get_modules()) do
-				results[#results + 1] = mod.name
+				results[#results + 1] = { name = mod.name, base_dir = mod.base_dir }
 			end
 			assert.same(testcase.expected, results)
 		end)
