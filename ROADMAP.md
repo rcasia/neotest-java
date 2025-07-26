@@ -17,3 +17,4 @@ v1.0.0
 extra:
 
 - [ ] for maintainers: add luacov -> add more tests -> merciless refactor
+- [ ] compatibility with the Java Platform Module System (eclipse jdtls limitation)
