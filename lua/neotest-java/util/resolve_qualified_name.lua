@@ -1,5 +1,5 @@
 local read_file = require("neotest-java.util.read_file")
-local TEST_CLASS_PATTERNS = require("neotest-java.types.test_class_patterns")
+local TEST_CLASS_PATTERNS = require("neotest-java.types.patterns").TEST_CLASS_PATTERNS
 
 local CLASSNAME_QUERY = [[
     ((class_declaration (identifier) @target))
