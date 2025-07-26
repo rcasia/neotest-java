@@ -12,7 +12,7 @@ Module.__index = Module
 function Module.new(base_dir, build_tool)
 	local self = setmetatable({}, Module)
 	self.base_dir = base_dir
-	self.name = base_dir:match("([^/]+)$")
+	self.name = base_dir:match("([^/\\]+)$")
 	self._build_tool = build_tool
 	return self
 end
