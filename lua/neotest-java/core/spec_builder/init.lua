@@ -32,12 +32,13 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local absolute_path = position.path
 	local project = assert(Project.from_root_dir(root), "project not detected correctly")
 	local modules = project:get_modules()
+	local build_tool = build_tools.get(project_type)
 
 	-- make sure we are in root_dir
 	nio.fn.chdir(root)
 
 	-- make sure outputDir is created to operate in it
-	local output_dir = build_tools.get(project_type).get_output_dir()
+	local output_dir = build_tool.get_output_dir()
 	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
 	vim.uv.fs_mkdir(output_dir_parent, 493)
@@ -55,6 +56,8 @@ function SpecBuilder.build_spec(args, project_type, config)
 		:totable()
 	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module base_dir not found")
 	command:basedir(base_dir)
+
+	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_dirs))
 
 	-- TEST SELECTORS
 	if position.type == "dir" then

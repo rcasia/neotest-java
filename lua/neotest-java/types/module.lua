@@ -1,3 +1,5 @@
+local LAST_PATH_SEGMENT_REGEX = "([^/\\]+)$"
+
 ---@class neotest-java.Module
 ---@field base_dir string
 ---@field _build_tool neotest-java.BuildTool
@@ -12,7 +14,7 @@ Module.__index = Module
 function Module.new(base_dir, build_tool)
 	local self = setmetatable({}, Module)
 	self.base_dir = base_dir
-	self.name = base_dir:match("([^/]+)$")
+	self.name = base_dir:match(LAST_PATH_SEGMENT_REGEX) or base_dir
 	self._build_tool = build_tool
 	return self
 end

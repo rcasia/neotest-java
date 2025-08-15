@@ -68,6 +68,7 @@ local jdtls_compiler = {
 		end):wait()
 		logger.debug("compilation complete!")
 
+		logger.debug("scanning for test resources in " .. args.cwd)
 		local resources = scan.scan_dir(args.cwd, {
 			only_dirs = true,
 			search_pattern = "test/resources$",
