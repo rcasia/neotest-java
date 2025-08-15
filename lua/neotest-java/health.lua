@@ -10,8 +10,51 @@ local function check_bin(name)
 	end
 end
 
+local function check_treesitter()
+	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
+	if not ok then
+		health.error("'nvim-treesitter' is not installed", {
+			"Install it: https://github.com/nvim-treesitter/nvim-treesitter",
+		})
+		return
+	end
+	if not parsers.has_parser("java") then
+		health.error("Tree-sitter parser for 'java' is missing", {
+			"Run :TSInstall java",
+		})
+	else
+		health.ok("Tree-sitter parser for 'java' is installed")
+	end
+	health.warn("Make sure Tree-sitter parser for 'java' is up-to-date", {
+		"Run :TSUpdate java",
+	})
+end
+
+local function check_plugin(mod_name, repo_url)
+	local ok = pcall(require, mod_name)
+	if ok then
+		health.ok(string.format("Plugin '%s' is installed", mod_name))
+	else
+		health.error(string.format("Plugin '%s' is missing", mod_name), {
+			"Install it: https://github.com/" .. repo_url,
+		})
+	end
+end
+
 return {
 	check = function()
+		health.start("Required plugin depencies:")
+		check_plugin("neotest", "nvim-neotest/neotest")
+		check_plugin("nvim-treesitter", "nvim-treesitter/nvim-treesitter")
+		check_treesitter()
+		check_plugin("nio", "nvim-neotest/nvim-nio")
+		check_plugin("plenary", "nvim-lua/plenary.nvim")
+		check_plugin("jdtls", "mfussenegger/nvim-jdtls")
+		check_plugin("dap", "mfussenegger/nvim-dap")
+		check_plugin("dapui", "rcarriga/nvim-dap-ui")
+		check_plugin("nvim-dap-virtual-text", "theHamsta/nvim-dap-virtual-text")
+
+		health.start("Required binaries:")
 		check_bin(binaries.java())
 		check_bin(binaries.javac())
 	end,
