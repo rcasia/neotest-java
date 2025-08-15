@@ -43,18 +43,27 @@ end
 
 return {
 	check = function()
-		health.start("Required plugin depencies:")
+		health.start("Neovim version check")
+		if vim.fn.has("nvim-0.10.4") == 1 then
+			health.ok("Neovim version is OK")
+		else
+			health.error("Neovim 0.10.4+ is required")
+		end
+
+		health.start("Required plugin dependencies")
 		check_plugin("neotest", "nvim-neotest/neotest")
 		check_plugin("nvim-treesitter", "nvim-treesitter/nvim-treesitter")
 		check_treesitter()
 		check_plugin("nio", "nvim-neotest/nvim-nio")
 		check_plugin("plenary", "nvim-lua/plenary.nvim")
 		check_plugin("jdtls", "mfussenegger/nvim-jdtls")
+
+		health.start("Required plugin dependencies for debugging")
 		check_plugin("dap", "mfussenegger/nvim-dap")
 		check_plugin("dapui", "rcarriga/nvim-dap-ui")
 		check_plugin("nvim-dap-virtual-text", "theHamsta/nvim-dap-virtual-text")
 
-		health.start("Required binaries:")
+		health.start("Required binaries")
 		check_bin(binaries.java())
 		check_bin(binaries.javac())
 	end,
