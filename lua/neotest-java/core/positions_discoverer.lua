@@ -16,23 +16,29 @@ function PositionsDiscoverer.discover_positions(file_path)
 
 	local query = [[
 
-       ;; Test class
-        (class_declaration
-          name: (identifier) @namespace.name
-        ) @namespace.definition
+    ;; Test class
+    (class_declaration
+      name: (identifier) @namespace.name
+    ) @namespace.definition
 
-      ;; annotated functions
-      (method_declaration
-        (modifiers
+    ;; Annotated test methods
+    (method_declaration
+      (modifiers
+        [
           (marker_annotation
             name: (identifier) @annotation
-              (#any-of? @annotation ]] .. a .. [[)
-            )
-        )
-        name: (identifier) @test.name
-      ) @test.definition
+            (#any-of? @annotation ]] .. a .. [[)
+          )
+          (annotation
+            name: (identifier) @annotation
+            (#any-of? @annotation ]] .. a .. [[)
+          )
+        ]
+      )
+      name: (identifier) @test.name
+    ) @test.definition
 
-    ]]
+  ]]
 
 	return lib.treesitter.parse_positions(file_path, query, { nested_namespaces = true })
 end
