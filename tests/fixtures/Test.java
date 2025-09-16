@@ -23,8 +23,13 @@ class Test {
     assertThat(1).isEqualTo(1);
   }
 
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("provideStringsForIsBlank")
+  public void shouldFindThis5() {
+    assertThat(1).isEqualTo(1);
+  }
+
   private void assertThat(int i) {
     // do nothing
   }
 }
-

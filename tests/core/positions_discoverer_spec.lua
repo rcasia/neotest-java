@@ -19,10 +19,11 @@ describe("PositionsDiscoverer", function()
 		assert.equals("shouldFindThis2", actual_list[2][3][1].name)
 		assert.equals("shouldFindThis3", actual_list[2][4][1].name)
 		assert.equals("shouldFindThis4", actual_list[2][5][1].name)
+		assert.equals("shouldFindThis5", actual_list[2][6][1].name)
 
-		-- should find 4 tests
+		-- should find 5 tests
 		local actual_count = #actual:children()[1]:children()
-		assert.equals(4, actual_count)
+		assert.equals(5, actual_count)
 	end)
 
 	async.it("should discover nested tests", function()
