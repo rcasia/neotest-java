@@ -2,12 +2,72 @@ local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfro
 local async = require("nio").tests
 local plugin = require("neotest-java")
 
-local current_dir = vim.fn.expand("%:p:h") .. "/"
+local eq = assert.are.same
 
 describe("PositionsDiscoverer", function()
+	local tmp_files
+
+	before_each(function()
+		tmp_files = {}
+	end)
+
+	after_each(function()
+		-- clear temporary files
+		for _, file in ipairs(tmp_files) do
+			os.remove(file)
+		end
+	end)
+
+	---@param content string
+	---@return string filename
+	local function create_tmp_javafile(content)
+		local tmp_file = os.tmpname() .. ".java"
+		table.insert(tmp_files, tmp_file)
+		local file = assert(io.open(tmp_file, "w"))
+		file:write(content)
+		file:close()
+		return tmp_file
+	end
+
 	async.it("should discover test method names", function()
 		-- given
-		local file_path = current_dir .. "tests/fixtures/Test.java"
+		local file_path = create_tmp_javafile([[
+class Test {
+
+  @Test
+  public void shouldFindThis1() {
+    assertThat(1).isEqualTo(1);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1, 2, 3})
+  public void shouldFindThis2(int i) {
+    assertThat(i).isGreaterThan(0);
+  }
+
+  @Test
+  public void shouldFindThis3() {
+    assertThat(1).isEqualTo(1);
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideStringsForIsBlank")
+  public void shouldFindThis4() {
+    assertThat(1).isEqualTo(1);
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("provideStringsForIsBlank")
+  public void shouldFindThis5() {
+    assertThat(1).isEqualTo(1);
+  }
+
+  private void assertThat(int i) {
+    // do nothing
+  }
+}
+
+		]])
 
 		-- when
 		local actual = plugin.discover_positions(file_path)
@@ -27,17 +87,32 @@ describe("PositionsDiscoverer", function()
 	end)
 
 	async.it("should discover nested tests", function()
-		-- given
-		local file_path = current_dir .. "tests/fixtures/SomeNestedTest.java"
+		local file_path = create_tmp_javafile([[
+public class SomeTest {
+    public static class SomeNestedTest {
+        public static class AnotherNestedTest {
+            @Test
+            public void someTest() {
+                assertEquals(1 + 1, 2);
+            }
+        }
+
+        @Test
+        public void oneMoreOuterTest() {
+            assertEquals(1 + 1, 2);
+        }
+    }
+}
+		]])
 
 		-- when
-		local actual = plugin.discover_positions(file_path)
+		local actual = assert(plugin.discover_positions(file_path))
 
 		-- then
 		local test_name = actual:to_list()[2][2][2][2][1].name
-		assert.equals(test_name, "someTest")
+		eq(test_name, "someTest")
 
 		local another_outer_test_name = actual:to_list()[2][2][3][1].name
-		assert.equals(another_outer_test_name, "oneMoreOuterTest")
+		eq(another_outer_test_name, "oneMoreOuterTest")
 	end)
 end)
