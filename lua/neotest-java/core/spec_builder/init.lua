@@ -75,8 +75,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	elseif position.type == "file" then
 		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 	elseif position.type == "test" then
-		-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "test")
 	end
 
 	-- COMPILATION STEP
