@@ -29,61 +29,72 @@ describe("PositionsDiscoverer", function()
 		return tmp_file
 	end
 
-	async.it("should discover test method names", function()
+	async.it("should discover simple test method", function()
 		-- given
 		local file_path = create_tmp_javafile([[
 class Test {
 
   @Test
-  public void shouldFindThis1() {
+  public void simpleTestMethod() {
     assertThat(1).isEqualTo(1);
   }
+
+	public void notATestMethod() {
+		assertThat(1).isEqualTo(1);
+	}
+
+}
+		]])
+
+		-- when
+		local actual = assert(plugin.discover_positions(file_path))
+
+		-- then
+		local actual_list = actual:to_list()
+
+		eq("simpleTestMethod", actual_list[2][2][1].name)
+
+		eq(1, #actual:children()[1]:children())
+	end)
+
+	async.it("should discover ParameterizedTest", function()
+		-- given
+		local file_path = create_tmp_javafile([[
+class Test {
 
   @ParameterizedTest
   @ValueSource(ints = {1, 2, 3})
-  public void shouldFindThis2(int i) {
+  public void parameterizedTestWithValueSource(int i) {
     assertThat(i).isGreaterThan(0);
-  }
-
-  @Test
-  public void shouldFindThis3() {
-    assertThat(1).isEqualTo(1);
   }
 
   @ParameterizedTest
   @MethodSource("provideStringsForIsBlank")
-  public void shouldFindThis4() {
+  public void parameterizedTestWithMethodSource() {
     assertThat(1).isEqualTo(1);
   }
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("provideStringsForIsBlank")
-  public void shouldFindThis5() {
+  public void parameterizedTestWithMethodSourceAndExplicitName() {
     assertThat(1).isEqualTo(1);
   }
 
-  private void assertThat(int i) {
-    // do nothing
-  }
 }
 
 		]])
 
 		-- when
-		local actual = plugin.discover_positions(file_path)
+		local actual = assert(plugin.discover_positions(file_path))
 
 		-- then
 		local actual_list = actual:to_list()
 
-		assert.equals("shouldFindThis1", actual_list[2][2][1].name)
-		assert.equals("shouldFindThis2", actual_list[2][3][1].name)
-		assert.equals("shouldFindThis3", actual_list[2][4][1].name)
-		assert.equals("shouldFindThis4", actual_list[2][5][1].name)
-		assert.equals("shouldFindThis5", actual_list[2][6][1].name)
+		eq("parameterizedTestWithValueSource", actual_list[2][2][1].name)
+		eq("parameterizedTestWithMethodSource", actual_list[2][3][1].name)
+		eq("parameterizedTestWithMethodSourceAndExplicitName", actual_list[2][4][1].name)
 
-		-- should find 5 tests
-		local actual_count = #actual:children()[1]:children()
-		assert.equals(5, actual_count)
+		eq(3, #actual:children()[1]:children())
 	end)
 
 	async.it("should discover nested tests", function()
