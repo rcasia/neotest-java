@@ -49,7 +49,6 @@ describe("PositionsDiscoverer", function()
 		eq({
 			{
 				id = "com.example",
-				-- take the last node of the directory
 				name = file_path:gsub(".*/", ""),
 				path = file_path,
 				range = { 0, 4, 8, 2 },
@@ -61,6 +60,16 @@ describe("PositionsDiscoverer", function()
 					path = file_path,
 					range = { 2, 4, 7, 5 },
 					type = "namespace",
+				},
+				{
+					{
+						id = "com.example.Inner",
+						-- id = "com.example.Outer$Inner",
+						name = "Inner",
+						path = file_path,
+						range = { 3, 6, 6, 7 },
+						type = "namespace",
+					},
 				},
 			},
 		}, result:to_list())
@@ -155,6 +164,61 @@ public class SomeTest {
 
 		-- when
 		local actual = assert(plugin.discover_positions(file_path))
+
+		eq({
+			{
+				id = file_path,
+				name = file_path:gsub(".*/", ""),
+				path = file_path,
+				range = { 0, 0, 15, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = file_path .. "::SomeTest",
+					name = "SomeTest",
+					path = file_path,
+					range = { 0, 0, 14, 1 },
+					type = "namespace",
+				},
+				{
+					{
+						id = file_path .. "::SomeTest::SomeNestedTest",
+						name = "SomeNestedTest",
+						path = file_path,
+						range = { 1, 4, 13, 5 },
+						type = "namespace",
+					},
+					{
+						{
+							id = file_path .. "::SomeTest::SomeNestedTest::AnotherNestedTest",
+							name = "AnotherNestedTest",
+							path = file_path,
+							range = { 2, 8, 7, 9 },
+							type = "namespace",
+						},
+						{
+							{
+								id = file_path .. "::SomeTest::SomeNestedTest::AnotherNestedTest::someTest",
+								name = "someTest",
+								path = file_path,
+								range = { 3, 12, 6, 13 },
+								type = "test",
+							},
+						},
+					},
+					{
+						{
+							id = file_path .. "::SomeTest::SomeNestedTest::oneMoreOuterTest",
+							name = "oneMoreOuterTest",
+							path = file_path,
+							range = { 9, 8, 12, 9 },
+							type = "test",
+						},
+					},
+				},
+			},
+		}, actual:to_list())
 
 		-- then
 		local test_name = actual:to_list()[2][2][2][2][1].name

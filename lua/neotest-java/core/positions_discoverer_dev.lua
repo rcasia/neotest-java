@@ -65,60 +65,51 @@ function PositionsDiscoverer.discover_positions(file_path)
 
 	local pkg = get_package_name()
 
-	--- @return TSNode
-	local get_main_class = function()
-		local result = nil
-		for id, node in query:iter_captures(ts_tree:root(), src, 0, -1) do
-			local cap = query.captures[id]
-			if cap == "class.definition" then
-				result = node
-				break
-			end
-		end
-		return result
-	end
+	--- recursively build list of nodes from TSNode tree
+	--- @param node TSNode
+	--- @return {id: string, name: string, path: string, range: table}[]
+	local function build_tree(node)
+		local captures = vim.iter(query:iter_captures(node, src, 0, -1))
+			:map(function(id, child)
+				return {
+					id = id,
+					child = child,
+				}
+			end)
+			:totable()
 
-	local main_class = get_main_class()
+		return vim
+			.iter(captures)
+			:map(function(c)
+				return query.captures[c.id], c.child
+			end)
+			:filter(function(_, child)
+				return not child:parent() or child:parent() == node
+			end)
+			--- @param child TSNode
+			:map(function(cap, child)
+				if cap == "class.definition" then
+					local class_name = vim.treesitter.get_node_text(child:field("name")[1], src) or "Unknown"
+					local children = vim.iter(child:iter_children()):map(build_tree):totable()
+					local children_flattered = vim.iter(children):flatten():totable()
 
-	for id, node in query:iter_captures(ts_tree:root(), src, 0, -1) do
-		local cap = query.captures[id]
-
-		if cap == "class.name" then
-			-- just to see the class name
-			local class_name = vim.treesitter.get_node_text(node, src)
-		end
-
-		if cap == "method.name" then
-			local method = vim.treesitter.get_node_text(node, src)
-			-- climb to enclosing class/inner classes and collect their names
-			local parts = {}
-			local cur = node
-			while cur do
-				if
-					cur:type() == "class_declaration"
-					or cur:type() == "interface_declaration"
-					or cur:type() == "enum_declaration"
-					or cur:type() == "record_declaration"
-				then
-					local name_field = cur:field("name")[1]
-					if name_field then
-						table.insert(parts, 1, vim.treesitter.get_node_text(name_field, src))
-					end
+					return {
+						{
+							id = pkg .. "." .. class_name,
+							name = class_name,
+							path = file_path,
+							range = { child:range() },
+							type = "namespace",
+						},
+						#children_flattered > 0 and children_flattered or nil,
+					}
 				end
-				cur = cur:parent()
-			end
-
-			local class_bin = table.concat(parts, "$") -- Outer$Inner
-			if pkg and pkg ~= "" then
-				class_bin = pkg .. "." .. class_bin
-			end
-
-			local fqn = string.format("%s#%s", class_bin, method)
-			-- print(fqn) -- ==> com.example.Outer$Inner#simpleTestMethod
-
-			method = fqn
-		end
+			end)
+			:flatten()
+			:totable()
 	end
+
+	local l = build_tree(ts_tree:root())
 
 	return Tree.from_list({
 		{
@@ -127,24 +118,7 @@ function PositionsDiscoverer.discover_positions(file_path)
 			path = file_path,
 			range = { ts_tree:root():range() },
 		},
-		{
-			{
-				id = pkg .. ".Outer",
-				name = "Outer",
-				path = file_path,
-				range = { main_class:range() },
-				type = "namespace",
-			},
-			-- 	{
-			-- 		{
-			-- 			id = "/tmp/lua_l7nCK1.java::Test::simpleTestMethod",
-			-- 			name = "simpleTestMethod",
-			-- 			path = "/tmp/lua_l7nCK1.java",
-			-- 			range = { 2, 2, 5, 3 },
-			-- 			type = "test",
-			-- 		},
-			-- 	},
-		},
+		l,
 	}, function(pos)
 		return pos.id
 	end)
