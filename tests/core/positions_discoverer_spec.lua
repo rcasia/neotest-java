@@ -1,6 +1,8 @@
+---@module "luassert"
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
 local plugin = require("neotest-java")
+local positions_discoverer = require("neotest-java.core.positions_discoverer_dev")
 
 local eq = assert.are.same
 
@@ -28,6 +30,41 @@ describe("PositionsDiscoverer", function()
 		file:close()
 		return tmp_file
 	end
+
+	async.it("method FQN with inner classes", function()
+		local file_path = create_tmp_javafile([[
+    package com.example;
+
+    class Outer {
+      class Inner {
+        @Test
+        void simpleTestMethod() {}
+      }
+    }
+  ]])
+
+		--- @type neotest.Tree
+		local result = assert(positions_discoverer.discover_positions(file_path))
+
+		eq({
+			{
+				id = "com.example",
+				-- take the last node of the directory
+				name = file_path:gsub(".*/", ""),
+				path = file_path,
+				range = { 0, 4, 8, 2 },
+			},
+			{
+				{
+					id = "com.example.Outer",
+					name = "Outer",
+					path = file_path,
+					range = { 2, 4, 7, 5 },
+					type = "namespace",
+				},
+			},
+		}, result:to_list())
+	end)
 
 	async.it("should discover simple test method", function()
 		-- given
