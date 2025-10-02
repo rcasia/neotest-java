@@ -46,6 +46,8 @@ describe("PositionsDiscoverer", function()
 		--- @type neotest.Tree
 		local result = assert(positions_discoverer.discover_positions(file_path))
 
+		print(vim.inspect(result:to_list()))
+
 		eq({
 			{
 				id = "com.example",
@@ -63,8 +65,7 @@ describe("PositionsDiscoverer", function()
 				},
 				{
 					{
-						id = "com.example.Inner",
-						-- id = "com.example.Outer$Inner",
+						id = "com.example.Outer$Inner",
 						name = "Inner",
 						path = file_path,
 						range = { 3, 6, 6, 7 },

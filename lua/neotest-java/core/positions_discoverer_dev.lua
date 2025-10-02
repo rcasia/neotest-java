@@ -89,14 +89,25 @@ function PositionsDiscoverer.discover_positions(file_path)
 			--- @param child TSNode
 			:map(function(cap, child)
 				if cap == "class.definition" then
-					local class_name = vim.treesitter.get_node_text(child:field("name")[1], src) or "Unknown"
+					local name = vim.treesitter.get_node_text(child:field("name")[1], src) or "Unknown"
 					local children = vim.iter(child:iter_children()):map(build_tree):totable()
 					local children_flattered = vim.iter(children):flatten():totable()
 
+					local inner_classname = name
+					local cur = child:parent()
+					while cur do
+						if cur:type() == "class_declaration" then
+							inner_classname = vim.treesitter.get_node_text(cur:field("name")[1], src)
+								.. "$"
+								.. inner_classname
+						end
+						cur = cur:parent()
+					end
+
 					return {
 						{
-							id = pkg .. "." .. class_name,
-							name = class_name,
+							id = pkg .. "." .. inner_classname,
+							name = name,
 							path = file_path,
 							range = { child:range() },
 							type = "namespace",
