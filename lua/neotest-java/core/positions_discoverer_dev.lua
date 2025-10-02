@@ -115,6 +115,33 @@ function PositionsDiscoverer.discover_positions(file_path)
 						#children_flattered > 0 and children_flattered or nil,
 					}
 				end
+
+				if cap == "test.definition" then
+					local name = vim.treesitter.get_node_text(child:field("name")[1], src) or "Unknown"
+
+					local parts = {}
+					local cur = child:parent()
+					while cur do
+						if cur:type() == "class_declaration" then
+							parts[#parts + 1] = vim.treesitter.get_node_text(cur:field("name")[1], src)
+						end
+						cur = cur:parent()
+					end
+
+					local inner_classname = vim.iter(parts):rev():join("$")
+
+					local fqn = pkg .. "." .. inner_classname .. "#" .. name
+
+					return {
+						{
+							id = fqn,
+							name = name,
+							path = file_path,
+							range = { child:range() },
+							type = "test",
+						},
+					}
+				end
 			end)
 			:flatten()
 			:totable()
