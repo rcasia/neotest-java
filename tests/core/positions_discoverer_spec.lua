@@ -71,6 +71,15 @@ describe("PositionsDiscoverer", function()
 						range = { 3, 6, 6, 7 },
 						type = "namespace",
 					},
+					{
+						{
+							id = "com.example.Outer$Inner#simpleTestMethod",
+							name = "simpleTestMethod",
+							path = file_path,
+							range = { 4, 8, 5, 34 },
+							type = "test",
+						},
+					},
 				},
 			},
 		}, result:to_list())
