@@ -112,6 +112,69 @@ class Test {
 		eq(1, #actual:children()[1]:children())
 	end)
 
+	async.it("should discover two simple test method", function()
+		-- given
+		local file_path = create_tmp_javafile([[
+class Test {
+
+  @Test
+  public void firstTestMethod() {
+    assertThat(1).isEqualTo(1);
+  }
+
+  @Test
+  public void secondTestMethod() {
+    assertThat(1).isEqualTo(1);
+  }
+
+}
+		]])
+
+		-- when
+		local actual = assert(plugin.discover_positions(file_path))
+
+		-- then
+		local actual_list = actual:to_list()
+		print(vim.inspect(actual_list))
+
+		eq({
+			{
+				id = file_path,
+				name = file_path:gsub(".*/", ""),
+				path = file_path,
+				range = { 0, 0, 13, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = "Test",
+					name = "Test",
+					path = file_path,
+					range = { 0, 0, 12, 1 },
+					type = "namespace",
+				},
+				{
+					{
+						id = "Test#firstTestMethod",
+						name = "firstTestMethod",
+						path = file_path,
+						range = { 2, 2, 5, 3 },
+						type = "test",
+					},
+				},
+				{
+					{
+						id = "Test#secondTestMethod",
+						name = "secondTestMethod",
+						path = file_path,
+						range = { 7, 2, 10, 3 },
+						type = "test",
+					},
+				},
+			},
+		}, actual_list)
+	end)
+
 	async.it("should discover ParameterizedTest", function()
 		-- given
 		local file_path = create_tmp_javafile([[
@@ -242,29 +305,32 @@ public class SomeTest {
 					},
 					{
 						{
-							id = "SomeTest$SomeNestedTest$AnotherNestedTest",
-							name = "AnotherNestedTest",
+							{
+								id = "SomeTest$SomeNestedTest$AnotherNestedTest",
+								name = "AnotherNestedTest",
+								path = file_path,
+								range = { 2, 8, 7, 9 },
+								type = "namespace",
+							},
+							{
+								{
+									id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
+									name = "someTest",
+									path = file_path,
+									range = { 3, 12, 6, 13 },
+									type = "test",
+								},
+							},
+						},
+					},
+
+					{
+						{
+							id = "SomeTest$SomeNestedTest#oneMoreOuterTest",
+							name = "oneMoreOuterTest",
 							path = file_path,
-							range = { 2, 8, 7, 9 },
-							type = "namespace",
-						},
-						{
-							{
-								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
-								name = "someTest",
-								path = file_path,
-								range = { 3, 12, 6, 13 },
-								type = "test",
-							},
-						},
-						{
-							{
-								id = "SomeTest$SomeNestedTest#oneMoreOuterTest",
-								name = "oneMoreOuterTest",
-								path = file_path,
-								range = { 9, 8, 12, 9 },
-								type = "test",
-							},
+							range = { 9, 8, 12, 9 },
+							type = "test",
 						},
 					},
 				},
