@@ -69,7 +69,12 @@ function PositionsDiscoverer.discover_positions(file_path)
 	--- @param node TSNode
 	--- @return {id: string, name: string, path: string, range: table}[]
 	local function build_tree(node)
-		local captures = vim.iter(query:iter_captures(node, src, 0, -1))
+		local captures = vim
+			.iter(query:iter_captures(node, src, 0, -1))
+			---@param child TSNode
+			:filter(function(_, child)
+				return not child:parent() or child:parent() == node
+			end)
 			:map(function(id, child)
 				return {
 					id = id,
@@ -82,9 +87,6 @@ function PositionsDiscoverer.discover_positions(file_path)
 			.iter(captures)
 			:map(function(c)
 				return query.captures[c.id], c.child
-			end)
-			:filter(function(_, child)
-				return not child:parent() or child:parent() == node
 			end)
 			--- @param child TSNode
 			:map(function(cap, child)
@@ -99,7 +101,17 @@ function PositionsDiscoverer.discover_positions(file_path)
 
 				if cap == "class.definition" then
 					local name = vim.treesitter.get_node_text(child:field("name")[1], src) or "Unknown"
-					local children = vim.iter(child:iter_children()):map(build_tree):totable()
+
+					local function is_nonempty(x)
+						if x == nil then
+							return false
+						end
+						if type(x) ~= "table" then
+							return true
+						end
+						return next(x) ~= nil -- tabla vacía => false
+					end
+					local children = vim.iter(child:iter_children()):map(build_tree):filter(is_nonempty):totable()
 					local children_flattered = vim.iter(children):flatten():totable()
 
 					local inner_classname = name
@@ -113,16 +125,41 @@ function PositionsDiscoverer.discover_positions(file_path)
 						cur = cur:parent()
 					end
 
-					return {
+					local fqn = (pkg and (pkg .. ".") or "") .. inner_classname
+
+					-- return {
+					-- 	{
+					-- 		id = fqn,
+					-- 		name = name,
+					-- 		path = file_path,
+					-- 		range = { child:range() },
+					-- 		type = "namespace",
+					-- 	},
+					-- 	unpack(children_flattered),
+					-- }
+					--
+					--
+					--
+					-- construye el nodo de clase y pega sus hijos SIN flatten
+					local nodes = {
 						{
-							id = (pkg and (pkg .. ".") or "") .. inner_classname,
+							id = fqn,
 							name = name,
 							path = file_path,
 							range = { child:range() },
 							type = "namespace",
 						},
-						{ unpack(children_flattered) },
 					}
+
+					for _, subtree in ipairs(children) do
+						-- subtree puede ser:
+						--  - una lista { namespace, ...children }
+						--  - un único nodo (p.ej., un método)
+						table.insert(nodes, subtree)
+					end
+
+					print(vim.inspect({ fqn = fqn, n = nodes }))
+					return nodes
 				end
 
 				if cap == "test.definition" then
@@ -157,6 +194,8 @@ function PositionsDiscoverer.discover_positions(file_path)
 	end
 
 	local l = build_tree(ts_tree:root())
+
+	print("L: " .. vim.inspect(l))
 
 	return Tree.from_list({
 		{
