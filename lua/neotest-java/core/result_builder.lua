@@ -110,7 +110,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 		local classname = jresult:classname()
 
 		name = name:gsub("%(.*%)", "")
-		local unique_key = build_unique_key(classname, name)
+		local unique_key = classname .. "#" .. name
 		testcases[unique_key] = testcase
 		testcases_junit[unique_key] = jresult
 	end
@@ -140,7 +140,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 			qualified_name = qualified_name .. "::" .. inner_classes
 		end
 
-		local unique_key = build_unique_key(qualified_name, node.name)
+		local unique_key = node.id
 
 		if is_parameterized then
 			local jtestcases = extract_parameterized_tests(testcases, unique_key)

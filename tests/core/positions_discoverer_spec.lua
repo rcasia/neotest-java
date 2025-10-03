@@ -44,16 +44,15 @@ describe("PositionsDiscoverer", function()
   ]])
 
 		--- @type neotest.Tree
-		local result = assert(positions_discoverer.discover_positions(file_path))
-
-		print(vim.inspect(result:to_list()))
+		local result = assert(plugin.discover_positions(file_path))
 
 		eq({
 			{
-				id = "com.example",
+				id = file_path,
 				name = file_path:gsub(".*/", ""),
 				path = file_path,
 				range = { 0, 4, 8, 2 },
+				type = "file",
 			},
 			{
 				{
@@ -146,11 +145,51 @@ class Test {
 		-- then
 		local actual_list = actual:to_list()
 
-		eq("parameterizedTestWithValueSource", actual_list[2][2][1].name)
-		eq("parameterizedTestWithMethodSource", actual_list[2][3][1].name)
-		eq("parameterizedTestWithMethodSourceAndExplicitName", actual_list[2][4][1].name)
-
-		eq(3, #actual:children()[1]:children())
+		eq({
+			{
+				id = file_path,
+				name = file_path:gsub(".*/", ""),
+				path = file_path,
+				range = { 0, 0, 22, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = "Test",
+					name = "Test",
+					path = file_path,
+					range = { 0, 0, 20, 1 },
+					type = "namespace",
+				},
+				{
+					{
+						id = "Test#parameterizedTestWithValueSource",
+						name = "parameterizedTestWithValueSource",
+						path = file_path,
+						range = { 2, 2, 6, 3 },
+						type = "test",
+					},
+					{
+						{
+							id = "Test#parameterizedTestWithMethodSource",
+							name = "parameterizedTestWithMethodSource",
+							path = file_path,
+							range = { 8, 2, 12, 3 },
+							type = "test",
+						},
+					},
+					{
+						{
+							id = "Test#parameterizedTestWithMethodSourceAndExplicitName",
+							name = "parameterizedTestWithMethodSourceAndExplicitName",
+							path = file_path,
+							range = { 14, 2, 18, 3 },
+							type = "test",
+						},
+					},
+				},
+			},
+		}, actual_list)
 	end)
 
 	async.it("should discover nested tests", function()
@@ -175,6 +214,8 @@ public class SomeTest {
 		-- when
 		local actual = assert(plugin.discover_positions(file_path))
 
+		print(vim.inspect(actual:to_list()))
+
 		eq({
 			{
 				id = file_path,
@@ -185,7 +226,7 @@ public class SomeTest {
 			},
 			{
 				{
-					id = file_path .. "::SomeTest",
+					id = "SomeTest",
 					name = "SomeTest",
 					path = file_path,
 					range = { 0, 0, 14, 1 },
@@ -193,7 +234,7 @@ public class SomeTest {
 				},
 				{
 					{
-						id = file_path .. "::SomeTest::SomeNestedTest",
+						id = "SomeTest$SomeNestedTest",
 						name = "SomeNestedTest",
 						path = file_path,
 						range = { 1, 4, 13, 5 },
@@ -201,7 +242,7 @@ public class SomeTest {
 					},
 					{
 						{
-							id = file_path .. "::SomeTest::SomeNestedTest::AnotherNestedTest",
+							id = "SomeTest$SomeNestedTest$AnotherNestedTest",
 							name = "AnotherNestedTest",
 							path = file_path,
 							range = { 2, 8, 7, 9 },
@@ -209,32 +250,25 @@ public class SomeTest {
 						},
 						{
 							{
-								id = file_path .. "::SomeTest::SomeNestedTest::AnotherNestedTest::someTest",
+								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
 								name = "someTest",
 								path = file_path,
 								range = { 3, 12, 6, 13 },
 								type = "test",
 							},
 						},
-					},
-					{
 						{
-							id = file_path .. "::SomeTest::SomeNestedTest::oneMoreOuterTest",
-							name = "oneMoreOuterTest",
-							path = file_path,
-							range = { 9, 8, 12, 9 },
-							type = "test",
+							{
+								id = "SomeTest$SomeNestedTest#oneMoreOuterTest",
+								name = "oneMoreOuterTest",
+								path = file_path,
+								range = { 9, 8, 12, 9 },
+								type = "test",
+							},
 						},
 					},
 				},
 			},
 		}, actual:to_list())
-
-		-- then
-		local test_name = actual:to_list()[2][2][2][2][1].name
-		eq(test_name, "someTest")
-
-		local another_outer_test_name = actual:to_list()[2][2][3][1].name
-		eq(another_outer_test_name, "oneMoreOuterTest")
 	end)
 end)
