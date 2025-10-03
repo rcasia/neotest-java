@@ -50,9 +50,9 @@ function PositionsDiscoverer.discover_positions(file_path)
 	local ts_tree = vim.treesitter.get_string_parser(src, "java"):parse()[1]
 
 	-- function just to take the pacakage name
-	--- @return string
+	--- @return string | nil
 	local get_package_name = function()
-		local result = ""
+		local result = nil
 		for id, node in query:iter_captures(ts_tree:root(), src, 0, -1) do
 			local cap = query.captures[id]
 			if cap == "package.name" then
@@ -88,6 +88,15 @@ function PositionsDiscoverer.discover_positions(file_path)
 			end)
 			--- @param child TSNode
 			:map(function(cap, child)
+				if cap == "package.declaration" then
+					return {
+						id = pkg or "<no package>",
+						name = file_path:gsub(".*/", ""),
+						path = file_path,
+						range = { node:range() },
+					}
+				end
+
 				if cap == "class.definition" then
 					local name = vim.treesitter.get_node_text(child:field("name")[1], src) or "Unknown"
 					local children = vim.iter(child:iter_children()):map(build_tree):totable()
@@ -106,13 +115,13 @@ function PositionsDiscoverer.discover_positions(file_path)
 
 					return {
 						{
-							id = pkg .. "." .. inner_classname,
+							id = (pkg and (pkg .. ".") or "") .. inner_classname,
 							name = name,
 							path = file_path,
 							range = { child:range() },
 							type = "namespace",
 						},
-						#children_flattered > 0 and children_flattered or nil,
+						{ unpack(children_flattered) },
 					}
 				end
 
@@ -130,7 +139,7 @@ function PositionsDiscoverer.discover_positions(file_path)
 
 					local inner_classname = vim.iter(parts):rev():join("$")
 
-					local fqn = pkg .. "." .. inner_classname .. "#" .. name
+					local fqn = (pkg and (pkg .. ".") or "") .. inner_classname .. "#" .. name
 
 					return {
 						{
@@ -151,10 +160,11 @@ function PositionsDiscoverer.discover_positions(file_path)
 
 	return Tree.from_list({
 		{
-			id = pkg,
+			id = file_path,
 			name = file_path:gsub(".*/", ""),
 			path = file_path,
 			range = { ts_tree:root():range() },
+			type = "file",
 		},
 		l,
 	}, function(pos)
