@@ -99,7 +99,7 @@ local CommandBuilder = {
 		local selectors = {}
 		for _, v in ipairs(self._test_references) do
 			if v.type == "test" then
-				table.insert(selectors, "-m=" .. v.qualified_name)
+				table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
 			elseif v.type == "file" then
 				table.insert(selectors, "-c=" .. v.qualified_name)
 			elseif v.type == "dir" then
