@@ -75,7 +75,6 @@ function SpecBuilder.build_spec(args, project_type, config)
 			end
 		end
 	elseif position.type == "test" then
-		-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
 		command:test_reference(position.id, position.name, "test")
 	end
 
