@@ -71,7 +71,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	elseif position.type == "namespace" then
 		for _, child in tree:iter() do
 			if child.type == "test" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "test")
+				command:test_reference(child.id, child.name, "test")
 			end
 		end
 	elseif position.type == "test" then
