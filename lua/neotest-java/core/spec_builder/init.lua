@@ -66,17 +66,17 @@ function SpecBuilder.build_spec(args, project_type, config)
 				command:test_reference(resolve_qualfied_name(child.path), child.name, "file")
 			end
 		end
+	elseif position.type == "file" then
+		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 	elseif position.type == "namespace" then
 		for _, child in tree:iter() do
 			if child.type == "test" then
 				command:test_reference(resolve_qualfied_name(child.path), child.name, "test")
 			end
 		end
-	elseif position.type == "file" then
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
 	elseif position.type == "test" then
 		-- note: parameterized tests are not being discovered by the junit standalone, so we run tests per file
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
+		command:test_reference(position.id, position.name, "test")
 	end
 
 	-- COMPILATION STEP
