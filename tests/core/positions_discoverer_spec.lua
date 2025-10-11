@@ -265,6 +265,7 @@ public class SomeTest {
 
 			@ParameterizedTest
 			void testWithParameters(
+				  boolean myBoolean,
 				  int myInteger,
 				  short myShort,
 				  long myLong,
@@ -277,28 +278,26 @@ public class SomeTest {
 
 		]])
 
-		-- TODO: add bool
-
 		local tree = assert(plugin.discover_positions(filepath))
 
 		print(vim.inspect(tree:to_list()))
 		eq({
-			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 17, 2 } },
+			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 18, 2 } },
 			{
 				{
 					id = "com.example.SomeParameterizedTest",
 					name = "SomeParameterizedTest",
 					path = filepath,
 					type = "namespace",
-					range = { 3, 2, 15, 5 },
+					range = { 3, 2, 16, 5 },
 				},
 				{
 					{
-						id = "com.example.SomeParameterizedTest#testWithParameters(int, short, long, float, double, char, byte)",
+						id = "com.example.SomeParameterizedTest#testWithParameters(boolean, int, short, long, float, double, char, byte)",
 						name = "testWithParameters",
 						path = filepath,
 						type = "test",
-						range = { 5, 3, 14, 10 },
+						range = { 5, 3, 15, 10 },
 					},
 				},
 			},
