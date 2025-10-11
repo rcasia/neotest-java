@@ -55,7 +55,7 @@ local NeotestJavaAdapter = {
 		-- build spec
 		return spec_builder.build_spec(args, project_type, ch.get_context().config)
 	end,
-}
+};
 
 -- on init
 (function()

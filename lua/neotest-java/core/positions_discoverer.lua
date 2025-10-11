@@ -35,38 +35,52 @@ local function extract_param_types_from_range(content, range)
 		return {}
 	end
 
-	-- Utility: DFS to find the first node that represents a "type"
-	local type_node_kinds = {
-		type_type = true,
-		unann_type = true,
-		primitive_type = true,
-		numeric_type = true,
-		integral_type = true,
-		class_or_interface_type = true,
+	-- We prefer the *widest* node that represents the full type, so that arrays include [].
+	-- Priority: unann_array_type/array_type > class_or_interface_type > unann_type/unann_primitive_type > primitive/numeric/etc.
+	local priority = {
+		unann_array_type = 7,
+		array_type = 7,
+		class_or_interface_type = 6,
+		unann_reference_type = 5,
+		unann_type = 4,
+		unann_primitive_type = 4,
+		type_type = 3,
+		primitive_type = 2,
+		numeric_type = 2,
+		integral_type = 2,
+		floating_point_type = 2,
 	}
 
-	local function find_first_type_node(n)
-		if type_node_kinds[n:type()] then
-			return n
+	local function best_type_node(n, best, best_p)
+		local t = n:type()
+		local p = priority[t]
+		if p and (not best_p or p > best_p) then
+			best, best_p = n, p
 		end
 		for child in n:iter_children() do
-			local found = find_first_type_node(child)
-			if found then
-				return found
-			end
+			best, best_p = best_type_node(child, best, best_p)
 		end
-		return nil
+		return best, best_p
 	end
 
 	local function text(n)
 		return vim.treesitter.get_node_text(n, content)
 	end
 
+	-- Count how many [] are already present in a string
+	local function count_brackets(s)
+		local c = 0
+		for _ in s:gmatch("%[%s*%]") do
+			c = c + 1
+		end
+		return c
+	end
+
 	-- Fallback: extract primitive keyword (incl. boolean) from a parameter node text
 	local function fallback_primitive_text(param_node)
 		local s = text(param_node)
 		if not s or s == "" then
-			return nil
+			return nil, 0
 		end
 
 		-- Try to find a primitive keyword token
@@ -80,19 +94,12 @@ local function extract_param_types_from_range(content, range)
 			or s:match("%f[%w](double)%f[%W]")
 
 		if not primitive then
-			return nil
+			return nil, 0
 		end
 
-		-- Append any array brackets (e.g., boolean[], int[][])
-		local brackets = {}
-		for _ in s:gmatch("%[%s*%]") do
-			table.insert(brackets, "[]")
-		end
-		if #brackets > 0 then
-			primitive = primitive .. table.concat(brackets, "")
-		end
-
-		return primitive
+		-- Total dims present in the whole parameter text
+		local dims_in_param = count_brackets(s)
+		return primitive, dims_in_param
 	end
 
 	-- Collect each parameter's type
@@ -100,7 +107,8 @@ local function extract_param_types_from_range(content, range)
 	for child in formal_params:iter_children() do
 		local kind = child:type()
 		if kind == "formal_parameter" or kind == "receiver_parameter" or kind == "last_formal_parameter" then
-			local tnode = find_first_type_node(child)
+			-- Prefer the widest node for the type (to include array brackets if part of type)
+			local tnode = select(1, best_type_node(child))
 			local t = nil
 
 			if tnode then
@@ -113,15 +121,28 @@ local function extract_param_types_from_range(content, range)
 				end
 			end
 
-			-- Robust fallback for primitives like 'boolean' when TS node text is empty
+			local param_full_text = text(child) or ""
+			local dims_in_param = count_brackets(param_full_text)
+
+			-- Robust fallback for primitives like 'boolean'
+			local fallback_dims = 0
 			if not t then
-				t = fallback_primitive_text(child)
+				t, fallback_dims = fallback_primitive_text(child)
 			end
 
 			if t then
-				-- If it's a vararg parameter, append "..."
-				if kind == "last_formal_parameter" and not t:find("%.%.%.$") then
+				-- If it's varargs, prefer "..." and do not add [].
+				local is_vararg = (kind == "last_formal_parameter")
+				if is_vararg and not t:find("%.%.%.$") then
 					t = t .. "..."
+				else
+					-- Ensure array dims present in the *parameter* are reflected in the type text.
+					-- Some grammars yield just "int" as the type node while "[]" is attached to the declarator/dims.
+					local dims_in_t = count_brackets(t)
+					local missing = math.max(0, dims_in_param - dims_in_t)
+					if missing > 0 then
+						t = t .. string.rep("[]", missing)
+					end
 				end
 
 				-- Normalize whitespace just in case

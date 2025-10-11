@@ -303,4 +303,52 @@ public class SomeTest {
 			},
 		}, tree:to_list())
 	end)
+
+	async.it("discovers test position for ParameterizedTest for primitive array types", function()
+		local filepath = create_tmp_javafile([[
+
+    package com.example;
+
+    class SomeParameterizedTest {
+
+      @ParameterizedTest
+      void testWithParameters(
+          boolean[] myBoolean,
+          int[] myInteger,
+          short[] myShort,
+          long[] myLong,
+          float[] myFloat,
+          double[] myDouble,
+          char[] myChar,
+          byte[] myByte
+          ) {}
+    }
+
+  ]])
+
+		local tree = assert(plugin.discover_positions(filepath))
+
+		print(vim.inspect(tree:to_list()))
+		eq({
+			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 4, 18, 2 } },
+			{
+				{
+					id = "com.example.SomeParameterizedTest",
+					name = "SomeParameterizedTest",
+					path = filepath,
+					type = "namespace",
+					range = { 3, 4, 16, 5 },
+				},
+				{
+					{
+						id = "com.example.SomeParameterizedTest#testWithParameters(boolean[], int[], short[], long[], float[], double[], char[], byte[])",
+						name = "testWithParameters",
+						path = filepath,
+						type = "test",
+						range = { 5, 6, 15, 14 },
+					},
+				},
+			},
+		}, tree:to_list())
+	end)
 end)
