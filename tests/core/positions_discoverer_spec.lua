@@ -2,7 +2,6 @@
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
 local plugin = require("neotest-java")
-local positions_discoverer = require("neotest-java.core.positions_discoverer_dev")
 
 local eq = assert.are.same
 
