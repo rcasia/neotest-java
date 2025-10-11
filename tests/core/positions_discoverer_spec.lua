@@ -415,7 +415,7 @@ public class SomeTest {
 		eq({
 			{
 				id = filepath,
-				name = filepath:gsub(".*/", ""),
+				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
 				path = filepath,
 				type = "file",
 			},
