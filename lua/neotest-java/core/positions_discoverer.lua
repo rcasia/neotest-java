@@ -62,25 +62,69 @@ local function extract_param_types_from_range(content, range)
 		return vim.treesitter.get_node_text(n, content)
 	end
 
+	-- Fallback: extract primitive keyword (incl. boolean) from a parameter node text
+	local function fallback_primitive_text(param_node)
+		local s = text(param_node)
+		if not s or s == "" then
+			return nil
+		end
+
+		-- Try to find a primitive keyword token
+		local primitive = s:match("%f[%w](boolean)%f[%W]")
+			or s:match("%f[%w](byte)%f[%W]")
+			or s:match("%f[%w](short)%f[%W]")
+			or s:match("%f[%w](char)%f[%W]")
+			or s:match("%f[%w](int)%f[%W]")
+			or s:match("%f[%w](long)%f[%W]")
+			or s:match("%f[%w](float)%f[%W]")
+			or s:match("%f[%w](double)%f[%W]")
+
+		if not primitive then
+			return nil
+		end
+
+		-- Append any array brackets (e.g., boolean[], int[][])
+		local brackets = {}
+		for _ in s:gmatch("%[%s*%]") do
+			table.insert(brackets, "[]")
+		end
+		if #brackets > 0 then
+			primitive = primitive .. table.concat(brackets, "")
+		end
+
+		return primitive
+	end
+
 	-- Collect each parameter's type
 	local types = {}
 	for child in formal_params:iter_children() do
 		local kind = child:type()
 		if kind == "formal_parameter" or kind == "receiver_parameter" or kind == "last_formal_parameter" then
 			local tnode = find_first_type_node(child)
-			if tnode then
-				local t = text(tnode)
+			local t = nil
 
-				-- If it's a vararg parameter, append "..."
-				if kind == "last_formal_parameter" then
-					-- Some grammars include "..." as a separate token after the type.
-					-- We add it explicitly if it's not already present.
-					if not t:find("%.%.%.$") then
-						t = t .. "..."
+			if tnode then
+				t = text(tnode)
+				if t then
+					t = t:gsub("%s+", " "):gsub("^%s*", ""):gsub("%s*$", "")
+					if t == "" then
+						t = nil
 					end
 				end
+			end
 
-				-- Normalize whitespace
+			-- Robust fallback for primitives like 'boolean' when TS node text is empty
+			if not t then
+				t = fallback_primitive_text(child)
+			end
+
+			if t then
+				-- If it's a vararg parameter, append "..."
+				if kind == "last_formal_parameter" and not t:find("%.%.%.$") then
+					t = t .. "..."
+				end
+
+				-- Normalize whitespace just in case
 				t = t:gsub("%s+", " "):gsub("^%s*", ""):gsub("%s*$", "")
 				table.insert(types, t)
 			end

@@ -264,33 +264,41 @@ public class SomeTest {
 		class SomeParameterizedTest {
 
 			@ParameterizedTest
-			void testWithParameters(int myInteger, short myShort, long myLong, char myChar, byte myByte) {}
+			void testWithParameters(
+				  int myInteger,
+				  short myShort,
+				  long myLong,
+				  float myFloat,
+				  double myDouble,
+				  char myChar,
+				  byte myByte
+				  ) {}
     }
 
 		]])
 
-		-- TODO: add float, bool and double
+		-- TODO: add bool
 
 		local tree = assert(plugin.discover_positions(filepath))
 
 		print(vim.inspect(tree:to_list()))
 		eq({
-			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 9, 2 } },
+			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 17, 2 } },
 			{
 				{
 					id = "com.example.SomeParameterizedTest",
 					name = "SomeParameterizedTest",
 					path = filepath,
 					type = "namespace",
-					range = { 3, 2, 7, 5 },
+					range = { 3, 2, 15, 5 },
 				},
 				{
 					{
-						id = "com.example.SomeParameterizedTest#testWithParameters(int, short, long, char, byte)",
+						id = "com.example.SomeParameterizedTest#testWithParameters(int, short, long, float, double, char, byte)",
 						name = "testWithParameters",
 						path = filepath,
 						type = "test",
-						range = { 5, 3, 6, 98 },
+						range = { 5, 3, 14, 10 },
 					},
 				},
 			},
