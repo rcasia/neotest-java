@@ -1,18 +1,25 @@
 local compatible_path = require("neotest-java.util.compatible_path")
---- @param project_root_path string
---- @return string "gradle" | "maven" | "unknown"
-local function detect_project_type(project_root_path)
-	local gradle_kotlin_settings_file = compatible_path(project_root_path .. "/settings.gradle.kts")
-	local gradle_groovy_settings_file = compatible_path(project_root_path .. "/settings.gradle")
-	local maven_build_file = compatible_path(project_root_path .. "/pom.xml")
+local scan = require("plenary.scandir")
 
-	if
-		vim.fn.filereadable(gradle_groovy_settings_file) == 1
-		or vim.fn.filereadable(gradle_kotlin_settings_file) == 1
-	then
-		return "gradle"
-	elseif vim.fn.filereadable(maven_build_file) == 1 then
-		return "maven"
+--- Detect project type (maven | gradle | unknown)
+--- @param root_dir string
+--- @param scandir fun(path: string, opts?: table): string[]
+--- @return "maven"|"gradle"|"unknown"
+local function detect_project_type(root_dir, scandir)
+	scandir = scandir or scan.scan_dir
+	local files = scandir(compatible_path(root_dir), {
+		hidden = false,
+		add_dirs = false,
+		depth = math.huge,
+	}) or {}
+
+	for _, path in ipairs(files) do
+		local name = path:match("([^/\\]+)$")
+		if name == "pom.xml" then
+			return "maven"
+		elseif name == "settings.gradle" or name == "settings.gradle.kts" then
+			return "gradle"
+		end
 	end
 
 	return "unknown"
