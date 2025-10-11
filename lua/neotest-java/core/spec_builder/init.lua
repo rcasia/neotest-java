@@ -60,22 +60,14 @@ function SpecBuilder.build_spec(args, project_type, config)
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_dirs))
 
 	-- TEST SELECTORS
-	if position.type == "dir" then
-		for _, child in tree:iter() do
-			if child.type == "file" then
-				command:test_reference(resolve_qualfied_name(child.path), child.name, "file")
-			end
-		end
-	elseif position.type == "file" then
-		command:test_reference(resolve_qualfied_name(absolute_path), position.name, "file")
-	elseif position.type == "namespace" then
+	if position.type == "test" then
+		command:test_reference(position.id, position.name, "test")
+	else
 		for _, child in tree:iter() do
 			if child.type == "test" then
 				command:test_reference(child.id, child.name, "test")
 			end
 		end
-	elseif position.type == "test" then
-		command:test_reference(position.id, position.name, "test")
 	end
 
 	-- COMPILATION STEP
