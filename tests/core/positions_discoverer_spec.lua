@@ -363,4 +363,78 @@ public class SomeTest {
 			},
 		}, tree:to_list())
 	end)
+
+	async.it("discovers ParameterizedTest with standard Java types using FQNs for JUnit selectors", function()
+		local filepath = create_tmp_javafile([[
+
+    package com.example;
+
+    import org.junit.jupiter.params.ParameterizedTest;
+    import java.util.List;
+    import java.util.Map;
+
+    class SomeParameterizedTest {
+
+      @ParameterizedTest
+      void testWithParameters(
+        String name,
+        Integer boxedInt,
+        Long boxedLong,
+        Double boxedDouble,
+        Boolean boxedBoolean,
+        Character boxedChar,
+        Byte boxedByte,
+        Short boxedShort,
+        Object obj,
+        String[] names,
+        List<String> tags,
+        Map<String, Integer> counters,
+      ) {}
+    }
+
+  ]])
+
+		local tree = assert(plugin.discover_positions(filepath))
+
+		-- Helper: remove 'range' fields so formatting changes don't break the test
+		local function strip_ranges(node)
+			if type(node) ~= "table" then
+				return
+			end
+			node.range = nil
+			for _, v in ipairs(node) do
+				strip_ranges(v)
+			end
+		end
+
+		local list = tree:to_list()
+		strip_ranges(list)
+
+		print(vim.inspect(list))
+
+		eq({
+			{
+				id = filepath,
+				name = filepath:gsub(".*/", ""),
+				path = filepath,
+				type = "file",
+			},
+			{
+				{
+					id = "com.example.SomeParameterizedTest",
+					name = "SomeParameterizedTest",
+					path = filepath,
+					type = "namespace",
+				},
+				{
+					{
+						id = "com.example.SomeParameterizedTest#testWithParameters(java.lang.String, java.lang.Integer, java.lang.Long, java.lang.Double, java.lang.Boolean, java.lang.Character, java.lang.Byte, java.lang.Short, java.lang.Object, java.lang.String[], java.util.List, java.util.Map)",
+						name = "testWithParameters",
+						path = filepath,
+						type = "test",
+					},
+				},
+			},
+		}, list)
+	end)
 end)
