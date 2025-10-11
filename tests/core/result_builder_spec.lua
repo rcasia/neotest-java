@@ -346,7 +346,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
 				errors = {
 					{
 						-- line = 27,
@@ -361,7 +361,7 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(java.lang.Integer, java.lang.Integer, java.lang.Integer)"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -425,7 +425,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			["com.example.EmptySourceTest#emptySourceShouldFail"] = {
+			["com.example.EmptySourceTest#emptySourceShouldFail(java.lang.String)"] = {
 				errors = {
 					{
 						-- line = 22,
@@ -436,7 +436,7 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			["com.example.EmptySourceTest#emptySourceShouldPass"] = {
+			["com.example.EmptySourceTest#emptySourceShouldPass(java.lang.String)"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -445,6 +445,7 @@ describe("ResultBuilder", function()
 		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
+		print(vim.inspect({ results = results, expected = expected }))
 		assert.are.same(expected, results)
 	end)
 

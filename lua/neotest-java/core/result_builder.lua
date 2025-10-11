@@ -1,6 +1,5 @@
 local xml = require("neotest.lib.xml")
 local flat_map = require("neotest-java.util.flat_map")
-local resolve_qualified_name = require("neotest-java.util.resolve_qualified_name")
 local log = require("neotest-java.logger")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
@@ -8,44 +7,62 @@ local SKIPPED = JunitResult.SKIPPED
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 
---- @param classname string name of class
---- @param testname string name of test
---- @return string unique_key based on classname and testname
-local build_unique_key = function(classname, testname)
-	-- replace all $ for ::
-	classname = classname:gsub("%$", "::")
-
-	return classname .. "::" .. testname
+-- Strip parameter list "(...)" and trailing "[index]" from a testcase name
+-- e.g. "test(int, int)[1]" -> "test"
+local function base_test_name(name)
+	if not name or name == "" then
+		return name
+	end
+	local s = name:gsub("%b()", "")
+	s = s:gsub("%s+", "")
+	s = s:gsub("%[%d+%]$", "")
+	return s
 end
 
-local function is_parameterized_test(testcases, name)
-	-- regex to match the name with some parameters and index at the end
-	-- example: subtractAMinusBEqualsC(int, int, int)[1]
-	local regex = name .. "[%(%.%{]?.*%[%d+%]$"
+-- Build group key "<classname>#<baseName>"
+local function build_group_key(classname, testname)
+	return tostring(classname) .. "#" .. tostring(base_test_name(testname))
+end
 
-	for k, _ in pairs(testcases) do
-		if string.match(k, regex) then
-			return true
-		end
+-- Decide if a JUnit display name looks parameterized, e.g. "method(String)[1]" or "method(String)"
+local function is_parameterized_display(display_name)
+	if type(display_name) ~= "string" or display_name == "" then
+		return false
 	end
-
+	if display_name:find("%b()") then
+		return true
+	end
+	if display_name:find("%[%d+%]") then
+		return true
+	end
 	return false
 end
 
----@return neotest-java.JunitResult[]
-local function extract_parameterized_tests(testcases, name)
-	-- regex to match the name with some parameters and index at the end
-	-- example: subtractAMinusBEqualsC(int, int, int)[1]
-	local regex = name .. "[%(%.%{]?.*%[%d+%]$"
+-- Prefix the parameterized display (from JUnit name) to short/error messages *only for parameterized cases*
+local function add_param_prefix_to_messages_if_needed(result_tbl, display_name)
+	if not result_tbl or not display_name or not is_parameterized_display(display_name) then
+		return result_tbl
+	end
 
-	local tests = {}
-	for k, v in pairs(testcases) do
-		if string.match(k, regex) then
-			tests[#tests + 1] = JunitResult:new(v)
+	local function starts_with(s, prefix)
+		return type(s) == "string" and s:find(prefix, 1, true) == 1
+	end
+
+	local prefix = display_name .. " -> "
+
+	if result_tbl.short and not starts_with(result_tbl.short, display_name) then
+		result_tbl.short = prefix .. result_tbl.short
+	end
+
+	if result_tbl.errors then
+		for _, err in ipairs(result_tbl.errors) do
+			if err.message and not starts_with(err.message, display_name) then
+				err.message = prefix .. err.message
+			end
 		end
 	end
 
-	return tests
+	return result_tbl
 end
 
 local ResultBuilder = {}
@@ -75,10 +92,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 	---@type table<string, neotest.Result>
 	local results = {}
 
-	local testcases = {}
-	---@type table<string, neotest-java.JunitResult>
-	local testcases_junit = {}
-
+	-- Read all report files
 	local report_filepaths = scan(spec.context.reports_dir, {
 		search_pattern = REPORT_FILE_NAMES_PATTERN,
 	})
@@ -96,63 +110,68 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file) -- lua
 		end
 
 		local xml_data = xml.parse(data)
-
-		local testcases_in_xml = xml_data.testsuite.testcase
-		if not vim.isarray(testcases_in_xml) then
-			testcases_in_xml = { testcases_in_xml }
+		local suite = xml_data.testsuite
+		if not suite then
+			return {}
 		end
-		return testcases_in_xml
+
+		local tcs = suite.testcase
+		if not tcs then
+			return {}
+		end
+		if not vim.isarray(tcs) then
+			tcs = { tcs }
+		end
+		return tcs
 	end, report_filepaths)
 
-	for _, testcase in ipairs(testcases_in_xml) do
-		local jresult = JunitResult:new(testcase)
-		local name = jresult:name()
-		local classname = jresult:classname()
+	-- Group JUnit results by "<classname>#<baseMethodName>"
+	---@type table<string, neotest-java.JunitResult[]>
+	local groups = {}
 
-		name = name:gsub("%(.*%)", "")
-		local unique_key = classname .. "#" .. name
-		testcases[unique_key] = testcase
-		testcases_junit[unique_key] = jresult
+	for _, testcase in ipairs(testcases_in_xml) do
+		local jres = JunitResult:new(testcase)
+		local classname = jres:classname() -- FQCN (inner classes use $)
+		local name = jres:name() -- may include params "(...)" and index "[n]"
+
+		local gkey = build_group_key(classname, name)
+		local bucket = groups[gkey]
+		if not bucket then
+			bucket = {}
+			groups[gkey] = bucket
+		end
+		bucket[#bucket + 1] = jres
 	end
 
+	-- Walk requested nodes and build results
 	for _, node in tree:iter() do
-		local is_test = node.type == "test"
-		local is_parameterized = is_parameterized_test(testcases, node.name)
-
-		if not is_test then
+		if node.type ~= "test" then
 			goto continue
 		end
 
-		local qualified_name = resolve_qualified_name(node.path)
+		-- node.id is "<fqClass>#<methodSignature or name>"
+		local fq_class = tostring(node.id):match("^(.-)#") or ""
+		local method_base = node.name -- plain method identifier
 
-		-- node.id contains something like: "com/example/MyTest.java::MyTest::MyInnerTest::test"
-		local pattern = "::([^:]+)" -- will match all the nested classes and test method name
-		local nested_classes = vim.iter(node.id:gmatch(pattern)):totable()
+		local key = fq_class .. "#" .. method_base
+		local bucket = groups[key]
 
-		local inner_classes = vim
-			.iter(nested_classes)
-			--
-			:skip(1) -- skip the base class
-			:rskip(1) -- skip the test method name
-			:join("::")
-
-		if inner_classes ~= "" then
-			qualified_name = qualified_name .. "::" .. inner_classes
-		end
-
-		local unique_key = node.id
-
-		if is_parameterized then
-			local jtestcases = extract_parameterized_tests(testcases, unique_key)
-			results[node.id] = JunitResult.merge_results(jtestcases)
-		else
-			local jtestcase = testcases_junit[unique_key]
-
-			if not jtestcase then
-				results[node.id] = SKIPPED(node.id)
+		if bucket and #bucket > 0 then
+			if #bucket == 1 then
+				-- Single execution (plain test or parameterized with a single case like @EmptySource)
+				local jres = bucket[1]
+				local res = jres:result()
+				res = add_param_prefix_to_messages_if_needed(res, jres:name())
+				results[node.id] = res
 			else
-				results[node.id] = jtestcase:result()
+				-- Multiple executions -> merged unified result
+				-- We keep the merge behavior identical (operates on JunitResult list).
+				-- (If needed later, we can enhance JunitResult.merge_results to carry prefixed messages.)
+				results[node.id] = JunitResult.merge_results(bucket)
 			end
+		else
+			-- Not found in reports -> SKIPPED
+			results[node.id] = SKIPPED(node.id)
 		end
 
 		::continue::
