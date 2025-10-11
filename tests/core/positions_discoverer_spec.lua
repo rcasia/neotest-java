@@ -46,6 +46,8 @@ describe("PositionsDiscoverer", function()
 		--- @type neotest.Tree
 		local result = assert(plugin.discover_positions(file_path))
 
+		print(vim.inspect(result:to_list()))
+
 		eq({
 			{
 				id = file_path,
@@ -208,6 +210,8 @@ class Test {
 		-- then
 		local actual_list = actual:to_list()
 
+		print(vim.inspect(actual_list))
+
 		eq({
 			{
 				id = file_path,
@@ -232,23 +236,23 @@ class Test {
 						range = { 2, 2, 6, 3 },
 						type = "test",
 					},
+				},
+				{
 					{
-						{
-							id = "Test#parameterizedTestWithMethodSource",
-							name = "parameterizedTestWithMethodSource",
-							path = file_path,
-							range = { 8, 2, 12, 3 },
-							type = "test",
-						},
+						id = "Test#parameterizedTestWithMethodSource",
+						name = "parameterizedTestWithMethodSource",
+						path = file_path,
+						range = { 8, 2, 12, 3 },
+						type = "test",
 					},
+				},
+				{
 					{
-						{
-							id = "Test#parameterizedTestWithMethodSourceAndExplicitName",
-							name = "parameterizedTestWithMethodSourceAndExplicitName",
-							path = file_path,
-							range = { 14, 2, 18, 3 },
-							type = "test",
-						},
+						id = "Test#parameterizedTestWithMethodSourceAndExplicitName",
+						name = "parameterizedTestWithMethodSourceAndExplicitName",
+						path = file_path,
+						range = { 14, 2, 18, 3 },
+						type = "test",
 					},
 				},
 			},
@@ -305,25 +309,22 @@ public class SomeTest {
 					},
 					{
 						{
+							id = "SomeTest$SomeNestedTest$AnotherNestedTest",
+							name = "AnotherNestedTest",
+							path = file_path,
+							range = { 2, 8, 7, 9 },
+							type = "namespace",
+						},
+						{
 							{
-								id = "SomeTest$SomeNestedTest$AnotherNestedTest",
-								name = "AnotherNestedTest",
+								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
+								name = "someTest",
 								path = file_path,
-								range = { 2, 8, 7, 9 },
-								type = "namespace",
-							},
-							{
-								{
-									id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
-									name = "someTest",
-									path = file_path,
-									range = { 3, 12, 6, 13 },
-									type = "test",
-								},
+								range = { 3, 12, 6, 13 },
+								type = "test",
 							},
 						},
 					},
-
 					{
 						{
 							id = "SomeTest$SomeNestedTest#oneMoreOuterTest",
