@@ -25,7 +25,7 @@ local CommandBuilder = {
 
 		local method_name
 		if type == "test" then
-			method_name = node_name
+			method_name = qualified_name
 		end
 
 		self._test_references[#self._test_references + 1] = {
@@ -99,7 +99,7 @@ local CommandBuilder = {
 		local selectors = {}
 		for _, v in ipairs(self._test_references) do
 			if v.type == "test" then
-				table.insert(selectors, "-m=" .. v.qualified_name .. "#" .. v.method_name)
+				table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
 			elseif v.type == "file" then
 				table.insert(selectors, "-c=" .. v.qualified_name)
 			elseif v.type == "dir" then

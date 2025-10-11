@@ -81,11 +81,11 @@ describe("ResultBuilder", function()
 		local tree = plugin.discover_positions(file_path)
 
 		local expected = {
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldFail"] = {
+			["com.example.ExampleTest#shouldFail"] = {
 				status = "skipped",
 				output = TEMPNAME,
 			},
-			[current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java::ExampleTest::shouldNotFail"] = {
+			["com.example.ExampleTest#shouldNotFail"] = {
 				status = "skipped",
 				output = TEMPNAME,
 			},
@@ -139,14 +139,14 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			[file_path .. "::ExampleTest::shouldFail"] = {
+			["com.example.ExampleTest#shouldFail"] = {
 				-- errors = { { line = 13, message = "expected: <true> but was: <false>" } },
 				errors = { { message = "expected: <true> but was: <false>" } },
 				short = "expected: <true> but was: <false>",
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[file_path .. "::ExampleTest::shouldNotFail"] = {
+			["com.example.ExampleTest#shouldNotFail"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -207,7 +207,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			[file_path .. "::ErroneousTest::shouldFailOnError"] = {
+			["com.example.ErroneousTest#shouldFailOnError"] = {
 				errors = {
 					{
 						message = "Error creating bean with name 'com.example.ErroneousTest': Injection of autowired dependencies failed",
@@ -258,7 +258,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 		local expected = {
-			[file_path .. "::RepositoryIT::shouldWorkProperly"] = {
+			["com.example.demo.RepositoryIT#shouldWorkProperly"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -346,7 +346,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			[file_path .. "::ParameterizedMethodTest::parameterizedMethodShouldFail"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
 				errors = {
 					{
 						-- line = 27,
@@ -361,7 +361,7 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[file_path .. "::ParameterizedMethodTest::parameterizedMethodShouldNotFail"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(java.lang.Integer, java.lang.Integer, java.lang.Integer)"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -425,7 +425,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			[file_path .. "::EmptySourceTest::emptySourceShouldFail"] = {
+			["com.example.EmptySourceTest#emptySourceShouldFail(java.lang.String)"] = {
 				errors = {
 					{
 						-- line = 22,
@@ -436,7 +436,7 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			[file_path .. "::EmptySourceTest::emptySourceShouldPass"] = {
+			["com.example.EmptySourceTest#emptySourceShouldPass(java.lang.String)"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -445,6 +445,7 @@ describe("ResultBuilder", function()
 		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
+		print(vim.inspect({ results = results, expected = expected }))
 		assert.are.same(expected, results)
 	end)
 
@@ -496,11 +497,11 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			[file_path .. "::NestedTest::Level2::nestedTest"] = {
+			["com.example.NestedTest$Level2#nestedTest"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
-			[file_path .. "::NestedTest::plainTest"] = {
+			["com.example.NestedTest#plainTest"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},

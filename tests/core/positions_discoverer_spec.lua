@@ -1,3 +1,4 @@
+---@module "luassert"
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
 local plugin = require("neotest-java")
@@ -29,6 +30,61 @@ describe("PositionsDiscoverer", function()
 		return tmp_file
 	end
 
+	async.it("method FQN with inner classes", function()
+		local file_path = create_tmp_javafile([[
+    package com.example;
+
+    class Outer {
+      class Inner {
+        @Test
+        void simpleTestMethod() {}
+      }
+    }
+  ]])
+
+		--- @type neotest.Tree
+		local result = assert(plugin.discover_positions(file_path))
+
+		print(vim.inspect(result:to_list()))
+
+		eq({
+			{
+				id = file_path,
+				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
+				path = file_path,
+				range = { 0, 4, 8, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = "com.example.Outer",
+					name = "Outer",
+					path = file_path,
+					range = { 2, 4, 7, 5 },
+					type = "namespace",
+				},
+				{
+					{
+						id = "com.example.Outer$Inner",
+						name = "Inner",
+						path = file_path,
+						range = { 3, 6, 6, 7 },
+						type = "namespace",
+					},
+					{
+						{
+							id = "com.example.Outer$Inner#simpleTestMethod",
+							name = "simpleTestMethod",
+							path = file_path,
+							range = { 4, 8, 5, 34 },
+							type = "test",
+						},
+					},
+				},
+			},
+		}, result:to_list())
+	end)
+
 	async.it("should discover simple test method", function()
 		-- given
 		local file_path = create_tmp_javafile([[
@@ -57,31 +113,22 @@ class Test {
 		eq(1, #actual:children()[1]:children())
 	end)
 
-	async.it("should discover ParameterizedTest", function()
+	async.it("should discover two simple test method", function()
 		-- given
 		local file_path = create_tmp_javafile([[
 class Test {
 
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3})
-  public void parameterizedTestWithValueSource(int i) {
-    assertThat(i).isGreaterThan(0);
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideStringsForIsBlank")
-  public void parameterizedTestWithMethodSource() {
+  @Test
+  public void firstTestMethod() {
     assertThat(1).isEqualTo(1);
   }
 
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("provideStringsForIsBlank")
-  public void parameterizedTestWithMethodSourceAndExplicitName() {
+  @Test
+  public void secondTestMethod() {
     assertThat(1).isEqualTo(1);
   }
 
 }
-
 		]])
 
 		-- when
@@ -89,12 +136,44 @@ class Test {
 
 		-- then
 		local actual_list = actual:to_list()
+		print(vim.inspect(actual_list))
 
-		eq("parameterizedTestWithValueSource", actual_list[2][2][1].name)
-		eq("parameterizedTestWithMethodSource", actual_list[2][3][1].name)
-		eq("parameterizedTestWithMethodSourceAndExplicitName", actual_list[2][4][1].name)
-
-		eq(3, #actual:children()[1]:children())
+		eq({
+			{
+				id = file_path,
+				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
+				path = file_path,
+				range = { 0, 0, 13, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = "Test",
+					name = "Test",
+					path = file_path,
+					range = { 0, 0, 12, 1 },
+					type = "namespace",
+				},
+				{
+					{
+						id = "Test#firstTestMethod",
+						name = "firstTestMethod",
+						path = file_path,
+						range = { 2, 2, 5, 3 },
+						type = "test",
+					},
+				},
+				{
+					{
+						id = "Test#secondTestMethod",
+						name = "secondTestMethod",
+						path = file_path,
+						range = { 7, 2, 10, 3 },
+						type = "test",
+					},
+				},
+			},
+		}, actual_list)
 	end)
 
 	async.it("should discover nested tests", function()
@@ -119,11 +198,243 @@ public class SomeTest {
 		-- when
 		local actual = assert(plugin.discover_positions(file_path))
 
-		-- then
-		local test_name = actual:to_list()[2][2][2][2][1].name
-		eq(test_name, "someTest")
+		print(vim.inspect(actual:to_list()))
 
-		local another_outer_test_name = actual:to_list()[2][2][3][1].name
-		eq(another_outer_test_name, "oneMoreOuterTest")
+		eq({
+			{
+				id = file_path,
+				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
+				path = file_path,
+				range = { 0, 0, 15, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = "SomeTest",
+					name = "SomeTest",
+					path = file_path,
+					range = { 0, 0, 14, 1 },
+					type = "namespace",
+				},
+				{
+					{
+						id = "SomeTest$SomeNestedTest",
+						name = "SomeNestedTest",
+						path = file_path,
+						range = { 1, 4, 13, 5 },
+						type = "namespace",
+					},
+					{
+						{
+							id = "SomeTest$SomeNestedTest$AnotherNestedTest",
+							name = "AnotherNestedTest",
+							path = file_path,
+							range = { 2, 8, 7, 9 },
+							type = "namespace",
+						},
+						{
+							{
+								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
+								name = "someTest",
+								path = file_path,
+								range = { 3, 12, 6, 13 },
+								type = "test",
+							},
+						},
+					},
+					{
+						{
+							id = "SomeTest$SomeNestedTest#oneMoreOuterTest",
+							name = "oneMoreOuterTest",
+							path = file_path,
+							range = { 9, 8, 12, 9 },
+							type = "test",
+						},
+					},
+				},
+			},
+		}, actual:to_list())
+	end)
+
+	async.it("discovers test position for ParameterizedTest for primitive types", function()
+		local filepath = create_tmp_javafile([[
+
+		package com.example;
+
+		class SomeParameterizedTest {
+
+			@ParameterizedTest
+			void testWithParameters(
+				  boolean myBoolean,
+				  int myInteger,
+				  short myShort,
+				  long myLong,
+				  float myFloat,
+				  double myDouble,
+				  char myChar,
+				  byte myByte
+				  ) {}
+    }
+
+		]])
+
+		local tree = assert(plugin.discover_positions(filepath))
+
+		print(vim.inspect(tree:to_list()))
+		eq({
+			{
+				id = filepath,
+				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
+				path = filepath,
+				type = "file",
+				range = { 1, 2, 18, 2 },
+			},
+			{
+				{
+					id = "com.example.SomeParameterizedTest",
+					name = "SomeParameterizedTest",
+					path = filepath,
+					type = "namespace",
+					range = { 3, 2, 16, 5 },
+				},
+				{
+					{
+						id = "com.example.SomeParameterizedTest#testWithParameters(boolean, int, short, long, float, double, char, byte)",
+						name = "testWithParameters",
+						path = filepath,
+						type = "test",
+						range = { 5, 3, 15, 10 },
+					},
+				},
+			},
+		}, tree:to_list())
+	end)
+
+	async.it("discovers test position for ParameterizedTest for primitive array types", function()
+		local filepath = create_tmp_javafile([[
+
+    package com.example;
+
+    class SomeParameterizedTest {
+
+      @ParameterizedTest
+      void testWithParameters(
+          boolean[] myBoolean,
+          int[] myInteger,
+          short[] myShort,
+          long[] myLong,
+          float[] myFloat,
+          double[] myDouble,
+          char[] myChar,
+          byte[] myByte
+          ) {}
+    }
+
+  ]])
+
+		local tree = assert(plugin.discover_positions(filepath))
+
+		print(vim.inspect(tree:to_list()))
+		eq({
+			{
+				id = filepath,
+				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
+				path = filepath,
+				type = "file",
+				range = { 1, 4, 18, 2 },
+			},
+			{
+				{
+					id = "com.example.SomeParameterizedTest",
+					name = "SomeParameterizedTest",
+					path = filepath,
+					type = "namespace",
+					range = { 3, 4, 16, 5 },
+				},
+				{
+					{
+						id = "com.example.SomeParameterizedTest#testWithParameters(boolean[], int[], short[], long[], float[], double[], char[], byte[])",
+						name = "testWithParameters",
+						path = filepath,
+						type = "test",
+						range = { 5, 6, 15, 14 },
+					},
+				},
+			},
+		}, tree:to_list())
+	end)
+
+	async.it("discovers ParameterizedTest with standard Java types using FQNs for JUnit selectors", function()
+		local filepath = create_tmp_javafile([[
+
+    package com.example;
+
+    import org.junit.jupiter.params.ParameterizedTest;
+    import java.util.List;
+    import java.util.Map;
+
+    class SomeParameterizedTest {
+
+      @ParameterizedTest
+      void testWithParameters(
+        String name,
+        Integer boxedInt,
+        Long boxedLong,
+        Double boxedDouble,
+        Boolean boxedBoolean,
+        Character boxedChar,
+        Byte boxedByte,
+        Short boxedShort,
+        Object obj,
+        String[] names,
+        List<String> tags,
+        Map<String, Integer> counters,
+      ) {}
+    }
+
+  ]])
+
+		local tree = assert(plugin.discover_positions(filepath))
+
+		-- Helper: remove 'range' fields so formatting changes don't break the test
+		local function strip_ranges(node)
+			if type(node) ~= "table" then
+				return
+			end
+			node.range = nil
+			for _, v in ipairs(node) do
+				strip_ranges(v)
+			end
+		end
+
+		local list = tree:to_list()
+		strip_ranges(list)
+
+		print(vim.inspect(list))
+
+		eq({
+			{
+				id = filepath,
+				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
+				path = filepath,
+				type = "file",
+			},
+			{
+				{
+					id = "com.example.SomeParameterizedTest",
+					name = "SomeParameterizedTest",
+					path = filepath,
+					type = "namespace",
+				},
+				{
+					{
+						id = "com.example.SomeParameterizedTest#testWithParameters(java.lang.String, java.lang.Integer, java.lang.Long, java.lang.Double, java.lang.Boolean, java.lang.Character, java.lang.Byte, java.lang.Short, java.lang.Object, java.lang.String[], java.util.List, java.util.Map)",
+						name = "testWithParameters",
+						path = filepath,
+						type = "test",
+					},
+				},
+			},
+		}, list)
 	end)
 end)
