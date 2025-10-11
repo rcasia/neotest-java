@@ -176,88 +176,6 @@ class Test {
 		}, actual_list)
 	end)
 
-	async.it("should discover ParameterizedTest", function()
-		-- given
-		local file_path = create_tmp_javafile([[
-class Test {
-
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 3})
-  public void parameterizedTestWithValueSource(int i) {
-    assertThat(i).isGreaterThan(0);
-  }
-
-  @ParameterizedTest
-  @MethodSource("provideStringsForIsBlank")
-  public void parameterizedTestWithMethodSource() {
-    assertThat(1).isEqualTo(1);
-  }
-
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("provideStringsForIsBlank")
-  public void parameterizedTestWithMethodSourceAndExplicitName() {
-    assertThat(1).isEqualTo(1);
-  }
-
-}
-
-		]])
-
-		-- when
-		local actual = assert(plugin.discover_positions(file_path))
-
-		-- then
-		local actual_list = actual:to_list()
-
-		print(vim.inspect(actual_list))
-
-		eq({
-			{
-				id = file_path,
-				name = file_path:gsub(".*/", ""),
-				path = file_path,
-				range = { 0, 0, 22, 2 },
-				type = "file",
-			},
-			{
-				{
-					id = "Test",
-					name = "Test",
-					path = file_path,
-					range = { 0, 0, 20, 1 },
-					type = "namespace",
-				},
-				{
-					{
-						id = "Test#parameterizedTestWithValueSource",
-						name = "parameterizedTestWithValueSource",
-						path = file_path,
-						range = { 2, 2, 6, 3 },
-						type = "test",
-					},
-				},
-				{
-					{
-						id = "Test#parameterizedTestWithMethodSource",
-						name = "parameterizedTestWithMethodSource",
-						path = file_path,
-						range = { 8, 2, 12, 3 },
-						type = "test",
-					},
-				},
-				{
-					{
-						id = "Test#parameterizedTestWithMethodSourceAndExplicitName",
-						name = "parameterizedTestWithMethodSourceAndExplicitName",
-						path = file_path,
-						range = { 14, 2, 18, 3 },
-						type = "test",
-					},
-				},
-			},
-		}, actual_list)
-	end)
-
 	async.it("should discover nested tests", function()
 		local file_path = create_tmp_javafile([[
 public class SomeTest {
@@ -336,5 +254,51 @@ public class SomeTest {
 				},
 			},
 		}, actual:to_list())
+	end)
+
+	async.it("discovers test position for ParameterizedTest", function()
+		local filepath = create_tmp_javafile([[
+
+		package com.example;
+
+		class SomeParameterizedTest {
+
+			@ParameterizedTest
+			@CsvSource({
+							"1, 2",
+							"2, 4",
+							"3, 6"
+			})
+			void testWithParameters(int input, int expected) {
+					assertThat(input * 2).isEqualTo(expected);
+			}
+    }
+
+		]])
+
+		local tree = assert(plugin.discover_positions(filepath))
+
+		print(vim.inspect(tree:to_list()))
+		eq({
+			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 16, 2 } },
+			{
+				{
+					id = "com.example.SomeParameterizedTest",
+					name = "SomeParameterizedTest",
+					path = filepath,
+					type = "namespace",
+					range = { 3, 2, 14, 5 },
+				},
+				{
+					{
+						id = "com.example.SomeParameterizedTest#testWithParameters(int, int)",
+						name = "testWithParameters",
+						path = filepath,
+						type = "test",
+						range = { 5, 3, 13, 4 },
+					},
+				},
+			},
+		}, tree:to_list())
 	end)
 end)
