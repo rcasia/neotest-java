@@ -50,7 +50,7 @@ describe("PositionsDiscoverer", function()
 		eq({
 			{
 				id = file_path,
-				name = file_path:gsub(".*/", ""),
+				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
 				path = file_path,
 				range = { 0, 4, 8, 2 },
 				type = "file",
@@ -141,7 +141,7 @@ class Test {
 		eq({
 			{
 				id = file_path,
-				name = file_path:gsub(".*/", ""),
+				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
 				path = file_path,
 				range = { 0, 0, 13, 2 },
 				type = "file",
@@ -203,7 +203,7 @@ public class SomeTest {
 		eq({
 			{
 				id = file_path,
-				name = file_path:gsub(".*/", ""),
+				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
 				path = file_path,
 				range = { 0, 0, 15, 2 },
 				type = "file",
@@ -282,7 +282,13 @@ public class SomeTest {
 
 		print(vim.inspect(tree:to_list()))
 		eq({
-			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 18, 2 } },
+			{
+				id = filepath,
+				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
+				path = filepath,
+				type = "file",
+				range = { 1, 2, 18, 2 },
+			},
 			{
 				{
 					id = "com.example.SomeParameterizedTest",
@@ -330,7 +336,13 @@ public class SomeTest {
 
 		print(vim.inspect(tree:to_list()))
 		eq({
-			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 4, 18, 2 } },
+			{
+				id = filepath,
+				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
+				path = filepath,
+				type = "file",
+				range = { 1, 4, 18, 2 },
+			},
 			{
 				{
 					id = "com.example.SomeParameterizedTest",
