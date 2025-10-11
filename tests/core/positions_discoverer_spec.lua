@@ -256,7 +256,7 @@ public class SomeTest {
 		}, actual:to_list())
 	end)
 
-	async.it("discovers test position for ParameterizedTest", function()
+	async.it("discovers test position for ParameterizedTest for primitive types", function()
 		local filepath = create_tmp_javafile([[
 
 		package com.example;
@@ -264,38 +264,33 @@ public class SomeTest {
 		class SomeParameterizedTest {
 
 			@ParameterizedTest
-			@CsvSource({
-							"1, 2",
-							"2, 4",
-							"3, 6"
-			})
-			void testWithParameters(int input, int expected) {
-					assertThat(input * 2).isEqualTo(expected);
-			}
+			void testWithParameters(int myInteger, short myShort, long myLong, char myChar, byte myByte) {}
     }
 
 		]])
+
+		-- TODO: add float, bool and double
 
 		local tree = assert(plugin.discover_positions(filepath))
 
 		print(vim.inspect(tree:to_list()))
 		eq({
-			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 16, 2 } },
+			{ id = filepath, name = filepath:gsub(".*/", ""), path = filepath, type = "file", range = { 1, 2, 9, 2 } },
 			{
 				{
 					id = "com.example.SomeParameterizedTest",
 					name = "SomeParameterizedTest",
 					path = filepath,
 					type = "namespace",
-					range = { 3, 2, 14, 5 },
+					range = { 3, 2, 7, 5 },
 				},
 				{
 					{
-						id = "com.example.SomeParameterizedTest#testWithParameters(int, int)",
+						id = "com.example.SomeParameterizedTest#testWithParameters(int, short, long, char, byte)",
 						name = "testWithParameters",
 						path = filepath,
 						type = "test",
-						range = { 5, 3, 13, 4 },
+						range = { 5, 3, 6, 98 },
 					},
 				},
 			},
