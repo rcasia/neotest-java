@@ -47,8 +47,6 @@ describe("PositionsDiscoverer", function()
 		--- @type neotest.Tree
 		local result = assert(plugin.discover_positions(file_path))
 
-		print(vim.inspect(result:to_list()))
-
 		eq({
 			{
 				id = file_path,
@@ -138,7 +136,6 @@ class Test {
 
 		-- then
 		local actual_list = actual:to_list()
-		print(vim.inspect(actual_list))
 
 		eq({
 			{
@@ -199,8 +196,6 @@ public class SomeTest {
 
 		-- when
 		local actual = assert(plugin.discover_positions(file_path))
-
-		print(vim.inspect(actual:to_list()))
 
 		eq({
 			{
@@ -282,7 +277,6 @@ public class SomeTest {
 
 		local tree = assert(plugin.discover_positions(filepath))
 
-		print(vim.inspect(tree:to_list()))
 		eq({
 			{
 				id = filepath,
@@ -336,7 +330,6 @@ public class SomeTest {
 
 		local tree = assert(plugin.discover_positions(filepath))
 
-		print(vim.inspect(tree:to_list()))
 		eq({
 			{
 				id = filepath,
@@ -411,8 +404,6 @@ public class SomeTest {
 
 		local list = tree:to_list()
 		strip_ranges(list)
-
-		print(vim.inspect(list))
 
 		eq({
 			{
