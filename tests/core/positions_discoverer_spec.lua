@@ -3,7 +3,9 @@ local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfro
 local async = require("nio").tests
 local plugin = require("neotest-java")
 
-local eq = assert.are.same
+local assertions = require("tests.assertions")
+
+local eq = assertions.eq
 
 describe("PositionsDiscoverer", function()
 	local tmp_files
