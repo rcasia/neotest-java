@@ -74,7 +74,7 @@ local jdtls_compiler = {
 			search_pattern = "test/resources$",
 		})
 
-		return _jdtls.get_classpath_file_argument(args.classpath_file_dir, resources)
+		return _jdtls.get_classpath_file_argument(args.classpath_file_dir, resources, args.cwd)
 	end,
 }
 

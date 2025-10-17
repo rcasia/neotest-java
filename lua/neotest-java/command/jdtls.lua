@@ -46,12 +46,13 @@ M.get_java_home = function()
 end
 
 ---@param additional_classpath_entries string[]
-M.get_classpath = function(additional_classpath_entries)
+---@param dir string
+M.get_classpath = function(additional_classpath_entries, dir)
 	additional_classpath_entries = additional_classpath_entries or {}
 
 	local classpaths = {}
 
-	local any_java_file = assert(find_any_java_file(), "No Java file found in the current directory.")
+	local any_java_file = assert(find_any_java_file(dir), "No Java file found in the current directory.")
 	local bufnr = preload_file_for_lsp(any_java_file)
 	local uri = vim.uri_from_bufnr(bufnr)
 	local runtime_classpath_future = nio.control.future()
@@ -103,8 +104,8 @@ M.get_classpath = function(additional_classpath_entries)
 	return classpaths
 end
 
-M.get_classpath_file_argument = function(report_dir, additional_classpath_entries)
-	local classpath = table.concat(M.get_classpath(additional_classpath_entries), ":")
+M.get_classpath_file_argument = function(report_dir, additional_classpath_entries, dir)
+	local classpath = table.concat(M.get_classpath(additional_classpath_entries, dir), ":")
 	local temp_file = compatible_path(report_dir .. "/.cp")
 	write_file(temp_file, ("-cp %s"):format(classpath))
 
