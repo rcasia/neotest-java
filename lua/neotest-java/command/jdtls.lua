@@ -105,11 +105,9 @@ M.get_classpath = function(additional_classpath_entries, dir)
 end
 
 M.get_classpath_file_argument = function(report_dir, additional_classpath_entries, dir)
-	local classpath = table.concat(M.get_classpath(additional_classpath_entries, dir), ":")
-	local temp_file = compatible_path(report_dir .. "/.cp")
-	write_file(temp_file, ("-cp %s"):format(classpath))
-
-	return ("@%s"):format(temp_file)
+	local classpaths = M.get_classpath(additional_classpath_entries, dir)
+	local classpath = table.concat(classpaths, ":")
+	return classpath
 end
 
 return M
