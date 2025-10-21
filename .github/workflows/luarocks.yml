@@ -2,12 +2,12 @@
 name: Push to Luarocks
 
 on:
-  push:
+  create:
     tags:
       - "*"
   release:
     types:
-      - created
+      - published
 
   pull_request: # Tests installing the generated rockspec on PR without uploading
   workflow_dispatch:
