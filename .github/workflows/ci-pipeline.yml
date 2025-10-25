@@ -45,3 +45,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+  push-to-luarocks:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./luarocks.yml
