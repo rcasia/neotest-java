@@ -11,6 +11,7 @@ on:
 
   pull_request: # Tests installing the generated rockspec on PR without uploading
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   luarocks-upload:
