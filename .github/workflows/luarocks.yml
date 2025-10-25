@@ -6,20 +6,45 @@ on:
   workflow_call:
 
 jobs:
+  check_tag:
+    runs-on: ubuntu-22.04
+    outputs:
+      has_tag: ${{ steps.out.outputs.has_tag }}
+      tag: ${{ steps.out.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - id: out
+        run: |
+          TAGS="$(git tag --points-at HEAD)"
+          if [ -z "$TAGS" ]; then
+            echo "has_tag=false" >> "$GITHUB_OUTPUT"
+            echo "tag=" >> "$GITHUB_OUTPUT"
+            echo "No tag on HEAD"
+          else
+            # If multiple tags point to HEAD, pick the first
+            TAG="$(echo "$TAGS" | head -n1)"
+            echo "has_tag=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            echo "Tag on HEAD: $TAG"
+          fi
+
   luarocks-upload:
+    needs: check_tag
+    if: needs.check_tag.outputs.has_tag == 'true'
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0 # Required to count the commits
-      - name: Get Version
-        run: echo "LUAROCKS_VERSION=$(git describe --abbrev=0 --tags)" >> $GITHUB_ENV
+        with: { fetch-depth: 0 }
 
-      # Needed to install the tree-sitter parser dependency
+      - name: Set Version
+        run: echo "LUAROCKS_VERSION=${{ needs.check_tag.outputs.tag }}" >> $GITHUB_ENV
+
       - name: Install C/C++ Compiler
         uses: rlalik/setup-cpp-compiler@master
         with:
           compiler: clang-latest
+
       - name: Install tree-sitter CLI
         uses: baptiste0928/cargo-install@v3
         with:
