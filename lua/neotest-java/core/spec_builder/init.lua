@@ -84,15 +84,18 @@ function SpecBuilder.build_spec(args, project_type, config)
 		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
 
+		local project_name = vim.fn.fnamemodify(root, ":t")
 		return {
 			strategy = {
 				type = "java",
 				request = "attach",
 				name = ("neotest-java (on port %s)"):format(port),
+				host = "localhost",
 				port = port,
+				projectName = project_name,
 			},
 			cwd = root,
-			symbol = position.name,
+			symbol = position.type == "test" and position.name or nil,
 			context = {
 				strategy = args.strategy,
 				reports_dir = reports_dir,
