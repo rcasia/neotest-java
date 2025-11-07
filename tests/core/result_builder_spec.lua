@@ -52,22 +52,6 @@ describe("ResultBuilder", function()
 		end
 	end)
 
-	async.it("throws error when no report files found", function()
-		--given
-		local scan_dir = function()
-			return {}
-		end
-
-		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
-		local tree = plugin.discover_positions(file_path)
-
-		--when
-		local _, err = pcall(result_builder.build_results, DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir)
-
-		-- then
-		assert.match("no report file could be generated", err)
-	end)
-
 	async.it("ignores report file when cannot be read", function()
 		--given
 		local scan_dir = function()

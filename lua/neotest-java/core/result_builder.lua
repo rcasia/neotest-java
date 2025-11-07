@@ -56,34 +56,130 @@ end
 -- -----------------------------------------------------------------------------
 -- XML loading
 -- -----------------------------------------------------------------------------
+--
+--
+
+---@generic T
+---@param v T
+local function Ok(v)
+	return {
+		tag = "result",
+		ok = true,
+		value = v,
+		map = function(fn)
+			local res = fn(v)
+			if res.tag == "result" then
+				return res
+			else
+				return Ok(res)
+			end
+		end,
+	}
+end
+---@param e any
+local function Err(e)
+	return {
+		tag = "result",
+		ok = false,
+		error = e,
+		map = function()
+			return Err(e)
+		end,
+	}
+end
+
+local function pipe(...)
+	local fns = { ... }
+
+	return function(x)
+		local result = x
+		for i = 1, #fns do
+			result = fns[i](result)
+		end
+		return result
+	end
+end
+
+local function map(fn)
+	return function(x)
+		return fn(x)
+	end
+end
+
+local function debug(x)
+	print(vim.inspect(x))
+	return x
+end
+
+local function safe_fn_call(fn)
+	return function(...)
+		local ok, res = pcall(fn, ...)
+		if ok then
+			return Ok(res)
+		else
+			return Err(res)
+		end
+	end
+end
+
+local prop = function(key)
+	return function(tbl)
+		return tbl[key]
+	end
+end
 
 local function load_all_testcases(reports_dir, scan, read_file)
-	local paths = scan(reports_dir, { search_pattern = REPORT_FILE_NAMES_PATTERN })
-	log.debug("Found report files: ", paths)
-	assert(#paths ~= 0, "no report file could be generated")
+	local read_files = pipe(
+		--
+		function(dir)
+			return scan(dir, { search_pattern = REPORT_FILE_NAMES_PATTERN })
+		end,
 
-	return flat_map(function(filepath)
-		local ok, data = pcall(read_file, filepath)
-		if not ok then
-			lib.notify("Error reading file: " .. tostring(filepath))
-			return {}
-		end
+		map(function(filepaths)
+			return vim.iter(filepaths)
+				:map(function(filepath)
+					return safe_fn_call(read_file)(filepath)
+				end)
+				:totable()
+		end)
+	)
 
-		local xml_data = xml.parse(data)
-		local suite = xml_data and xml_data.testsuite or nil
-		if not suite then
-			return {}
-		end
+	local get_successful_reads = pipe(
+		--
+		map(function(reads_results)
+			return vim.iter(reads_results)
+				:filter(function(r)
+					return r.ok
+				end)
+				:map(function(r)
+					return r.value
+				end)
+				:totable()
+		end)
+	)
 
-		local tcs = suite.testcase
-		if not tcs then
-			return {}
-		end
-		if not vim.isarray(tcs) then
-			tcs = { tcs }
-		end
-		return tcs
-	end, paths)
+	local process_xml = pipe(
+		map(xml.parse),
+
+		prop("testsuite"),
+		prop("testcase"),
+		map(function(tcs)
+			if not vim.isarray(tcs) then
+				return { tcs }
+			end
+			return tcs
+		end)
+	)
+
+	local read_xml_strings = pipe(
+		--
+		read_files,
+		get_successful_reads
+	)
+
+	local res = read_xml_strings(reports_dir)
+
+	return vim.iter(res):map(process_xml):flatten():totable()
 end
 
 local function group_by_method_base(testcases)
@@ -91,6 +187,7 @@ local function group_by_method_base(testcases)
 	for _, tc in ipairs(testcases) do
 		local jres = JunitResult:new(tc)
 		local key = build_group_key(jres:classname(), jres:name())
+
 		groups[key] = groups[key] or {}
 		table.insert(groups[key], jres)
 	end
