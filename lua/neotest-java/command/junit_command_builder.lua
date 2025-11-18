@@ -100,9 +100,9 @@ local CommandBuilder = {
 		for _, v in ipairs(self._test_references) do
 			if v.type == "test" then
 				local class_name = v.qualified_name:match("^(.-)#") or v.qualified_name
-				table.insert(selectors, "--select-class=" .. class_name)
+				table.insert(selectors, "--select-class='" .. class_name .. "'")
 				if v.method_name then
-					table.insert(selectors, "--select-method=" .. v.method_name)
+					table.insert(selectors, "--select-method='" .. v.method_name .. "'")
 				end
 			elseif v.type == "file" then
 				table.insert(selectors, "-c=" .. v.qualified_name)
