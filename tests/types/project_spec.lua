@@ -5,13 +5,13 @@ local p = require("neotest-java.util.compatible_path")
 describe("project", function()
 	local testscases = {
 		{
-			input = p("./tests/fixtures/maven-demo"),
+			input = "./tests/fixtures/maven-demo",
 			expected = {
 				{ name = "maven-demo", base_dir = p("./tests/fixtures/maven-demo") },
 			},
 		},
 		{
-			input = p("./tests/fixtures/gradle-groovy-demo"),
+			input = "./tests/fixtures/gradle-groovy-demo",
 			expected = {
 				{ name = "gradle-groovy-demo", base_dir = p("./tests/fixtures/gradle-groovy-demo") },
 			},
