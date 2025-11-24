@@ -99,11 +99,15 @@ local CommandBuilder = {
 		local selectors = {}
 		for _, v in ipairs(self._test_references) do
 			if v.type == "test" then
-				table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
+				local class_name = v.qualified_name:match("^(.-)#") or v.qualified_name
+				table.insert(selectors, "--select-class='" .. class_name .. "'")
+				if v.method_name then
+					table.insert(selectors, "--select-method='" .. v.method_name .. "'")
+				end
 			elseif v.type == "file" then
 				table.insert(selectors, "-c=" .. v.qualified_name)
 			elseif v.type == "dir" then
-				selectors = "-p=" .. v.qualified_name
+				table.insert(selectors, "-p=" .. v.qualified_name)
 			end
 		end
 		assert(#selectors ~= 0, "junit command has to have a selector")
@@ -115,7 +119,7 @@ local CommandBuilder = {
 				"-jar",
 				self._junit_jar,
 				"execute",
-				("%s"):format(self._classpath_file_arg),
+				"--classpath=" .. self._classpath_file_arg,
 				"--reports-dir=" .. self._reports_dir,
 				"--fail-if-no-tests",
 				"--disable-banner",

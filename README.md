@@ -4,8 +4,8 @@
   <h1>neotest-java</h1>
   <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using <a href="https://github.com/junit-team/junit5">JUnit</a>.</p>
 
-  <a href="https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml">
-    <img src="https://github.com/rcasia/neotest-java/actions/workflows/makefile.yml/badge.svg">
+  <a href="https://github.com/rcasia/neotest-java/actions/workflows/ci-pipeline.yml">
+    <img src="https://github.com/rcasia/neotest-java/actions/workflows/ci-pipeline.yml/badge.svg">
   </a>
   <a href="https://luarocks.org/modules/rcasia/neotest-java">
     <img alt="LuaRocks" src="https://img.shields.io/luarocks/v/rcasia/neotest-java">
