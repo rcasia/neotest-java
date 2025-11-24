@@ -12,7 +12,7 @@ jobs:
       has_tag: ${{ steps.out.outputs.has_tag }}
       tag: ${{ steps.out.outputs.tag }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
       - id: out
         run: |
@@ -34,7 +34,7 @@ jobs:
     if: needs.check_tag.outputs.has_tag == 'true'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with: { fetch-depth: 0 }
 
       - name: Set Version
