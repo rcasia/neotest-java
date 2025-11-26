@@ -35,4 +35,13 @@ describe("file_checker", function()
 			assert.is_false(plugin.is_test_file(file_path))
 		end
 	end)
+
+  it("should return true if theres a /main/ outside the root path", function()
+		local non_test_files = {
+			"main/src/java/neotest/NeotestTest.java",
+		}
+		for _, file_path in ipairs(non_test_files) do
+			assert.is_true(plugin.is_test_file(file_path))
+		end
+	end)
 end)
