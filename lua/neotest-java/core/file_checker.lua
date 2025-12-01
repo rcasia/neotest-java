@@ -17,8 +17,10 @@ end
 ---@return boolean
 function FileChecker.is_test_file(file_path)
   file_path = compatible_path(file_path)
+  print(file_path)
 
   local root = compatible_path(ch.get_context().root or root_finder.find_root(vim.fn.getcwd(), matcher) or "")
+  print(root)
 
   local relative_path = path:new(file_path):make_relative(root)
   if string.find(relative_path, "/main/") then
