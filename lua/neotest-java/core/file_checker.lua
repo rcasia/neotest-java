@@ -17,11 +17,10 @@ end
 ---@return boolean
 function FileChecker.is_test_file(file_path)
   file_path = compatible_path(file_path)
-
   local root = compatible_path(ch.get_context().root or root_finder.find_root(vim.fn.getcwd(), matcher) or "")
 
   local relative_path = path:new(file_path):make_relative(root)
-  if string.find(relative_path, "/main/") then
+  if string.find(relative_path, compatible_path("/main/")) then
     return false
   end
   for _, pattern in ipairs(JAVA_TEST_FILE_PATTERNS) do
