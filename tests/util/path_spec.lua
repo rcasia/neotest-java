@@ -5,9 +5,19 @@ local eq = assert.are.same
 describe("Path", function()
 	local cases = {
 		{
+			input_path = "\\some\\test\\path",
+			expected = "/some/test/path",
+			windows = false,
+		},
+		{
 			input_path = "/some/test/path",
 			expected = "/some/test/path",
 			windows = false,
+		},
+		{
+			input_path = "/some/test/path",
+			expected = "\\some\\test\\path",
+			windows = true,
 		},
 		{
 			input_path = "\\some\\test\\path",
