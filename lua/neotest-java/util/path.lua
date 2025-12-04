@@ -24,11 +24,12 @@ local function Path(raw_path, opts)
 
 	local slugs = vim
 		--
-		.iter(vim.split(raw_path, WINDOWS_SEPARATOR, { trimempty = true }))
+		.iter(vim.split(raw_path, WINDOWS_SEPARATOR))
 		:map(function(s)
-			return vim.split(s, UNIX_SEPARATOR, { trimempty = true })
+			return vim.split(s, UNIX_SEPARATOR)
 		end)
 		:flatten()
+		:filter(is_not_empty)
 		:map(remove_separator)
 		:totable()
 	local first_char = raw_path:sub(1, 1)
