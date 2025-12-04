@@ -1,5 +1,3 @@
-local Path = require("neotest-java.util.path")
-
 ---@param path string
 ---@return string compatible_path
 local function compatible_path(path)
@@ -17,7 +15,8 @@ local function compatible_path(path)
 	-- replace separators with the system's separator
 	path = path:gsub("%./", sep):gsub("%.\\", sep):gsub("/", sep):gsub("\\", sep)
 
-	return Path(relative_prefix .. path).to_string()
+	-- normalize the path and remove duplicate separators
+	return (relative_prefix .. path):gsub(sep .. "+", sep)
 end
 
 return compatible_path
