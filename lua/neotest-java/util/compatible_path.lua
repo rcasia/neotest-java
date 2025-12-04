@@ -14,9 +14,6 @@ local function compatible_path(path)
 		relative_prefix = "." .. sep
 	end
 
-	-- replace separators with the system's separator
-	path = path:gsub("%./", sep):gsub("%.\\", sep):gsub("/", sep):gsub("\\", sep)
-
 	return Path(relative_prefix .. path).to_string()
 end
 

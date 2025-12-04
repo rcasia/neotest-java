@@ -10,6 +10,10 @@ local is_not_empty = function(s)
 	return s ~= nil and s ~= ""
 end
 
+local is_not_dot = function(s)
+	return s ~= "."
+end
+
 local remove_separator = function(s)
 	local clean = string.gsub(s, UNIX_SEPARATOR, ""):gsub(WINDOWS_SEPARATOR, "")
 	return clean
@@ -36,6 +40,7 @@ local function Path(raw_path, opts)
 		end)
 		:flatten()
 		:filter(is_not_empty)
+		:filter(is_not_dot)
 		:map(remove_separator)
 		:totable()
 	local first_char = raw_path:sub(1, 1)
@@ -47,6 +52,12 @@ local function Path(raw_path, opts)
 
 	if is_absolute then
 		table.insert(slugs, 1, "")
+	end
+
+	local has_relative_dot = raw_path:sub(1, 2) == "." .. UNIX_SEPARATOR
+		or raw_path:sub(1, 2) == "." .. WINDOWS_SEPARATOR
+	if has_relative_dot then
+		table.insert(slugs, 1, ".")
 	end
 
 	return {

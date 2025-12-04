@@ -15,6 +15,16 @@ describe("Path", function()
 			separator = "/",
 		},
 		{
+			input_path = "./some/test/./path",
+			expected = "./some/test/path",
+			separator = "/",
+		},
+		{
+			input_path = "/some/test/./path",
+			expected = "/some/test/path",
+			separator = "/",
+		},
+		{
 			input_path = "/some/test/path",
 			expected = "/some/test/path",
 			separator = "/",
