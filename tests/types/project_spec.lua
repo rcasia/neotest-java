@@ -22,7 +22,7 @@ describe("project", function()
 			local project = Project.from_root_dir(testcase.input)
 			local results = {}
 			for _, mod in ipairs(project:get_modules()) do
-				results[#results + 1] = { name = mod.name, base_dir = mod.base_dir }
+				results[#results + 1] = { name = mod.name, base_dir = mod.base_dir.to_string() }
 			end
 			assert.same(testcase.expected, results)
 		end)

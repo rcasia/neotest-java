@@ -111,4 +111,27 @@ describe("Path", function()
 			eq(case.expected, path.append(case.append_path).to_string())
 		end)
 	end
+
+	local cases_name = {
+		{
+			input_path = "/some/test",
+			expected = "test",
+			separator = "/",
+		},
+		{
+			input_path = "\\some\\test",
+			expected = "test",
+			separator = "\\",
+		},
+	}
+	for _, case in ipairs(cases_name) do
+		it("gets name: " .. case.input_path, function()
+			local path = Path(case.input_path, {
+				separator = function()
+					return case.separator
+				end,
+			})
+			eq(case.expected, path.name())
+		end)
+	end
 end)

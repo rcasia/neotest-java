@@ -2,6 +2,7 @@
 --- @field to_string fun(): string
 --- @field parent fun(): neotest-java.Path
 --- @field append fun(other: string): neotest-java.Path
+--- @field name fun(): string
 
 local UNIX_SEPARATOR = "/"
 local WINDOWS_SEPARATOR = "\\"
@@ -60,7 +61,11 @@ local function Path(raw_path, opts)
 		table.insert(slugs, 1, ".")
 	end
 
+	--- @type neotest-java.Path
 	return {
+		name = function()
+			return slugs[#slugs]
+		end,
 		append = function(other)
 			return Path(raw_path .. SEP .. other, opts)
 		end,
