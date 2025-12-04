@@ -17,8 +17,9 @@ function Module.new(base_dir, build_tool)
 	return self
 end
 
+--- @return neotest-java.Path
 function Module:get_output_dir()
-	return self._build_tool.get_output_dir(self.base_dir.to_string())
+	return self._build_tool.get_output_dir(self.base_dir)
 end
 
 ---@return string[]

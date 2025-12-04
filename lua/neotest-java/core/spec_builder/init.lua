@@ -28,9 +28,9 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local tree = args.tree
 	local position = tree:data()
 	local root = assert(ch:get_context().root)
-	local absolute_path = position.path
 	local project = assert(Project.from_root_dir(root), "project not detected correctly")
 	local modules = project:get_modules()
+	--- @type neotest-java.BuildTool
 	local build_tool = build_tools.get(project_type)
 
 	-- make sure we are in root_dir
@@ -38,10 +38,9 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- make sure outputDir is created to operate in it
 	local output_dir = build_tool.get_output_dir()
-	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
-	vim.uv.fs_mkdir(output_dir_parent, 493)
-	vim.uv.fs_mkdir(output_dir, 493)
+	vim.uv.fs_mkdir(output_dir.parent().to_string(), 493)
+	vim.uv.fs_mkdir(output_dir.to_string(), 493)
 
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir =

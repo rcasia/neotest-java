@@ -95,6 +95,12 @@ describe("Path", function()
 			separator = "/",
 		},
 		{
+			input_path = "/some",
+			append_path = "test/more",
+			expected = "/some/test/more",
+			separator = "/",
+		},
+		{
 			input_path = "\\some",
 			append_path = "test",
 			expected = "\\some\\test",
