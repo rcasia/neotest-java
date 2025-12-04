@@ -4,7 +4,7 @@ local Module = require("neotest-java.types.module")
 local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
-local compatible_path = require("neotest-java.util.compatible_path")
+local Path = require("neotest-java.util.path")
 
 ---@class neotest-java.Project
 ---@field root_dir string
@@ -42,17 +42,14 @@ function Project:get_modules()
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, dir in ipairs(dirs) do
-		local base_filepath = compatible_path(dir)
-		-- get the base directory of the module, by removing the last part of the path
-		-- taking care of both Windows and Unix-like systems
-		local base_dir = base_filepath:match("^(.*)[/\\][^/\\]+$")
+		local base_dir = Path(dir).parent()
 		local mod = Module.new(base_dir, self.build_tool)
 		modules[#modules + 1] = mod
 	end
 
 	local base_dirs = {}
 	for _, mod in ipairs(modules) do
-		base_dirs[#base_dirs + 1] = mod.base_dir
+		base_dirs[#base_dirs + 1] = mod.base_dir.to_string()
 	end
 	logger.debug("modules: ", base_dirs)
 
