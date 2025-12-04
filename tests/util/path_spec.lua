@@ -7,37 +7,41 @@ describe("Path", function()
 		{
 			input_path = "/////some//////test///////path",
 			expected = "/some/test/path",
-			windows = false,
+			separator = "/",
 		},
 		{
 			input_path = "\\some\\test\\path",
 			expected = "/some/test/path",
-			windows = false,
+			separator = "/",
 		},
 		{
 			input_path = "/some/test/path",
 			expected = "/some/test/path",
-			windows = false,
+			separator = "/",
 		},
 		{
 			input_path = "/some/test/path",
 			expected = "\\some\\test\\path",
-			windows = true,
+			separator = "\\",
 		},
 		{
 			input_path = "\\some\\test\\path",
 			expected = "\\some\\test\\path",
-			windows = true,
+			separator = "\\",
 		},
 		{
 			input_path = "\\\\\\some\\\\\\\\test\\\\\\\\path",
 			expected = "\\some\\test\\path",
-			windows = true,
+			separator = "\\",
 		},
 	}
 	for _, case in ipairs(cases) do
 		it("creates path: " .. case.input_path, function()
-			local path = Path(case.input_path, { windows = case.windows })
+			local path = Path(case.input_path, {
+				separator = function()
+					return case.separator
+				end,
+			})
 			eq(case.expected, path.to_string())
 		end)
 	end
@@ -47,24 +51,28 @@ describe("Path", function()
 			description = "[unix] base case for parent",
 			input_path = "/some/test/path",
 			expected_parent = "/some/test",
-			windows = false,
+			separator = "/",
 		},
 		{
 			description = "[unix] parent is root",
 			input_path = "/some",
 			expected_parent = "/",
-			windows = false,
+			separator = "/",
 		},
 		{
 			description = "[win] parent is root",
 			input_path = "\\some",
 			expected_parent = "\\",
-			windows = true,
+			separator = "\\",
 		},
 	}
 	for _, case in ipairs(cases_parent) do
 		it("gets parent path: " .. case.description, function()
-			local path = Path(case.input_path, { windows = case.windows })
+			local path = Path(case.input_path, {
+				separator = function()
+					return case.separator
+				end,
+			})
 			eq(case.expected_parent, path.parent().to_string())
 		end)
 	end
@@ -74,18 +82,22 @@ describe("Path", function()
 			input_path = "/some",
 			append_path = "test",
 			expected = "/some/test",
-			windows = false,
+			separator = "/",
 		},
 		{
 			input_path = "\\some",
 			append_path = "test",
 			expected = "\\some\\test",
-			windows = true,
+			separator = "\\",
 		},
 	}
 	for _, case in ipairs(cases_append) do
 		it("appends path: " .. case.input_path .. " + " .. case.append_path, function()
-			local path = Path(case.input_path, { windows = case.windows })
+			local path = Path(case.input_path, {
+				separator = function()
+					return case.separator
+				end,
+			})
 			eq(case.expected, path.append(case.append_path).to_string())
 		end)
 	end

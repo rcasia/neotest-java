@@ -15,12 +15,18 @@ local remove_separator = function(s)
 	return clean
 end
 
+local separator = function()
+	if vim.fn.has("win64") == 1 or vim.fn.has("win32") == 1 then
+		return WINDOWS_SEPARATOR
+	end
+	return UNIX_SEPARATOR
+end
+
 --- @return neotest-java.Path
 --- @param raw_path string
---- @param opts? { windows?: boolean }
+--- @param opts? { separator?: fun(): string }
 local function Path(raw_path, opts)
-	local has_win = opts and opts.windows or vim.fn.has("win64") == 1 or vim.fn.has("win32") == 1
-	local SEP = has_win and WINDOWS_SEPARATOR or UNIX_SEPARATOR
+	local SEP = (opts and opts.separator) and opts.separator() or separator()
 
 	local slugs = vim
 		--
