@@ -22,19 +22,19 @@ function NeotestJavaCompiler.compile(opts)
 
 	local msg, level
 	if result == 0 then
-		msg = "Using %s compiling %s has failed"
+		msg = "Build %s has failed"
 		level = vim.log.levels.ERROR
 		result = false
 	elseif result == 1 then
-		msg = "Using %s compiled %s successfully"
+		msg = "Built %s successfully"
 		level = vim.log.levels.INFO
 		result = true
 	elseif result == 2 then
-		msg = "Using %s compiled %s with errors"
+		msg = "Built %s with errors"
 		level = vim.log.levels.WARN
 		result = false
 	else
-		msg = "Using %s compilation of %s has been canceled"
+		msg = "Build %s was canceled"
 		level = vim.log.levels.INFO
 		result = false
 	end

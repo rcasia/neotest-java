@@ -29,7 +29,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
-	local root = assert(vim.fn.getcwd())
+	local root = assert(ch:get_context().root)
 	local project = assert(Project.from_root_dir(root), "project not detected correctly")
 	local modules = project:get_modules()
 	local build_tool = build_tools.get(project_type)
@@ -47,17 +47,16 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module directory not found")
 	command:basedir(base_dir)
 
-	-- make sure outputDir is created to operate in it
+	-- BUILD OUTPUT DIRECTORY
 	local output_dir = build_tool.get_output_dir(base_dir)
 	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
-	vim.uv.fs_mkdir(output_dir_parent, 493)
-	vim.uv.fs_mkdir(output_dir, 493)
-
-	-- JUNIT REPORT DIRECTORY
-	local reports_dir = compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
+	-- JUNIT REPORTS DIRECTORY
+	local base_reports_dir = string.format("%s/junit-reports", output_dir)
+	local reports_dir = compatible_path(string.format("%s/%s", base_reports_dir, nio.fn.strftime("%d%m%y%H%M%S")))
 	command:reports_dir(compatible_path(reports_dir))
 
+	-- AUXILIARY TESTRUN RESOURCES
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_dirs))
 
 	-- TEST SELECTORS
@@ -83,6 +82,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 		cwd = base_dir,
 	})
 
+	-- VERIFY THE BUILD WAS OKAY
 	if build_result == false then
 		return {
 			command = {},
@@ -101,7 +101,12 @@ function SpecBuilder.build_spec(args, project_type, config)
 	local classpath_file_arg = table.concat(class_paths, ":")
 	command:classpath_file_arg(classpath_file_arg)
 
-	vim.print(command:build_to_string())
+	-- MAKE TEST RESOURCES
+	vim.uv.fs_mkdir(output_dir_parent, 493)
+	vim.uv.fs_mkdir(output_dir, 493)
+	vim.uv.fs_mkdir(base_reports_dir, 493)
+	vim.uv.fs_mkdir(reports_dir, 493)
+	assert(vim.uv.fs_stat(reports_dir) ~= nil, string.format("unable to stat %s", reports_dir))
 
 	-- DAP STRATEGY
 	if args.strategy == "dap" then
@@ -117,7 +122,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 				type = "java",
 				request = "attach",
 				name = ("neotest-java (on port %s)"):format(port),
-				host = "localhost",
+				host = "127.0.0.1",
 				port = port,
 				modulePaths = {}, -- ???
 				classPaths = class_paths,

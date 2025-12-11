@@ -60,7 +60,7 @@ end
 local function load_all_testcases(reports_dir, scan, read_file)
 	local paths = scan(reports_dir, { search_pattern = REPORT_FILE_NAMES_PATTERN })
 	log.debug("Found report files: ", paths)
-	assert(#paths ~= 0, "no report file could be generated")
+	assert(#paths ~= 0, string.format("no report file where found in %s", reports_dir))
 
 	return flat_map(function(filepath)
 		local ok, data = pcall(read_file, filepath)
