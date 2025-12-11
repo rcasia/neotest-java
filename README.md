@@ -1,4 +1,3 @@
-
 <section align="center">
 
   <h1>neotest-java</h1>
@@ -36,38 +35,38 @@
 <details>
   <summary><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> plugin manager example</summary>
 
-  ```lua
-  return {
-    {
-      "rcasia/neotest-java",
-      ft = "java",
-      dependencies = {
-        "mfussenegger/nvim-jdtls",
-        "mfussenegger/nvim-dap", -- for the debugger
-        "rcarriga/nvim-dap-ui", -- recommended
-        "theHamsta/nvim-dap-virtual-text", -- recommended
+```lua
+return {
+  {
+    "rcasia/neotest-java",
+    ft = "java",
+    dependencies = {
+      "mfussenegger/nvim-jdtls",
+      "mfussenegger/nvim-dap", -- for the debugger
+      "rcarriga/nvim-dap-ui", -- recommended
+      "theHamsta/nvim-dap-virtual-text", -- recommended
+    },
+  },
+ {
+  "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-neotest/nvim-nio",
+      "nvim-lua/plenary.nvim",
+      "antoinemadec/FixCursorHold.nvim",
+      "nvim-treesitter/nvim-treesitter",
+  },
+  config = function()
+    require("neotest").setup({
+      adapters = {
+        require("neotest-java")({
+          -- config here
+        }),
       },
-    },
-   {
-    "nvim-neotest/neotest",
-      dependencies = {
-        "nvim-neotest/nvim-nio",
-        "nvim-lua/plenary.nvim",
-        "antoinemadec/FixCursorHold.nvim",
-        "nvim-treesitter/nvim-treesitter",
-    },
-    config = function()
-      require("neotest").setup({
-        adapters = {
-          require("neotest-java")({
-            -- config here
-          }),
-        },
-      })
-    end,
-  }
- }
-  ```
+    })
+  end,
+}
+}
+```
 
 </details>
 
@@ -81,8 +80,19 @@
 
 ```lua
 {
-  junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
-  incremental_build = true
+    junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
+    incremental_build = true, -- default: true, avoid doing a full rebuild by default of projects or the entire workspace
+    target_type = "project", -- default: project, build and compile processes will target projects not the entire workspace
+    java_runtimes = {
+        -- There are no runtimes defined by default, if you wish to have
+        -- neotest-java resolve them based on your environment define them here,
+        -- one could also define environment variables with the same key/names
+        -- i.e. `JAVA_HOME_8` or `JAVA_HOME_11` or `JAVA_HOME_17` etc in your
+        -- zshenv or equivalent.
+        ["JAVA_HOME_8"] = "/absolute/path/to/jdk8/home/directory",
+        ["JAVA_HOME_11"] = "/absolute/path/to/jdk11/home/directory",
+        ["JAVA_HOME_17"] = "/absolute/path/to/jdk17/home/directory",
+    },
 }
 ```
 

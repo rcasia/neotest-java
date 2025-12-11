@@ -113,7 +113,7 @@ local CommandBuilder = {
 		assert(#selectors ~= 0, "junit command has to have a selector")
 
 		local junit_command = {
-			command = java(),
+			command = java(self._basedir),
 			args = {
 				"-Dspring.config.additional-location=" .. table.concat(self._spring_property_filepaths, ","),
 				"-jar",
