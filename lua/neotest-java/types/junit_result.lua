@@ -161,7 +161,8 @@ function JunitResult.merge_results(results)
 		return result:status() == FAILED
 	end) and FAILED or PASSED
 
-	local output = vim.iter(results)
+	local output = vim
+		.iter(results)
 		:map(function(result)
 			return result:output()
 		end)
@@ -172,14 +173,16 @@ function JunitResult.merge_results(results)
 		return { status = status, output = create_file_with_content(output) }
 	end
 
-	local errors = vim.iter(results)
+	local errors = vim
+		.iter(results)
 		:map(function(result)
 			return result:errors(true)
 		end)
 		:flatten()
 		:totable()
 
-	local short = vim.iter(results)
+	local short = vim
+		.iter(results)
 		:filter(function(result)
 			return result:status() == FAILED
 		end)

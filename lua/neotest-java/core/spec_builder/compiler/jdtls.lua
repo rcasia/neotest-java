@@ -31,50 +31,46 @@ local nio = require("nio")
 -- vim.fn.bufload(path)            -- preload lines
 
 local function get_current_project(working_directory)
-    local bufnr = nio.api.nvim_get_current_buf()
-    local err, result = lsp.execute_command("workspace/executeCommand", {
-        command = "java.project.list",
-        arguments = { vim.uri_from_fname(working_directory) }
-    }, bufnr)
-    assert(not err, vim.inspect(err))
+	local bufnr = nio.api.nvim_get_current_buf()
+	local err, result = lsp.execute_command("workspace/executeCommand", {
+		command = "java.project.list",
+		arguments = { vim.uri_from_fname(working_directory) },
+	}, bufnr)
+	assert(not err, vim.inspect(err))
 
-    local projects = vim.tbl_filter(function(p)
-        local path = vim.uri_to_fname(p.uri)
-        return vim.startswith(path, working_directory)
-    end, result)
+	local projects = vim.tbl_filter(function(p)
+		local path = vim.uri_to_fname(p.uri)
+		return vim.startswith(path, working_directory)
+	end, result)
 
-    assert(projects and #projects == 1, vim.inspect(working_directory))
-    return projects[1]
+	assert(projects and #projects == 1, vim.inspect(working_directory))
+	return projects[1]
 end
 
 ---@type NeotestJavaCompiler
 local compiler = {
-    build_workspace = function(args)
-        local bufnr = nio.api.nvim_get_current_buf()
-        local err, result = lsp.execute_command("java/buildWorkspace", args.compile_mode == "full", bufnr)
-        assert(not err, vim.inspect(err))
-        logger.info(string.format("Built workspace using %s build", args.compile_mode))
+	build_workspace = function(args)
+		local bufnr = nio.api.nvim_get_current_buf()
+		local err, result = lsp.execute_command("java/buildWorkspace", args.compile_mode == "full", bufnr)
+		assert(not err, vim.inspect(err))
+		logger.info(string.format("Built workspace using %s build", args.compile_mode))
 
-        local project = get_current_project(args.cwd);
-        return result, project.name
-    end,
-    build_project = function(args)
-        local bufnr = nio.api.nvim_get_current_buf()
-        local project = get_current_project(args.cwd);
+		local project = get_current_project(args.cwd)
+		return result, project.name
+	end,
+	build_project = function(args)
+		local bufnr = nio.api.nvim_get_current_buf()
+		local project = get_current_project(args.cwd)
 
-        local err, result = lsp.execute_command("java/buildProjects", {
-            identifiers = { { uri = project.uri } },
-            isFullBuild = args.compile_mode,
-        }, bufnr)
-        assert(not err, vim.inspect(err))
-        lib.notify(string.format(
-                "Built project/s %s using %s mode",
-                project.name, args.compile_mode
-            ),
-            vim.log.levels.INFO)
+		local err, result = lsp.execute_command("java/buildProjects", {
+			identifiers = { { uri = project.uri } },
+			isFullBuild = args.compile_mode,
+		}, bufnr)
+		assert(not err, vim.inspect(err))
+		lib.notify(string.format("Built project/s %s using %s mode", project.name, args.compile_mode), vim.log.levels.INFO)
 
-        return result, project.name
-    end
+		return result, project.name
+	end,
 }
 
 return compiler

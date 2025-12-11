@@ -21,126 +21,126 @@ local SpecBuilder = {}
 ---@param config neotest-java.ConfigOpts
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, project_type, config)
-    if args.strategy == "dap" then
-        local ok_dap, _ = pcall(require, "dap")
-        assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
-    end
+	if args.strategy == "dap" then
+		local ok_dap, _ = pcall(require, "dap")
+		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
+	end
 
-    local command = CommandBuilder:new(config, project_type)
-    local tree = args.tree
-    local position = tree:data()
-    local root = assert(vim.fn.getcwd())
-    local project = assert(Project.from_root_dir(root), "project not detected correctly")
-    local modules = project:get_modules()
-    local build_tool = build_tools.get(project_type)
+	local command = CommandBuilder:new(config, project_type)
+	local tree = args.tree
+	local position = tree:data()
+	local root = assert(vim.fn.getcwd())
+	local project = assert(Project.from_root_dir(root), "project not detected correctly")
+	local modules = project:get_modules()
+	local build_tool = build_tools.get(project_type)
 
-    -- make sure we are in root_dir
-    nio.fn.chdir(root)
+	-- make sure we are in root_dir
+	nio.fn.chdir(root)
 
-    local module_dirs = vim.iter(modules)
-        :map(function(mod)
-            return mod.base_dir
-        end)
-        :totable()
+	local module_dirs = vim
+		.iter(modules)
+		:map(function(mod)
+			return mod.base_dir
+		end)
+		:totable()
 
-    local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module directory not found")
-    command:basedir(base_dir)
+	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module directory not found")
+	command:basedir(base_dir)
 
-    -- make sure outputDir is created to operate in it
-    local output_dir = build_tool.get_output_dir(base_dir)
-    local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
+	-- make sure outputDir is created to operate in it
+	local output_dir = build_tool.get_output_dir(base_dir)
+	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
-    vim.uv.fs_mkdir(output_dir_parent, 493)
-    vim.uv.fs_mkdir(output_dir, 493)
+	vim.uv.fs_mkdir(output_dir_parent, 493)
+	vim.uv.fs_mkdir(output_dir, 493)
 
-    -- JUNIT REPORT DIRECTORY
-    local reports_dir =
-        compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
-    command:reports_dir(compatible_path(reports_dir))
+	-- JUNIT REPORT DIRECTORY
+	local reports_dir = compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
+	command:reports_dir(compatible_path(reports_dir))
 
-    command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_dirs))
+	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_dirs))
 
-    -- TEST SELECTORS
-    if position.type == "test" then
-        command:test_reference(position.id, position.name, "test")
-    else
-        for _, child in tree:iter() do
-            if child.type == "test" then
-                command:test_reference(child.id, child.name, "test")
-            end
-        end
-    end
+	-- TEST SELECTORS
+	if position.type == "test" then
+		command:test_reference(position.id, position.name, "test")
+	else
+		for _, child in tree:iter() do
+			if child.type == "test" then
+				command:test_reference(child.id, child.name, "test")
+			end
+		end
+	end
 
-    -- COMPILATION STEP
-    config = ch.config()
-    local build_type = config.incremental_build
-    local kind = config.build_target or "project"
-    local mode = build_type and "incremental" or "full"
-    local build_result, project_name = compilers.compile({
-        classpath_file_dir = output_dir,
-        compile_target = kind,
-        compile_mode = mode,
-        cwd = base_dir,
-    })
+	-- COMPILATION STEP
+	config = ch.config()
+	local build_type = config.incremental_build
+	local kind = config.build_target or "project"
+	local mode = build_type and "incremental" or "full"
+	local build_result, project_name = compilers.compile({
+		classpath_file_dir = output_dir,
+		compile_target = kind,
+		compile_mode = mode,
+		cwd = base_dir,
+	})
 
-    if build_result == false then
-        return {
-            command = {},
-            context = {},
-        }
-    end
+	if build_result == false then
+		return {
+			command = {},
+			context = {},
+		}
+	end
 
-    logger.debug("scanning for test resources in " .. base_dir)
-    local resources = scan.scan_dir(base_dir, {
-        only_dirs = true,
-        search_pattern = "test/resources$",
-    })
-    logger.debug("scanning tests completed for " .. base_dir)
+	logger.debug("scanning for test resources in " .. base_dir)
+	local resources = scan.scan_dir(base_dir, {
+		only_dirs = true,
+		search_pattern = "test/resources$",
+	})
+	logger.debug("scanning tests completed for " .. base_dir)
 
-    local class_paths = classpath.get_classpaths(resources, base_dir)
-    local classpath_file_arg = table.concat(class_paths, ":")
-    command:classpath_file_arg(classpath_file_arg)
+	local class_paths = classpath.get_classpaths(resources, base_dir)
+	local classpath_file_arg = table.concat(class_paths, ":")
+	command:classpath_file_arg(classpath_file_arg)
 
-    vim.print(command:build_to_string())
+	vim.print(command:build_to_string())
 
-    -- DAP STRATEGY
-    if args.strategy == "dap" then
-        local port = random_port()
+	-- DAP STRATEGY
+	if args.strategy == "dap" then
+		local port = random_port()
 
-        -- PREPARE DEBUG TEST COMMAND
-        local junit = command:build_junit(port)
-        logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
-        local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
+		-- PREPARE DEBUG TEST COMMAND
+		local junit = command:build_junit(port)
+		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
+		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
 
-        return {
-            strategy = {
-                type = "java",
-                request = "attach",
-                name = ("neotest-java (on port %s)"):format(port),
-                host = "localhost",
-                port = port,
-                modulePaths = {}, -- ???
-                classPaths = class_paths,
-                projectName = project_name,
-            },
-            cwd = base_dir,
-            symbol = position.type == "test" and position.name or nil,
-            context = {
-                strategy = args.strategy,
-                reports_dir = reports_dir,
-                terminated_command_event = terminated_command_event,
-            },
-        }
-    end
+		return {
+			strategy = {
+				type = "java",
+				request = "attach",
+				name = ("neotest-java (on port %s)"):format(port),
+				host = "localhost",
+				port = port,
+				modulePaths = {}, -- ???
+				classPaths = class_paths,
+				projectName = project_name,
+			},
+			cwd = base_dir,
+			symbol = position.type == "test" and position.name or nil,
+			context = {
+				strategy = args.strategy,
+				reports_dir = reports_dir,
+				terminated_command_event = terminated_command_event,
+			},
+		}
+	end
 
-    -- NORMAL STRATEGY
-    logger.info("junit command: ", command:build_to_string())
-    return {
-        command = command:build_to_string(),
-        cwd = base_dir,
-        symbol = position.name,
-        context = { reports_dir = reports_dir },
-    }
+	-- NORMAL STRATEGY
+	logger.info("junit command: ", command:build_to_string())
+	return {
+		command = command:build_to_string(),
+		cwd = base_dir,
+		symbol = position.name,
+		context = { reports_dir = reports_dir },
+	}
 end
 
 return SpecBuilder
