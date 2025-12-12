@@ -54,8 +54,7 @@ local function Path(raw_path, opts)
 		table.insert(slugs, 1, "")
 	end
 
-	local has_relative_dot = raw_path:sub(1, 2) == "." .. UNIX_SEPARATOR
-		or raw_path:sub(1, 2) == "." .. WINDOWS_SEPARATOR
+	local has_relative_dot = raw_path:sub(1, 2) == "." .. UNIX_SEPARATOR or raw_path:sub(1, 2) == "." .. WINDOWS_SEPARATOR
 	if has_relative_dot then
 		table.insert(slugs, 1, ".")
 	end

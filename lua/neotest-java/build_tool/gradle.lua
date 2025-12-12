@@ -17,7 +17,8 @@ end
 
 --- @param roots string[]
 function gradle.get_spring_property_filepaths(roots)
-	local base_dirs = vim.iter(roots)
+	local base_dirs = vim
+		.iter(roots)
 		:map(function(root)
 			return {
 				gradle.get_output_dir(root) .. "/main",
