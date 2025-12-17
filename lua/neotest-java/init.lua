@@ -26,7 +26,7 @@ local check_junit_jar = function(filepath)
 	)
 end
 
----@type neotest.Adapter
+---@class neotest.Adapter
 local NeotestJavaAdapter = {
 	name = "neotest-java",
 	filter_dir = dir_filter.filter_dir,
@@ -46,11 +46,9 @@ local NeotestJavaAdapter = {
 		-- TODO: find a way to avoid to make this steps every time
 
 		-- find root
-		local root = ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
-		assert(root, "root directory not found")
-
-		-- detect project type
-		local project_type = detect_project_type(root)
+		--
+		-- -- detect project type
+		-- local project_type = detect_project_type(root)
 
 		-- build spec
 		return spec_builder.build_spec(args, project_type, ch.get_context().config)
