@@ -25,6 +25,7 @@ jobs:
 
       - name: Run tests
         run: make test
+        timeout-minutes: 1
 
   release:
     if: github.ref == 'refs/heads/main'
