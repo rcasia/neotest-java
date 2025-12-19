@@ -21,7 +21,7 @@ prepare-demo:
 	-$(gradle_groovy) -p tests/fixtures/gradle-groovy-demo clean test --continue
 	-$(gradle_kotlin) -p tests/fixtures/gradle-kotlin-demo clean test --continue
 
-install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/nvim-treesitter/parser/groovy.so deps/neotest deps/nvim-nio
+install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
 
 deps/plenary.nvim:
 	mkdir -p deps
