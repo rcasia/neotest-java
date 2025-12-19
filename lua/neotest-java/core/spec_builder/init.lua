@@ -25,46 +25,48 @@ local should_ignore_path = require("neotest-java.util.should_ignore_path")
 
 local SpecBuilder = {}
 
+--- @type neotest-java.BuildSpecDependencies
+local DEFAULT_DEPENDENCIES = {
+	mkdir = function(dir)
+		vim.uv.fs_mkdir(dir, 493)
+	end,
+
+	chdir = function(dir)
+		nio.fn.chdir(dir)
+	end,
+
+	root_getter = function()
+		return ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
+	end,
+
+	scan = function(base_dir)
+		return plenary_scan.scan_dir(base_dir, {
+			search_pattern = function(path, project_file)
+				return not should_ignore_path(path) and path:find(project_file)
+			end,
+			respect_gitignore = false,
+		})
+	end,
+
+	compile = function(cwd, classpath_file_dir, compile_mode)
+		return compilers.jdtls.compile({
+			cwd = cwd,
+			classpath_file_dir = classpath_file_dir,
+			compile_mode = compile_mode,
+		})
+	end,
+	report_folder_name_gen = function(output_dir)
+		return string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
+	end,
+}
+
 ---@param args neotest.RunArgs
 ---@param project_type string
 ---@param config neotest-java.ConfigOpts
----@param dependencies neotest-java.BuildSpecDependencies
+---@param deps neotest-java.BuildSpecDependencies
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-function SpecBuilder.build_spec(args, project_type, config, dependencies)
-	dependencies = dependencies or {}
-	local mkdir = dependencies.mkdir or function(dir)
-		vim.uv.fs_mkdir(dir, 493)
-	end
-	local chdir = dependencies.chdir or function(dir)
-		nio.fn.chdir(dir)
-	end
-	local root_getter = dependencies.root_getter
-		or function()
-			return ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
-		end
-
-	local scan = dependencies.scan
-		or function(base_dir)
-			return plenary_scan.scan_dir(base_dir, {
-				search_pattern = function(path, project_file)
-					return not should_ignore_path(path) and path:find(project_file)
-				end,
-				respect_gitignore = false,
-			})
-		end
-
-	local compile = dependencies.compile
-		or function(cwd, classpath_file_dir, compile_mode)
-			return compilers.jdtls.compile({
-				cwd = cwd,
-				classpath_file_dir = classpath_file_dir,
-				compile_mode = compile_mode,
-			})
-		end
-	local report_file = dependencies.report_folder_name_gen
-		or function(output_dir)
-			return string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
-		end
+function SpecBuilder.build_spec(args, project_type, config, deps)
+	deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, deps or {})
 
 	if args.strategy == "dap" then
 		local ok_dap, _ = pcall(require, "dap")
@@ -74,24 +76,26 @@ function SpecBuilder.build_spec(args, project_type, config, dependencies)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
-	local root = assert(root_getter())
+	local root = assert(deps.root_getter())
 	local absolute_path = position.path
-	local project =
-		assert(Project.from_root_dir(root, build_tools.get(project_type), scan(root)), "project not detected correctly")
+	local project = assert(
+		Project.from_root_dir(root, build_tools.get(project_type), deps.scan(root)),
+		"project not detected correctly"
+	)
 	local modules = project:get_modules()
 	local build_tool = build_tools.get(project_type)
 
 	-- make sure we are in root_dir
-	chdir(root)
+	deps.chdir(root)
 
 	-- make sure outputDir is created to operate in it
 	local output_dir = build_tool.get_output_dir()
 	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
-	mkdir(output_dir_parent)
-	mkdir(output_dir)
+	deps.mkdir(output_dir_parent)
+	deps.mkdir(output_dir)
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir = compatible_path(report_file(output_dir))
+	local reports_dir = compatible_path(deps.report_folder_name_gen(output_dir))
 	command:reports_dir(compatible_path(reports_dir))
 
 	local module_dirs = vim.iter(modules)
@@ -117,7 +121,7 @@ function SpecBuilder.build_spec(args, project_type, config, dependencies)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg = compile(base_dir, output_dir, compile_mode)
+	local classpath_file_arg = deps.compile(base_dir, output_dir, compile_mode)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
