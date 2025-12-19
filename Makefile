@@ -21,15 +21,12 @@ prepare-demo:
 	-$(gradle_groovy) -p tests/fixtures/gradle-groovy-demo clean test --continue
 	-$(gradle_kotlin) -p tests/fixtures/gradle-kotlin-demo clean test --continue
 
-install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
+install: deps/plenary.nvim deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
 
 deps/plenary.nvim:
 	mkdir -p deps
 	git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git $@
 
-deps/nvim-treesitter:
-	mkdir -p deps
-	git clone --depth 1 https://github.com/nvim-treesitter/nvim-treesitter.git $@
 
 deps/neotest:
 	mkdir -p deps
@@ -39,13 +36,13 @@ deps/nvim-nio:
 	mkdir -p deps
 	git clone --depth 1 https://github.com/nvim-neotest/nvim-nio $@
 
-deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
+deps/nvim-treesitter/parser/java.so:
 	nvim --headless -u tests/testrc.vim -c "TSInstall java" +q
 	# nvim --headless -u tests/testrc.vim -c "lua require('nvim-treesitter.install').install('java'):wait(300000)" +q
 
 
 clean:
-	rm -rf deps/plenary.nvim deps/nvim-treesitter deps/neotest
+	rm -rf deps/plenary.nvim deps/neotest
 	$(mvn) -f tests/fixtures/maven-demo/pom.xml clean
 	$(gradle_groovy) -p tests/fixtures/gradle-groovy-demo clean
 	$(gradle_kotlin) -p tests/fixtures/gradle-kotlin-demo clean
