@@ -40,7 +40,7 @@ deps/nvim-nio:
 	git clone --depth 1 https://github.com/nvim-neotest/nvim-nio $@
 
 deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
-	nvim --headless -u tests/testrc.vim -c "lua require('nvim-treesitter.install').install('java'):wait(300000)" -c "quit"
+	nvim --headless -u tests/testrc.vim -c "lua require('nvim-treesitter.install').install('java'):wait(300000)" +q
 
 
 clean:
