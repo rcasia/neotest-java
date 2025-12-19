@@ -1,6 +1,7 @@
-local exists = require("neotest.lib.file").exists
+-- local exists = require("neotest.lib.file").exists
+local exists = function(path) end
 local job = require("plenary.job")
-local logger = require("neotest.logging")
+local logger = require("neotest-java.logger")
 local lib = require("neotest.lib")
 local ch = require("neotest-java.context_holder")
 local junit_version = ch.config().default_version
