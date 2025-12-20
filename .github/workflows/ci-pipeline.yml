@@ -23,8 +23,13 @@ jobs:
         with:
           neovim: true
 
+      - name: Make install
+        run: make install
+        timeout-minutes: 2
+
       - name: Run tests
         run: make test
+        timeout-minutes: 1
 
   release:
     if: github.ref == 'refs/heads/main'
