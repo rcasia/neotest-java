@@ -9,7 +9,7 @@ all: hooks test
 hooks:
 	cp -f ./git-hooks/* .git/hooks/
 
-test: install
+test:
 	bash scripts/test
 
 test-fail-fast: install
@@ -29,7 +29,7 @@ deps/plenary.nvim:
 
 deps/nvim-treesitter:
 	mkdir -p deps
-	git clone --depth 1 https://github.com/nvim-treesitter/nvim-treesitter.git $@
+	git clone --branch master --depth 1 https://github.com/nvim-treesitter/nvim-treesitter.git $@
 
 deps/neotest:
 	mkdir -p deps
@@ -40,8 +40,7 @@ deps/nvim-nio:
 	git clone --depth 1 https://github.com/nvim-neotest/nvim-nio $@
 
 deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
-	# nvim --headless -u tests/testrc.vim -c "TSInstall java" +q
-	nvim --headless -u tests/testrc.vim -c "lua require('nvim-treesitter.install').install('java'):wait(300000)" +q
+	nvim --headless -u tests/testrc.vim -c "TSInstallSync java" +q
 
 
 clean:
