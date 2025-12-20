@@ -14,6 +14,7 @@ local find_module_by_filepath = require("neotest-java.util.find_module_by_filepa
 local compilers = require("neotest-java.core.spec_builder.compiler")
 local plenary_scan = require("plenary.scandir")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
+local detect_project_type = require("neotest-java.util.detect_project_type")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: string)
@@ -23,6 +24,7 @@ local should_ignore_path = require("neotest-java.util.should_ignore_path")
 --- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
 --- @field report_folder_name_gen fun(output_dir: string): string
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
+--- @field detect_project_type fun(base_dir: string): string
 
 local SpecBuilder = {}
 
@@ -62,14 +64,16 @@ local DEFAULT_DEPENDENCIES = {
 	build_tool_getter = function(project_type)
 		return build_tools.get(project_type)
 	end,
+	detect_project_type = function(base_dir)
+		return detect_project_type(base_dir)
+	end,
 }
 
 ---@param args neotest.RunArgs
----@param project_type string
 ---@param config neotest-java.ConfigOpts
 ---@param deps neotest-java.BuildSpecDependencies
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-function SpecBuilder.build_spec(args, project_type, config, deps)
+function SpecBuilder.build_spec(args, config, deps)
 	deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, deps or {})
 
 	if args.strategy == "dap" then
@@ -77,6 +81,7 @@ function SpecBuilder.build_spec(args, project_type, config, deps)
 		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
 	end
 
+	local project_type = deps.detect_project_type(root)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()

@@ -43,15 +43,7 @@ local NeotestJavaAdapter = {
 	build_spec = function(args)
 		check_junit_jar(ch.get_context().config.junit_jar)
 
-		-- TODO: find a way to avoid to make this steps every time
-
-		-- find root
-		--
-		-- -- detect project type
-		-- local project_type = detect_project_type(root)
-
-		-- build spec
-		return spec_builder.build_spec(args, project_type, ch.get_context().config)
+		return spec_builder.build_spec(args, ch.get_context().config)
 	end,
 }
 

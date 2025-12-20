@@ -31,7 +31,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec(args, project_type, config, {
+		local actual = SpecBuilder.build_spec(args, config, {
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -69,6 +69,9 @@ describe("SpecBuilder", function()
 						}
 					end,
 				}
+			end,
+			detect_project_type = function()
+				return "maven"
 			end,
 		})
 
