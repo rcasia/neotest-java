@@ -13,6 +13,21 @@ local CommandBuilder = {
 		return setmetatable({}, self)
 	end,
 
+	equals = function(self, other)
+		if #self._test_references ~= #other._test_references then
+			return false
+		end
+
+		for i, v in ipairs(self._test_references) do
+			local ov = other._test_references[i]
+			if v.qualified_name ~= ov.qualified_name or v.method_name ~= ov.method_name or v.type ~= ov.type then
+				return false
+			end
+		end
+
+		return true
+	end,
+
 	---@param qualified_name string example: com.example.ExampleTest
 	---@param node_name? string example: shouldNotFail
 	---@return CommandBuilder
@@ -77,15 +92,18 @@ local CommandBuilder = {
 	basedir = function(self, basedir)
 		logger.debug("assigned basedir: " .. basedir)
 		self._basedir = basedir
+		return self
 	end,
 
 	classpath_file_arg = function(self, classpath_file_arg)
 		self._classpath_file_arg = classpath_file_arg
+		return self
 	end,
 
 	--- @param property_filepaths string[]
 	spring_property_filepaths = function(self, property_filepaths)
 		self._spring_property_filepaths = property_filepaths
+		return self
 	end,
 
 	--- @param port? number

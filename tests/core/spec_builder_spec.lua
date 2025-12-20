@@ -1,4 +1,5 @@
 local SpecBuilder = require("neotest-java.core.spec_builder")
+local JunitCommandBuilder = require("neotest-java.command.junit_command_builder")
 
 local function mock_args_tree(data)
 	return {
@@ -45,11 +46,35 @@ describe("SpecBuilder", function()
 			report_folder_name_gen = function()
 				return "report_folder"
 			end,
+			build_tool_getter = function()
+				--- @type neotest-java.BuildTool
+				return {
+					get_output_dir = function()
+						return "/user/home/target"
+					end,
+					get_module_dependencies = function()
+						return {}
+					end,
+					get_project_filename = function()
+						return "pom.xml"
+					end,
+					get_spring_property_filepaths = function()
+						return {}
+					end,
+
+					get_classpaths = function()
+						return {
+							"/user/home/target/classes",
+							"/user/home/target/test-classes",
+						}
+					end,
+				}
+			end,
 		})
 
 		-- then
 		assert.are.same({
-			command = "java -Dspring.config.additional-location=optional:file:/user/home/target/classes/classes/application.yml,optional:file:/user/home/target/classes/classes/application.yaml,optional:file:/user/home/target/classes/classes/application.properties,optional:file:/user/home/target/classes/classes/application-test.yml,optional:file:/user/home/target/classes/classes/application-test.yaml,optional:file:/user/home/target/classes/classes/application-test.properties,optional:file:/user/home/target/classes/test-classes/application.yml,optional:file:/user/home/target/classes/test-classes/application.yaml,optional:file:/user/home/target/classes/test-classes/application.properties,optional:file:/user/home/target/classes/test-classes/application-test.yml,optional:file:/user/home/target/classes/test-classes/application-test.yaml,optional:file:/user/home/target/classes/test-classes/application-test.properties,optional:file:/user/home/root/src/test/java/com/example/target/classes/classes/application.yml,optional:file:/user/home/root/src/test/java/com/example/target/classes/classes/application.yaml,optional:file:/user/home/root/src/test/java/com/example/target/classes/classes/application.properties,optional:file:/user/home/root/src/test/java/com/example/target/classes/classes/application-test.yml,optional:file:/user/home/root/src/test/java/com/example/target/classes/classes/application-test.yaml,optional:file:/user/home/root/src/test/java/com/example/target/classes/classes/application-test.properties,optional:file:/user/home/root/src/test/java/com/example/target/classes/test-classes/application.yml,optional:file:/user/home/root/src/test/java/com/example/target/classes/test-classes/application.yaml,optional:file:/user/home/root/src/test/java/com/example/target/classes/test-classes/application.properties,optional:file:/user/home/root/src/test/java/com/example/target/classes/test-classes/application-test.yml,optional:file:/user/home/root/src/test/java/com/example/target/classes/test-classes/application-test.yaml,optional:file:/user/home/root/src/test/java/com/example/target/classes/test-classes/application-test.properties,optional:file:/user/home/root/target/classes/classes/application.yml,optional:file:/user/home/root/target/classes/classes/application.yaml,optional:file:/user/home/root/target/classes/classes/application.properties,optional:file:/user/home/root/target/classes/classes/application-test.yml,optional:file:/user/home/root/target/classes/classes/application-test.yaml,optional:file:/user/home/root/target/classes/classes/application-test.properties,optional:file:/user/home/root/target/classes/test-classes/application.yml,optional:file:/user/home/root/target/classes/test-classes/application.yaml,optional:file:/user/home/root/target/classes/test-classes/application.properties,optional:file:/user/home/root/target/classes/test-classes/application-test.yml,optional:file:/user/home/root/target/classes/test-classes/application-test.yaml,optional:file:/user/home/root/target/classes/test-classes/application-test.properties -jar my-junit-jar.jar execute --classpath=classpath-file-argument --reports-dir=report_folder --fail-if-no-tests --disable-banner --details=testfeed --config=junit.platform.output.capture.stdout=true --select-class='com.example.ExampleTest' --select-method='com.example.ExampleTest'",
+			command = "java -Dspring.config.additional-location= -jar my-junit-jar.jar execute --classpath=classpath-file-argument --reports-dir=report_folder --fail-if-no-tests --disable-banner --details=testfeed --config=junit.platform.output.capture.stdout=true --select-class='com.example.ExampleTest' --select-method='com.example.ExampleTest'",
 			context = {
 				reports_dir = "report_folder",
 			},

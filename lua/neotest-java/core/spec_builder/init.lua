@@ -22,6 +22,7 @@ local should_ignore_path = require("neotest-java.util.should_ignore_path")
 --- @field scan fun(base_dir: string): string[]
 --- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
 --- @field report_folder_name_gen fun(output_dir: string): string
+--- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 
 local SpecBuilder = {}
 
@@ -58,6 +59,9 @@ local DEFAULT_DEPENDENCIES = {
 	report_folder_name_gen = function(output_dir)
 		return string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
+	build_tool_getter = function(project_type)
+		return build_tools.get(project_type)
+	end,
 }
 
 ---@param args neotest.RunArgs
@@ -83,7 +87,7 @@ function SpecBuilder.build_spec(args, project_type, config, deps)
 		"project not detected correctly"
 	)
 	local modules = project:get_modules()
-	local build_tool = build_tools.get(project_type)
+	local build_tool = deps.build_tool_getter(project_type)
 
 	-- make sure we are in root_dir
 	deps.chdir(root)
