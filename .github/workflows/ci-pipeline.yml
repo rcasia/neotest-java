@@ -12,20 +12,26 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
         nvim-version: [stable, nightly]
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
           version: ${{ matrix.nvim-version }}
 
+      - name: Make install
+        run: make install
+        timeout-minutes: 2
+
       - name: Run tests
         run: make test
+        timeout-minutes: 1
 
   release:
     if: github.ref == 'refs/heads/main'
@@ -36,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Setup Node.js
@@ -50,3 +56,5 @@ jobs:
   push-to-luarocks:
     needs: release
     uses: ./.github/workflows/luarocks.yml
+    secrets:
+      LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}

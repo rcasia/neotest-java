@@ -35,4 +35,48 @@ describe("file_checker", function()
 			assert.is_false(plugin.is_test_file(file_path))
 		end
 	end)
+
+	it("should return true if theres a /main/ outside the root path", function()
+		local ch = require("neotest-java.context_holder")
+		ch.set_root("/absolute_path/main/src")
+		local non_test_files = {
+			"/absolute_path/main/src/java/neotest/NeotestTest.java",
+		}
+		for _, file_path in ipairs(non_test_files) do
+			assert.is_true(plugin.is_test_file(file_path))
+		end
+		ch.set_root("")
+	end)
+
+	it("should return false if theres a /main/ inside the root path in a windows env", function()
+		vim.fn.win64 = {}
+		local ch = require("neotest-java.context_holder")
+		ch.set_root("C:\\absolute_path\\main\\src")
+
+		local non_test_files = {
+			"C:\\absolute_path\\src\\main\\java\\neotest\\NeotestTest.java",
+		}
+		for _, file_path in ipairs(non_test_files) do
+			assert.is_false(plugin.is_test_file(file_path))
+		end
+
+		ch.set_root("")
+		vim.fn.win64 = nil
+	end)
+
+	it("should return true if theres a /main/ outside the root path in a windows env", function()
+		vim.fn.win64 = {}
+		local ch = require("neotest-java.context_holder")
+		ch.set_root("C:\\absolute_path\\main\\src")
+
+		local non_test_files = {
+			"C:\\absolute_path\\main\\src\\java\\neotest\\NeotestTest.java",
+		}
+		for _, file_path in ipairs(non_test_files) do
+			assert.is_true(plugin.is_test_file(file_path))
+		end
+
+		ch.set_root("")
+		vim.fn.win64 = nil
+	end)
 end)

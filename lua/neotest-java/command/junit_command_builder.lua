@@ -77,15 +77,18 @@ local CommandBuilder = {
 	basedir = function(self, basedir)
 		logger.debug("assigned basedir: " .. basedir)
 		self._basedir = basedir
+		return self
 	end,
 
 	classpath_file_arg = function(self, classpath_file_arg)
 		self._classpath_file_arg = classpath_file_arg
+		return self
 	end,
 
 	--- @param property_filepaths string[]
 	spring_property_filepaths = function(self, property_filepaths)
 		self._spring_property_filepaths = property_filepaths
+		return self
 	end,
 
 	--- @param port? number
