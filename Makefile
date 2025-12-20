@@ -9,7 +9,7 @@ all: hooks test
 hooks:
 	cp -f ./git-hooks/* .git/hooks/
 
-test:
+test: install
 	bash scripts/test
 
 test-fail-fast: install
