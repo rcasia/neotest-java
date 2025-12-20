@@ -13,21 +13,6 @@ local CommandBuilder = {
 		return setmetatable({}, self)
 	end,
 
-	equals = function(self, other)
-		if #self._test_references ~= #other._test_references then
-			return false
-		end
-
-		for i, v in ipairs(self._test_references) do
-			local ov = other._test_references[i]
-			if v.qualified_name ~= ov.qualified_name or v.method_name ~= ov.method_name or v.type ~= ov.type then
-				return false
-			end
-		end
-
-		return true
-	end,
-
 	---@param qualified_name string example: com.example.ExampleTest
 	---@param node_name? string example: shouldNotFail
 	---@return CommandBuilder
