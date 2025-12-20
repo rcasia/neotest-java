@@ -9,15 +9,17 @@ local compatible_path = require("neotest-java.util.compatible_path")
 ---@class neotest-java.Project
 ---@field root_dir string
 ---@field build_tool neotest-java.BuildTool
+---@field dirs string[]
 local Project = {}
 Project.__index = Project
 
 ---@param root_dir string
 ---@return neotest-java.Project
-function Project.from_root_dir(root_dir)
+function Project.from_root_dir(root_dir, build_tool, dirs)
 	local self = setmetatable({}, Project)
 	self.root_dir = root_dir
-	self.build_tool = build_tools.get(detect_project_type(root_dir))
+	self.build_tool = build_tool or build_tools.get(detect_project_type(root_dir))
+	self.dirs = dirs
 	return self
 end
 
@@ -28,14 +30,15 @@ function Project:get_modules()
 	logger.debug("Root directory: ", self.root_dir)
 
 	-- NOTE: flag respect_gitignore does not work with "build.gradle"
-	local dirs = scan.scan_dir(self.root_dir, {
-		search_pattern = function(path)
-			return not should_ignore_path(path) and path:find(self.build_tool.get_project_filename())
-		end,
-		respect_gitignore = false,
-	})
+	local dirs = self.dirs
+		or scan.scan_dir(self.root_dir, {
+			search_pattern = function(path)
+				return not should_ignore_path(path) and path:find(self.build_tool.get_project_filename())
+			end,
+			respect_gitignore = false,
+		})
 
-	assert(dirs and #dirs > 0, "should find at least 1 module")
+	assert(dirs and #dirs > 0, "should find at least 1 module in root: " .. tostring(self.root_dir))
 
 	logger.debug("Found project directories: ", dirs)
 

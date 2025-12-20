@@ -1,5 +1,6 @@
 ---@module "neotest"
 
+local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
@@ -11,41 +12,99 @@ local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local compilers = require("neotest-java.core.spec_builder.compiler")
+local plenary_scan = require("plenary.scandir")
+local should_ignore_path = require("neotest-java.util.should_ignore_path")
+local detect_project_type = require("neotest-java.util.detect_project_type")
+
+--- @class neotest-java.BuildSpecDependencies
+--- @field mkdir fun(dir: string)
+--- @field chdir fun(dir: string)
+--- @field root_getter fun(): string
+--- @field scan fun(base_dir: string): string[]
+--- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
+--- @field report_folder_name_gen fun(output_dir: string): string
+--- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
+--- @field detect_project_type fun(base_dir: string): string
 
 local SpecBuilder = {}
 
+--- @type neotest-java.BuildSpecDependencies
+local DEFAULT_DEPENDENCIES = {
+	mkdir = function(dir)
+		vim.uv.fs_mkdir(dir, 493)
+	end,
+
+	chdir = function(dir)
+		nio.fn.chdir(dir)
+	end,
+
+	root_getter = function()
+		return ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
+	end,
+
+	scan = function(base_dir)
+		return plenary_scan.scan_dir(base_dir, {
+			search_pattern = function(path, project_file)
+				return not should_ignore_path(path) and path:find(project_file)
+			end,
+			respect_gitignore = false,
+		})
+	end,
+
+	compile = function(cwd, classpath_file_dir, compile_mode)
+		return compilers.jdtls.compile({
+			cwd = cwd,
+			classpath_file_dir = classpath_file_dir,
+			compile_mode = compile_mode,
+		})
+	end,
+	report_folder_name_gen = function(output_dir)
+		return string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
+	end,
+	build_tool_getter = function(project_type)
+		return build_tools.get(project_type)
+	end,
+	detect_project_type = function(base_dir)
+		return detect_project_type(base_dir)
+	end,
+}
+
 ---@param args neotest.RunArgs
----@param project_type string
 ---@param config neotest-java.ConfigOpts
+---@param deps neotest-java.BuildSpecDependencies
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
-function SpecBuilder.build_spec(args, project_type, config)
+function SpecBuilder.build_spec(args, config, deps)
+	deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, deps or {})
+
 	if args.strategy == "dap" then
 		local ok_dap, _ = pcall(require, "dap")
 		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
 	end
 
+	local project_type = deps.detect_project_type(root)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
-	local root = assert(ch:get_context().root)
+	local root = assert(deps.root_getter())
 	local absolute_path = position.path
-	local project = assert(Project.from_root_dir(root), "project not detected correctly")
+	local project = assert(
+		Project.from_root_dir(root, build_tools.get(project_type), deps.scan(root)),
+		"project not detected correctly"
+	)
 	local modules = project:get_modules()
-	local build_tool = build_tools.get(project_type)
+	local build_tool = deps.build_tool_getter(project_type)
 
 	-- make sure we are in root_dir
-	nio.fn.chdir(root)
+	deps.chdir(root)
 
 	-- make sure outputDir is created to operate in it
 	local output_dir = build_tool.get_output_dir()
 	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
 
-	vim.uv.fs_mkdir(output_dir_parent, 493)
-	vim.uv.fs_mkdir(output_dir, 493)
-
+	deps.mkdir(output_dir_parent)
+	deps.mkdir(output_dir)
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir =
-		compatible_path(string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S")))
+	local reports_dir = compatible_path(deps.report_folder_name_gen(output_dir))
 	command:reports_dir(compatible_path(reports_dir))
 
 	local module_dirs = vim.iter(modules)
@@ -71,8 +130,7 @@ function SpecBuilder.build_spec(args, project_type, config)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg =
-		compilers.jdtls.compile({ cwd = base_dir, classpath_file_dir = output_dir, compile_mode = compile_mode })
+	local classpath_file_arg = deps.compile(base_dir, output_dir, compile_mode)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY

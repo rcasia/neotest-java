@@ -3,7 +3,7 @@ local scan = require("plenary.scandir")
 
 --- Detect project type (maven | gradle | unknown)
 --- @param root_dir string
---- @param scandir fun(path: string, opts?: table): string[]
+--- @param scandir? fun(path: string, opts?: table): string[]
 --- @return "maven"|"gradle"|"unknown"
 local function detect_project_type(root_dir, scandir)
 	scandir = scandir or scan.scan_dir
