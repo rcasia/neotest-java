@@ -54,3 +54,5 @@ jobs:
   push-to-luarocks:
     needs: release
     uses: ./.github/workflows/luarocks.yml
+    secrets:
+      LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}

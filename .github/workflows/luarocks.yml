@@ -4,6 +4,9 @@ name: Push to Luarocks
 on:
   workflow_dispatch:
   workflow_call:
+    secrets:
+      LUAROCKS_API_KEY:
+        required: true
 
 jobs:
   check_tag:
