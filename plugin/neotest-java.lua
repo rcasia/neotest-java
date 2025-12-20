@@ -1,5 +1,4 @@
--- local exists = require("neotest.lib.file").exists
-local exists = function(path) end
+local exists = require("neotest.lib.file").exists
 local job = require("plenary.job")
 local logger = require("neotest-java.logger")
 local lib = require("neotest.lib")
