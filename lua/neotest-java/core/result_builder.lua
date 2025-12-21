@@ -58,11 +58,9 @@ end
 -- XML loading
 -- -----------------------------------------------------------------------------
 
---- @param reports_dir neotest-java.Path
 --- @param read_file fun(path: neotest-java.Path): string
---- @param scan fun(dir: string, opts: table): string[]
-local function load_all_testcases(reports_dir, scan, read_file)
-	local paths = scan(reports_dir.to_string(), { search_pattern = REPORT_FILE_NAMES_PATTERN })
+--- @param paths string[]
+local function load_all_testcases(paths, read_file)
 	log.debug("Found report files: ", paths)
 	assert(#paths ~= 0, "no report file could be generated")
 
@@ -122,7 +120,10 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 		spec.context.terminated_command_event.wait()
 	end
 
-	local testcases = load_all_testcases(spec.context.reports_dir, scan, read_file)
+	local testcases = load_all_testcases(
+		scan(spec.context.reports_dir.to_string(), { search_pattern = REPORT_FILE_NAMES_PATTERN }),
+		read_file
+	)
 	local groups = group_by_method_base(testcases)
 	local results = {}
 
