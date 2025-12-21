@@ -1,5 +1,6 @@
 local lib = require("neotest.lib")
 local resolve_package_name = require("neotest-java.util.resolve_package_name")
+local Path = require("neotest-java.util.path")
 
 local PositionsDiscoverer = {}
 
@@ -335,7 +336,7 @@ function PositionsDiscoverer.discover_positions(file_path)
 				return position.path
 			end
 
-			local package_name = resolve_package_name(position.path)
+			local package_name = resolve_package_name(Path(position.path))
 
 			local namespace_string = vim
 				.iter(parents)

@@ -2,7 +2,7 @@ local read_file = require("neotest-java.util.read_file")
 
 ---Resolve the Java package name from a file.
 ---Returns "" if no package declaration is present.
----@param filename string
+---@param filename neotest-java.Path
 ---@return string
 local function resolve_package_name(filename)
 	local ok, content = pcall(function()

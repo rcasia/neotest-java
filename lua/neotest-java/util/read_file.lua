@@ -1,9 +1,8 @@
 local File = require("neotest.lib.file")
-local compatible_path = require("neotest-java.util.compatible_path")
 
----@param path string
+---@param path neotest-java.Path
 local function read_file(path)
-	return File.read(compatible_path(path))
+	return File.read(path.to_string())
 end
 
 return read_file

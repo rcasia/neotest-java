@@ -3,6 +3,7 @@ local flat_map = require("neotest-java.util.flat_map")
 local log = require("neotest-java.logger")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
+local Path = require("neotest-java.util.path")
 
 local SKIPPED = JunitResult.SKIPPED
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
@@ -58,13 +59,15 @@ end
 -- -----------------------------------------------------------------------------
 
 --- @param reports_dir neotest-java.Path
+--- @param read_file fun(path: neotest-java.Path): string
+--- @param scan fun(dir: string, opts: table): string[]
 local function load_all_testcases(reports_dir, scan, read_file)
 	local paths = scan(reports_dir.to_string(), { search_pattern = REPORT_FILE_NAMES_PATTERN })
 	log.debug("Found report files: ", paths)
 	assert(#paths ~= 0, "no report file could be generated")
 
 	return flat_map(function(filepath)
-		local ok, data = pcall(read_file, filepath)
+		local ok, data = pcall(read_file, Path(filepath))
 		if not ok then
 			lib.notify("Error reading file: " .. tostring(filepath))
 			return {}
@@ -104,6 +107,8 @@ end
 
 local ResultBuilder = {}
 
+--- @param read_file fun(path: neotest-java.Path): string
+--- @param scan fun(dir: string, opts: table): string[]
 function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 	scan = scan or require("plenary.scandir").scan_dir
 	read_file = read_file or require("neotest-java.util.read_file")
