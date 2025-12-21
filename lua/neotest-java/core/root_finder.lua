@@ -1,4 +1,5 @@
 local log = require("neotest-java.logger")
+local lib = require("neotest.lib")
 
 local RootFinder = {}
 
@@ -6,9 +7,11 @@ local RootFinder = {}
 ---Should no root be found, the adapter can still be used in a non-project context if a test file matches.
 ---@async
 ---@param dir string @Directory to treat as cwd
----@param matcher fun(pattern: string): fun(dir: string): string | nil
+---@param matcher? fun(pattern: string): fun(dir: string): string | nil
 ---@return string | nil @Absolute root dir of test suite
 function RootFinder.find_root(dir, matcher)
+	matcher = matcher or lib.files.match_root_pattern
+
 	local patterns = {
 		"pom.xml",
 		"settings.gradle",

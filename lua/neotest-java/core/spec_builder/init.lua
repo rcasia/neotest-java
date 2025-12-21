@@ -18,12 +18,12 @@ local Path = require("neotest-java.util.path")
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
 --- @field chdir fun(dir: neotest-java.Path)
---- @field root_getter fun(): string
---- @field scan fun(base_dir: string): neotest-java.Path[]
+--- @field root_getter fun(): neotest-java.Path
+--- @field scan fun(base_dir: neotest-java.Path): neotest-java.Path[]
 --- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
---- @field detect_project_type fun(base_dir: string): string
+--- @field detect_project_type fun(base_dir: neotest-java.Path): string
 
 local SpecBuilder = {}
 
@@ -38,13 +38,21 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 
 	root_getter = function()
-		return ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
+		local root = ch.get_context().root
+		if root then
+			return Path(root)
+		end
+		root = root_finder.find_root(vim.fn.getcwd())
+		if root then
+			return Path(root)
+		end
+		error("Could not find project root")
 	end,
 
 	-- TODO: move into another module
 	-- NOTE: flag respect_gitignore does not work with "build.gradle"
 	scan = function(base_dir)
-		return vim.iter(plenary_scan.scan_dir(base_dir, {
+		return vim.iter(plenary_scan.scan_dir(base_dir.to_string(), {
 			search_pattern = function(path, project_file)
 				return not should_ignore_path(path) and path:find(project_file)
 			end,
@@ -68,7 +76,7 @@ local DEFAULT_DEPENDENCIES = {
 		return build_tools.get(project_type)
 	end,
 	detect_project_type = function(base_dir)
-		return detect_project_type(base_dir)
+		return detect_project_type(base_dir.to_string())
 	end,
 }
 
@@ -87,20 +95,20 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	local tree = args.tree
 	local position = tree:data()
-	local root = assert(deps.root_getter())
+	local root = deps.root_getter()
 	local project_type = deps.detect_project_type(root)
 	--- @type neotest-java.BuildTool
 	local build_tool = deps.build_tool_getter(project_type)
 	local command = CommandBuilder:new(config, project_type)
 	local project = assert(
 		-- TODO: move this Path instantiation upper in hierarchy
-		Project.from_root_dir(Path(root), build_tool.get_project_filename(), deps.scan(root)),
+		Project.from_root_dir(root, build_tool.get_project_filename(), deps.scan(root)),
 		"project not detected correctly"
 	)
 	local modules = project:get_modules()
 
 	-- make sure we are in root_dir
-	deps.chdir(Path(root))
+	deps.chdir(root)
 
 	-- make sure build directory is created to operate in it
 	local build_dir = build_tool.get_build_dirname()
@@ -149,7 +157,7 @@ function SpecBuilder.build_spec(args, config, deps)
 		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
 
-		local project_name = vim.fn.fnamemodify(root, ":t")
+		local project_name = vim.fn.fnamemodify(root.to_string(), ":t")
 		return {
 			strategy = {
 				type = "java",
@@ -159,7 +167,7 @@ function SpecBuilder.build_spec(args, config, deps)
 				port = port,
 				projectName = project_name,
 			},
-			cwd = root,
+			cwd = root.to_string(),
 			symbol = position.type == "test" and position.name or nil,
 			context = {
 				strategy = args.strategy,
@@ -173,7 +181,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	logger.info("junit command: ", command:build_to_string())
 	return {
 		command = command:build_to_string(),
-		cwd = root,
+		cwd = root.to_string(),
 		symbol = position.name,
 		context = { reports_dir = reports_dir },
 	}

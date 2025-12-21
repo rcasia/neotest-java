@@ -35,7 +35,7 @@ describe("SpecBuilder", function()
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
-				return "root"
+				return Path("root")
 			end,
 			scan = function()
 				return project_paths
