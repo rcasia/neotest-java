@@ -37,3 +37,10 @@ repos:
         pass_filenames: true
         types_or: [lua]
         stages: [pre-commit]
+
+      - id: test
+        name: Test
+        entry: make test
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
