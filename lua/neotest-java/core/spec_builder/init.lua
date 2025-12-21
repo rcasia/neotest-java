@@ -50,9 +50,7 @@ local DEFAULT_DEPENDENCIES = {
 			end,
 			respect_gitignore = false,
 		}))
-			:map(function(filepath)
-				return Path(filepath)
-			end)
+			:map(Path)
 			:totable()
 	end,
 
