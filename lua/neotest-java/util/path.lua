@@ -14,7 +14,6 @@ local PATH_METATABLE = {
 	--- @param path1 neotest-java.Path
 	--- @param path2 neotest-java.Path
 	__eq = function(path1, path2)
-		print("Comparing paths:", path1:to_string(), path2:to_string())
 		-- check if both are actually tables to avoid errors
 		if type(path1) ~= "table" or type(path2) ~= "table" then
 			return false

@@ -10,10 +10,9 @@ local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local compilers = require("neotest-java.core.spec_builder.compiler")
-local plenary_scan = require("plenary.scandir")
-local should_ignore_path = require("neotest-java.util.should_ignore_path")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.util.path")
+local scan = require("neotest-java.util.dir_scan")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -49,18 +48,7 @@ local DEFAULT_DEPENDENCIES = {
 		error("Could not find project root")
 	end,
 
-	-- TODO: move into another module
-	-- NOTE: flag respect_gitignore does not work with "build.gradle"
-	scan = function(base_dir)
-		return vim.iter(plenary_scan.scan_dir(base_dir.to_string(), {
-			search_pattern = function(path, project_file)
-				return not should_ignore_path(path) and path:find(project_file)
-			end,
-			respect_gitignore = false,
-		}))
-			:map(Path)
-			:totable()
-	end,
+	scan = scan,
 
 	compile = function(cwd, classpath_file_dir, compile_mode)
 		return compilers.jdtls.compile({
