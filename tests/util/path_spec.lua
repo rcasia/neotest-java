@@ -8,6 +8,45 @@ describe("Path", function()
 		assert(Path(raw_path) == Path(raw_path), "should be equal when same string")
 	end)
 
+	it("can determine whether it contains a slug or not", function()
+		local path = Path("/home/user/repo")
+		eq(true, path.contains("home"), "should return true")
+		eq(false, path.contains("hom"), "should return false")
+	end)
+
+	local relative_cases = {
+		{
+			base_path = "/some/test",
+			full_path = "/some/test/path/to/file",
+			expected_relative = "path/to/file",
+		},
+		{
+			base_path = "/some/test/",
+			full_path = "/some/test/path/to/file",
+			expected_relative = "path/to/file",
+		},
+		{
+			base_path = "/some/test",
+			full_path = "/some/test/",
+			expected_relative = "",
+		},
+		{
+			base_path = "C:\\absolute_path\\",
+			full_path = "C:\\absolute_path\\src\\main\\java\\neotest\\NeotestTest.java",
+			expected_relative = "src\\main\\java\\neotest\\NeotestTest.java",
+		},
+	}
+	for _, case in ipairs(relative_cases) do
+		it("can make a relative path from '" .. case.full_path .. "' to '" .. case.base_path .. "'", function()
+			local base_path = Path(case.base_path)
+			local full_path = Path(case.full_path)
+
+			local relative_path = full_path.make_relative(base_path)
+
+			eq(Path(case.expected_relative).to_string(), relative_path.to_string())
+		end)
+	end
+
 	local cases = {
 		{
 			input_path = "/////some//////test///////path",
