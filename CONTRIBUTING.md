@@ -22,6 +22,7 @@ You will need to have installed:
 
 * Java JDK 17 or 21
 * This list of commands available in your terminal:
+  * pre-commit (<https://pre-commit.com/#install>)
   * `stylua`
   * `make`
   * `git`
