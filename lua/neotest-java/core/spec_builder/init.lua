@@ -21,7 +21,7 @@ local Path = require("neotest-java.util.path")
 --- @field mkdir fun(dir: string)
 --- @field chdir fun(dir: string)
 --- @field root_getter fun(): string
---- @field scan fun(base_dir: string): string[]
+--- @field scan fun(base_dir: string): neotest-java.Path[]
 --- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
 --- @field report_folder_name_gen fun(output_dir: string): string
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
@@ -43,13 +43,19 @@ local DEFAULT_DEPENDENCIES = {
 		return ch.get_context().root or root_finder.find_root(vim.fn.getcwd())
 	end,
 
+	-- TODO: move into another module
+	-- NOTE: flag respect_gitignore does not work with "build.gradle"
 	scan = function(base_dir)
-		return plenary_scan.scan_dir(base_dir, {
+		return vim.iter(plenary_scan.scan_dir(base_dir, {
 			search_pattern = function(path, project_file)
 				return not should_ignore_path(path) and path:find(project_file)
 			end,
 			respect_gitignore = false,
-		})
+		}))
+			:map(function(filepath)
+				return Path(filepath)
+			end)
+			:totable()
 	end,
 
 	compile = function(cwd, classpath_file_dir, compile_mode)

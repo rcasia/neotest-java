@@ -1,5 +1,6 @@
 local SpecBuilder = require("neotest-java.core.spec_builder")
 local Path = require("neotest-java.util.path")
+local FakeBuildTool = require("tests.fake_build_tool")
 
 local function mock_args_tree(data)
 	return {
@@ -24,9 +25,9 @@ describe("SpecBuilder", function()
 			junit_jar = Path("my-junit-jar.jar"),
 		}
 		local project_paths = {
-			"/user/home/root",
-			"/user/home/root/src/test/java/com/example/ExampleTest.java",
-			"/user/home/root/pom.xml",
+			Path("/user/home/root"),
+			Path("/user/home/root/src/test/java/com/example/ExampleTest.java"),
+			Path("/user/home/root/pom.xml"),
 		}
 
 		-- when
@@ -47,27 +48,7 @@ describe("SpecBuilder", function()
 			end,
 			build_tool_getter = function()
 				--- @type neotest-java.BuildTool
-				return {
-					get_output_dir = function()
-						return "/user/home/target"
-					end,
-					get_module_dependencies = function()
-						return {}
-					end,
-					get_project_filename = function()
-						return "pom.xml"
-					end,
-					get_spring_property_filepaths = function()
-						return {}
-					end,
-
-					get_classpaths = function()
-						return {
-							"/user/home/target/classes",
-							"/user/home/target/test-classes",
-						}
-					end,
-				}
+				return FakeBuildTool
 			end,
 			detect_project_type = function()
 				return "maven"

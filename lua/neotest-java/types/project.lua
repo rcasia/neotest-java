@@ -1,57 +1,42 @@
-local build_tools = require("neotest-java.build_tool")
-local detect_project_type = require("neotest-java.util.detect_project_type")
 local Module = require("neotest-java.types.module")
-local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
-local should_ignore_path = require("neotest-java.util.should_ignore_path")
-local compatible_path = require("neotest-java.util.compatible_path")
-local Path = require("neotest-java.util.path")
 
 ---@class neotest-java.Project
 ---@field root_dir neotest-java.Path
+---@field project_filename string
 ---@field build_tool neotest-java.BuildTool
----@field dirs string[]
+---@field dirs neotest-java.Path[]
 local Project = {}
 Project.__index = Project
 
 ---@param root_dir neotest-java.Path
+---@param build_tool neotest-java.BuildTool
+---@param dirs neotest-java.Path[]
 ---@return neotest-java.Project
 function Project.from_root_dir(root_dir, build_tool, dirs)
 	local self = setmetatable({}, Project)
 	self.root_dir = root_dir
-	self.build_tool = build_tool or build_tools.get(detect_project_type(root_dir.to_string()))
+	self.build_tool = build_tool
+	self.project_filename = self.build_tool.get_project_filename()
 	self.dirs = dirs
 	return self
 end
 
 ---@return neotest-java.Module[]
 function Project:get_modules()
-	local project_file = self.build_tool.get_project_filename()
-	logger.debug("Searching for project files: ", project_file)
+	logger.debug("Searching for project files: ", self.project_filename)
 	logger.debug("Root directory: ", self.root_dir.to_string())
 
-	-- NOTE: flag respect_gitignore does not work with "build.gradle"
-	local dirs = self.dirs
-		or scan.scan_dir(self.root_dir.to_string(), {
-			search_pattern = function(path)
-				return not should_ignore_path(path) and path:find(self.build_tool.get_project_filename())
-			end,
-			respect_gitignore = false,
-		})
+	assert(self.dirs and #self.dirs > 0, "should find at least 1 module in root: " .. tostring(self.root_dir))
 
-	assert(dirs and #dirs > 0, "should find at least 1 module in root: " .. tostring(self.root_dir))
-
-	logger.debug("Found project directories: ", dirs)
+	logger.debug("Found project directories: ", self.dirs)
 
 	---@type table<neotest-java.Module>
 	local modules = {}
-	for _, dir in ipairs(dirs) do
-		local base_filepath = compatible_path(dir)
-		-- get the base directory of the module, by removing the last part of the path
-		-- taking care of both Windows and Unix-like systems
-		local base_dir = base_filepath:match("^(.*)[/\\][^/\\]+$")
-		local mod = Module.new(Path(base_dir), self.build_tool)
-		modules[#modules + 1] = mod
+	for _, path in ipairs(self.dirs) do
+		if path.to_string():find(self.project_filename) then
+			modules[#modules + 1] = Module.new(path.parent(), self.build_tool)
+		end
 	end
 
 	local base_dirs = {}
