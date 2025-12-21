@@ -13,7 +13,7 @@ gradle.get_output_dir = function(root)
 end
 
 gradle.get_build_dirname = function()
-	return Path("target/classes")
+	return Path("bin")
 end
 
 function gradle.get_project_filename()
