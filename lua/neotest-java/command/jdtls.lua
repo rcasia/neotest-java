@@ -1,6 +1,4 @@
 local nio = require("nio")
-local write_file = require("neotest-java.util.write_file")
-local compatible_path = require("neotest-java.util.compatible_path")
 local logger = require("neotest-java.logger")
 
 local M = {}

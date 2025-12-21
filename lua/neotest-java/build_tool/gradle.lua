@@ -1,4 +1,3 @@
-local compatible_path = require("neotest-java.util.compatible_path")
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 local Path = require("neotest-java.util.path")
 
