@@ -1,13 +1,12 @@
-local compatible_path = require("neotest-java.util.compatible_path")
 local scan = require("plenary.scandir")
 
 --- Detect project type (maven | gradle | unknown)
---- @param root_dir string
+--- @param root_dir neotest-java.Path
 --- @param scandir? fun(path: string, opts?: table): string[]
 --- @return "maven"|"gradle"|"unknown"
 local function detect_project_type(root_dir, scandir)
 	scandir = scandir or scan.scan_dir
-	local files = scandir(compatible_path(root_dir), {
+	local files = scandir(root_dir.to_string(), {
 		hidden = false,
 		add_dirs = false,
 		depth = math.huge,

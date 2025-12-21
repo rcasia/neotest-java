@@ -76,7 +76,7 @@ local DEFAULT_DEPENDENCIES = {
 		return build_tools.get(project_type)
 	end,
 	detect_project_type = function(base_dir)
-		return detect_project_type(base_dir.to_string())
+		return detect_project_type(base_dir)
 	end,
 }
 
