@@ -5,20 +5,21 @@ local scan = require("plenary.scandir")
 local logger = require("neotest-java.logger")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
 local compatible_path = require("neotest-java.util.compatible_path")
+local Path = require("neotest-java.util.path")
 
 ---@class neotest-java.Project
----@field root_dir string
+---@field root_dir neotest-java.Path
 ---@field build_tool neotest-java.BuildTool
 ---@field dirs string[]
 local Project = {}
 Project.__index = Project
 
----@param root_dir string
+---@param root_dir neotest-java.Path
 ---@return neotest-java.Project
 function Project.from_root_dir(root_dir, build_tool, dirs)
 	local self = setmetatable({}, Project)
 	self.root_dir = root_dir
-	self.build_tool = build_tool or build_tools.get(detect_project_type(root_dir))
+	self.build_tool = build_tool or build_tools.get(detect_project_type(root_dir.to_string()))
 	self.dirs = dirs
 	return self
 end
@@ -27,11 +28,11 @@ end
 function Project:get_modules()
 	local project_file = self.build_tool.get_project_filename()
 	logger.debug("Searching for project files: ", project_file)
-	logger.debug("Root directory: ", self.root_dir)
+	logger.debug("Root directory: ", self.root_dir.to_string())
 
 	-- NOTE: flag respect_gitignore does not work with "build.gradle"
 	local dirs = self.dirs
-		or scan.scan_dir(self.root_dir, {
+		or scan.scan_dir(self.root_dir.to_string(), {
 			search_pattern = function(path)
 				return not should_ignore_path(path) and path:find(self.build_tool.get_project_filename())
 			end,
@@ -49,7 +50,7 @@ function Project:get_modules()
 		-- get the base directory of the module, by removing the last part of the path
 		-- taking care of both Windows and Unix-like systems
 		local base_dir = base_filepath:match("^(.*)[/\\][^/\\]+$")
-		local mod = Module.new(base_dir, self.build_tool)
+		local mod = Module.new(Path(base_dir), self.build_tool)
 		modules[#modules + 1] = mod
 	end
 

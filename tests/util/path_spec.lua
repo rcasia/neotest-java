@@ -3,6 +3,11 @@ local Path = require("neotest-java.util.path")
 local eq = assert.are.same
 
 describe("Path", function()
+	it("two paths are equal if their string representations are equal", function()
+		local raw_path = "/some/test/path"
+		assert(Path(raw_path) == Path(raw_path), "should be equal when same string")
+	end)
+
 	local cases = {
 		{
 			input_path = "/////some//////test///////path",

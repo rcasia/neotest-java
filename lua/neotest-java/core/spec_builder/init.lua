@@ -15,6 +15,7 @@ local compilers = require("neotest-java.core.spec_builder.compiler")
 local plenary_scan = require("plenary.scandir")
 local should_ignore_path = require("neotest-java.util.should_ignore_path")
 local detect_project_type = require("neotest-java.util.detect_project_type")
+local Path = require("neotest-java.util.path")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: string)
@@ -87,7 +88,8 @@ function SpecBuilder.build_spec(args, config, deps)
 	local position = tree:data()
 	local root = assert(deps.root_getter())
 	local project = assert(
-		Project.from_root_dir(root, build_tools.get(project_type), deps.scan(root)),
+		-- TODO: move this Path instantiation upper in hierarchy
+		Project.from_root_dir(Path(root), build_tools.get(project_type), deps.scan(root)),
 		"project not detected correctly"
 	)
 	local modules = project:get_modules()
@@ -106,9 +108,11 @@ function SpecBuilder.build_spec(args, config, deps)
 	local reports_dir = compatible_path(deps.report_folder_name_gen(output_dir))
 	command:reports_dir(compatible_path(reports_dir))
 
-	local module_dirs = vim.iter(modules)
+	local module_dirs = vim
+		.iter(modules)
+		--- @param mod neotest-java.Module
 		:map(function(mod)
-			return mod.base_dir
+			return mod.base_dir.to_string()
 		end)
 		:totable()
 	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module base_dir not found")

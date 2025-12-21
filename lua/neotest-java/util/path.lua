@@ -2,6 +2,21 @@
 --- @field to_string fun(): string
 --- @field parent fun(): neotest-java.Path
 --- @field append fun(other: string): neotest-java.Path
+--- @field name fun(): string
+
+local PATH_METATABLE = {
+
+	--- @param path1 neotest-java.Path
+	--- @param path2 neotest-java.Path
+	__eq = function(path1, path2)
+		print("Comparing paths:", path1:to_string(), path2:to_string())
+		-- check if both are actually tables to avoid errors
+		if type(path1) ~= "table" or type(path2) ~= "table" then
+			return false
+		end
+		return path1.to_string() == path2.to_string()
+	end,
+}
 
 local UNIX_SEPARATOR = "/"
 local WINDOWS_SEPARATOR = "\\"
@@ -60,7 +75,10 @@ local function Path(raw_path, opts)
 		table.insert(slugs, 1, ".")
 	end
 
-	return {
+	return setmetatable({
+		name = function()
+			return slugs[#slugs]
+		end,
 		append = function(other)
 			return Path(raw_path .. SEP .. other, opts)
 		end,
@@ -76,7 +94,7 @@ local function Path(raw_path, opts)
 			end
 			return vim.iter(slugs):join(SEP)
 		end,
-	}
+	}, PATH_METATABLE)
 end
 
 return Path
