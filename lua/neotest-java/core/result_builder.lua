@@ -57,8 +57,9 @@ end
 -- XML loading
 -- -----------------------------------------------------------------------------
 
+--- @param reports_dir neotest-java.Path
 local function load_all_testcases(reports_dir, scan, read_file)
-	local paths = scan(reports_dir, { search_pattern = REPORT_FILE_NAMES_PATTERN })
+	local paths = scan(reports_dir.to_string(), { search_pattern = REPORT_FILE_NAMES_PATTERN })
 	log.debug("Found report files: ", paths)
 	assert(#paths ~= 0, "no report file could be generated")
 

@@ -3,12 +3,13 @@ local async = require("nio").tests
 local plugin = require("neotest-java")
 local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
+local Path = require("neotest-java.util.path")
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 
 local TEMPDIR = os.getenv("TEMP") or os.getenv("TMP") or vim.uv.os_tmpdir()
 local TEMPNAME = TEMPDIR .. "/neotest-java-result-builder-test.txt"
-local MAVEN_REPORTS_DIR = vim.loop.cwd() .. "/tests/fixtures/maven-demo/target/surefire-reports/"
+local MAVEN_REPORTS_DIR = Path(vim.loop.cwd() .. "/tests/fixtures/maven-demo/target/surefire-reports/")
 
 local SUCCESSFUL_RESULT = {
 	code = 0,
