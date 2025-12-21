@@ -23,7 +23,6 @@ describe("SpecBuilder", function()
 		local config = {
 			junit_jar = Path("my-junit-jar.jar"),
 		}
-		local project_type = "maven"
 		local project_paths = {
 			"/user/home/root",
 			"/user/home/root/src/test/java/com/example/ExampleTest.java",
