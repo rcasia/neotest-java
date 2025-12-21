@@ -4,20 +4,18 @@ local logger = require("neotest-java.logger")
 ---@class neotest-java.Project
 ---@field root_dir neotest-java.Path
 ---@field project_filename string
----@field build_tool neotest-java.BuildTool
 ---@field dirs neotest-java.Path[]
 local Project = {}
 Project.__index = Project
 
 ---@param root_dir neotest-java.Path
----@param build_tool neotest-java.BuildTool
+---@param project_filename string
 ---@param dirs neotest-java.Path[]
 ---@return neotest-java.Project
-function Project.from_root_dir(root_dir, build_tool, dirs)
+function Project.from_root_dir(root_dir, project_filename, dirs)
 	local self = setmetatable({}, Project)
 	self.root_dir = root_dir
-	self.build_tool = build_tool
-	self.project_filename = self.build_tool.get_project_filename()
+	self.project_filename = project_filename
 	self.dirs = dirs
 	return self
 end
@@ -35,7 +33,7 @@ function Project:get_modules()
 	local modules = {}
 	for _, path in ipairs(self.dirs) do
 		if path.to_string():find(self.project_filename) then
-			modules[#modules + 1] = Module.new(path.parent(), self.build_tool)
+			modules[#modules + 1] = Module.new(path.parent())
 		end
 	end
 

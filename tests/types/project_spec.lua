@@ -1,7 +1,6 @@
 local async = require("nio").tests
 local Project = require("neotest-java.types.project")
 local Path = require("neotest-java.util.path")
-local FakeBuildTool = require("tests.fake_build_tool")
 
 local eq = assert.are.same
 
@@ -12,6 +11,7 @@ describe("project", function()
 			dirs = {
 				Path("./tests/fixtures/maven-demo/pom.xml"),
 			},
+			project_filename = "pom.xml",
 			expected = {
 				{ name = "maven-demo", base_dir = Path("./tests/fixtures/maven-demo") },
 			},
@@ -21,6 +21,7 @@ describe("project", function()
 			dirs = {
 				Path("./tests/fixtures/gradle-groovy-demo/pom.xml"),
 			},
+			project_filename = "pom.xml",
 			expected = {
 				{ name = "gradle-groovy-demo", base_dir = Path("./tests/fixtures/gradle-groovy-demo") },
 			},
@@ -28,7 +29,7 @@ describe("project", function()
 	}
 	for _, testcase in ipairs(testscases) do
 		async.it("should get modules: " .. testcase.input.to_string(), function()
-			local project = Project.from_root_dir(testcase.input, FakeBuildTool, testcase.dirs)
+			local project = Project.from_root_dir(testcase.input, testcase.project_filename, testcase.dirs)
 			local results = {}
 			for _, mod in ipairs(project:get_modules()) do
 				results[#results + 1] = { name = mod.name, base_dir = mod.base_dir }

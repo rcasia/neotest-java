@@ -7,6 +7,7 @@ local lib = require("neotest.lib")
 
 ---@class neotest-java.BuildTool
 ---@field get_output_dir fun(root?: string): string
+---@field get_build_dirname fun(): neotest-java.Path
 ---@field get_project_filename fun(): string
 ---@field get_module_dependencies fun(root: string): table
 ---@field get_spring_property_filepaths fun(root?: string): string[]

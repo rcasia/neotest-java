@@ -89,17 +89,18 @@ function SpecBuilder.build_spec(args, config, deps)
 	end
 
 	local project_type = deps.detect_project_type(root)
+	--- @type neotest-java.BuildTool
+	local build_tool = deps.build_tool_getter(project_type)
 	local command = CommandBuilder:new(config, project_type)
 	local tree = args.tree
 	local position = tree:data()
 	local root = assert(deps.root_getter())
 	local project = assert(
 		-- TODO: move this Path instantiation upper in hierarchy
-		Project.from_root_dir(Path(root), build_tools.get(project_type), deps.scan(root)),
+		Project.from_root_dir(Path(root), build_tool.get_project_filename(), deps.scan(root)),
 		"project not detected correctly"
 	)
 	local modules = project:get_modules()
-	local build_tool = deps.build_tool_getter(project_type)
 
 	-- make sure we are in root_dir
 	deps.chdir(root)

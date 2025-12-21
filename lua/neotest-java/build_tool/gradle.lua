@@ -1,5 +1,6 @@
 local compatible_path = require("neotest-java.util.compatible_path")
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
+local Path = require("neotest-java.util.path")
 
 local PROJECT_FILENAME = "build.gradle"
 
@@ -9,6 +10,10 @@ local gradle = {}
 gradle.get_output_dir = function(root)
 	root = root and root or "."
 	return compatible_path(root .. "/bin")
+end
+
+gradle.get_build_dirname = function()
+	return Path("target/classes")
 end
 
 function gradle.get_project_filename()
