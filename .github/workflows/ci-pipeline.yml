@@ -52,7 +52,7 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx -p conventional-changelog-conventionalcommits semantic-release
+        run: npx -p @semantic-release/release-notes-generator semantic-release
   push-to-luarocks:
     needs: release
     uses: ./.github/workflows/luarocks.yml
