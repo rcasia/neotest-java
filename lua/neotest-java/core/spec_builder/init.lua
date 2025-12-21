@@ -101,7 +101,6 @@ function SpecBuilder.build_spec(args, config, deps)
 	local build_tool = deps.build_tool_getter(project_type)
 	local command = CommandBuilder:new(config, project_type)
 	local project = assert(
-		-- TODO: move this Path instantiation upper in hierarchy
 		Project.from_root_dir(root, build_tool.get_project_filename(), deps.scan(root)),
 		"project not detected correctly"
 	)
