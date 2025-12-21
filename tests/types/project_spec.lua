@@ -21,9 +21,9 @@ describe("project", function()
 			input = {
 				root_dir = Path("./tests/fixtures/gradle-groovy-demo"),
 				dirs = {
-					Path("./tests/fixtures/gradle-groovy-demo/pom.xml"),
+					Path("./tests/fixtures/gradle-groovy-demo/build.gradle"),
 				},
-				project_filename = "pom.xml",
+				project_filename = "build.gradle",
 			},
 			expected = {
 				{ name = "gradle-groovy-demo", base_dir = Path("./tests/fixtures/gradle-groovy-demo") },
