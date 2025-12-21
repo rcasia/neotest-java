@@ -7,7 +7,7 @@ gradle_kotlin = ./tests/fixtures/gradle-kotlin-demo/gradlew
 all: hooks test
 
 hooks:
-	cp -f ./git-hooks/* .git/hooks/
+	pre-commit install
 
 test: install
 	bash scripts/test
