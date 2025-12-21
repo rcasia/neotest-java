@@ -1,6 +1,9 @@
+local Path = require("neotest-java.util.path")
+
+--- @type neotest-java.BuildTool
 return {
-	get_output_dir = function()
-		return "/user/home/target"
+	get_build_dirname = function()
+		return Path("target")
 	end,
 	get_module_dependencies = function()
 		return {}

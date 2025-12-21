@@ -4,6 +4,7 @@ local logger = require("neotest-java.logger")
 
 --- @class CommandBuilder
 --- @field _junit_jar neotest-java.Path
+--- @field _reports_dir neotest-java.Path
 local CommandBuilder = {
 
 	--- @param config neotest-java.ConfigOpts
@@ -72,6 +73,8 @@ local CommandBuilder = {
 		return method_names
 	end,
 
+	--- @param self CommandBuilder
+	--- @param reports_dir neotest-java.Path
 	reports_dir = function(self, reports_dir)
 		self._reports_dir = reports_dir
 	end,
@@ -126,7 +129,7 @@ local CommandBuilder = {
 				self._junit_jar.to_string(),
 				"execute",
 				"--classpath=" .. self._classpath_file_arg,
-				"--reports-dir=" .. self._reports_dir,
+				"--reports-dir=" .. self._reports_dir.to_string(),
 				"--fail-if-no-tests",
 				"--disable-banner",
 				"--details=testfeed",

@@ -44,7 +44,7 @@ describe("SpecBuilder", function()
 				return "classpath-file-argument"
 			end,
 			report_folder_name_gen = function()
-				return "report_folder"
+				return Path("report_folder")
 			end,
 			build_tool_getter = function()
 				--- @type neotest-java.BuildTool
@@ -59,7 +59,7 @@ describe("SpecBuilder", function()
 		assert.are.same({
 			command = "java -Dspring.config.additional-location= -jar my-junit-jar.jar execute --classpath=classpath-file-argument --reports-dir=report_folder --fail-if-no-tests --disable-banner --details=testfeed --config=junit.platform.output.capture.stdout=true --select-class='com.example.ExampleTest' --select-method='com.example.ExampleTest'",
 			context = {
-				reports_dir = "report_folder",
+				reports_dir = Path("report_folder"),
 			},
 			cwd = "root",
 			symbol = "shouldNotFail",

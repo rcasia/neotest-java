@@ -7,13 +7,8 @@ local PROJECT_FILE = "pom.xml"
 ---@class neotest-java.MavenBuildTool : neotest-java.BuildTool
 local maven = {}
 
-maven.get_output_dir = function(root)
-	root = root and root or "."
-	-- TODO: read from pom.xml <build><directory>
-	return compatible_path(root .. "/target/classes")
-end
-
 maven.get_build_dirname = function()
+	-- TODO: read from pom.xml <build><directory>
 	return Path("target/classes")
 end
 
@@ -23,11 +18,14 @@ end
 
 --- @param roots string[]
 function maven.get_spring_property_filepaths(roots)
-	local base_dirs = vim.iter(roots)
-		:map(function(root)
+	local base_dirs = vim
+		.iter(roots)
+		:map(Path)
+		--- @param r neotest-java.Path
+		:map(function(r)
 			return {
-				maven.get_output_dir(root) .. "/classes",
-				maven.get_output_dir(root) .. "/test-classes",
+				r.append("classes"),
+				r.append("test-classes"),
 			}
 		end)
 		:flatten()

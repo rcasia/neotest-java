@@ -6,8 +6,6 @@ local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
-local path = require("plenary.path")
-local compatible_path = require("neotest-java.util.compatible_path")
 local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
 local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
@@ -18,12 +16,12 @@ local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.util.path")
 
 --- @class neotest-java.BuildSpecDependencies
---- @field mkdir fun(dir: string)
---- @field chdir fun(dir: string)
+--- @field mkdir fun(dir: neotest-java.Path)
+--- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): string
 --- @field scan fun(base_dir: string): neotest-java.Path[]
 --- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
---- @field report_folder_name_gen fun(output_dir: string): string
+--- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: string): string
 
@@ -32,11 +30,11 @@ local SpecBuilder = {}
 --- @type neotest-java.BuildSpecDependencies
 local DEFAULT_DEPENDENCIES = {
 	mkdir = function(dir)
-		vim.uv.fs_mkdir(dir, 493)
+		vim.uv.fs_mkdir(dir.to_string(), 493)
 	end,
 
 	chdir = function(dir)
-		nio.fn.chdir(dir)
+		nio.fn.chdir(dir.to_string())
 	end,
 
 	root_getter = function()
@@ -65,8 +63,8 @@ local DEFAULT_DEPENDENCIES = {
 			compile_mode = compile_mode,
 		})
 	end,
-	report_folder_name_gen = function(output_dir)
-		return string.format("%s/junit-reports/%s", output_dir, nio.fn.strftime("%d%m%y%H%M%S"))
+	report_folder_name_gen = function(build_dir)
+		return build_dir.append("junit-reports").append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
 	build_tool_getter = function(project_type)
 		return build_tools.get(project_type)
@@ -81,6 +79,7 @@ local DEFAULT_DEPENDENCIES = {
 ---@param deps neotest-java.BuildSpecDependencies
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, config, deps)
+	--- @type neotest-java.BuildSpecDependencies
 	deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, deps or {})
 
 	if args.strategy == "dap" then
@@ -88,13 +87,13 @@ function SpecBuilder.build_spec(args, config, deps)
 		assert(ok_dap, "neotest-java requires nvim-dap to run debug tests")
 	end
 
+	local tree = args.tree
+	local position = tree:data()
+	local root = assert(deps.root_getter())
 	local project_type = deps.detect_project_type(root)
 	--- @type neotest-java.BuildTool
 	local build_tool = deps.build_tool_getter(project_type)
 	local command = CommandBuilder:new(config, project_type)
-	local tree = args.tree
-	local position = tree:data()
-	local root = assert(deps.root_getter())
 	local project = assert(
 		-- TODO: move this Path instantiation upper in hierarchy
 		Project.from_root_dir(Path(root), build_tool.get_project_filename(), deps.scan(root)),
@@ -103,17 +102,17 @@ function SpecBuilder.build_spec(args, config, deps)
 	local modules = project:get_modules()
 
 	-- make sure we are in root_dir
-	deps.chdir(root)
+	deps.chdir(Path(root))
 
-	-- make sure outputDir is created to operate in it
-	local output_dir = build_tool.get_output_dir()
-	local output_dir_parent = compatible_path(path:new(output_dir):parent().filename)
+	-- make sure build directory is created to operate in it
+	local build_dir = build_tool.get_build_dirname()
 
-	deps.mkdir(output_dir_parent)
-	deps.mkdir(output_dir)
+	deps.mkdir(build_dir)
+	deps.mkdir(build_dir.parent())
+
 	-- JUNIT REPORT DIRECTORY
-	local reports_dir = compatible_path(deps.report_folder_name_gen(output_dir))
-	command:reports_dir(compatible_path(reports_dir))
+	local reports_dir = deps.report_folder_name_gen(build_dir)
+	command:reports_dir(reports_dir)
 
 	local module_dirs = vim
 		.iter(modules)
@@ -140,7 +139,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg = deps.compile(base_dir, output_dir, compile_mode)
+	local classpath_file_arg = deps.compile(base_dir, build_dir.to_string(), compile_mode)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY

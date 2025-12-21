@@ -7,11 +7,6 @@ local PROJECT_FILENAME = "build.gradle"
 ---@class neotest-java.GradleBuildTool : neotest-java.BuildTool
 local gradle = {}
 
-gradle.get_output_dir = function(root)
-	root = root and root or "."
-	return compatible_path(root .. "/bin")
-end
-
 gradle.get_build_dirname = function()
 	return Path("bin")
 end
@@ -22,11 +17,14 @@ end
 
 --- @param roots string[]
 function gradle.get_spring_property_filepaths(roots)
-	local base_dirs = vim.iter(roots)
+	local base_dirs = vim
+		.iter(roots)
+		:map(Path)
+		--- @param root neotest-java.Path
 		:map(function(root)
 			return {
-				gradle.get_output_dir(root) .. "/main",
-				gradle.get_output_dir(root) .. "/test",
+				root.append("main"),
+				root.append("test"),
 			}
 		end)
 		:flatten()
