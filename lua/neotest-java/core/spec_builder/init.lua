@@ -86,7 +86,6 @@ function SpecBuilder.build_spec(args, config, deps)
 	local tree = args.tree
 	local position = tree:data()
 	local root = assert(deps.root_getter())
-	local absolute_path = position.path
 	local project = assert(
 		Project.from_root_dir(root, build_tools.get(project_type), deps.scan(root)),
 		"project not detected correctly"

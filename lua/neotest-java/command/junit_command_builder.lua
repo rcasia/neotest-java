@@ -3,8 +3,10 @@ local java = binaries.java
 local logger = require("neotest-java.logger")
 
 --- @class CommandBuilder
+--- @field _junit_jar neotest-java.Path
 local CommandBuilder = {
 
+	--- @param config neotest-java.ConfigOpts
 	--- @return CommandBuilder
 	new = function(self, config, project_type)
 		self.__index = self
@@ -91,6 +93,7 @@ local CommandBuilder = {
 		return self
 	end,
 
+	--- @param self CommandBuilder
 	--- @param port? number
 	--- @return { command: string, args: string[] }
 	build_junit = function(self, port)
@@ -120,7 +123,7 @@ local CommandBuilder = {
 			args = {
 				"-Dspring.config.additional-location=" .. table.concat(self._spring_property_filepaths, ","),
 				"-jar",
-				self._junit_jar,
+				self._junit_jar.to_string(),
 				"execute",
 				"--classpath=" .. self._classpath_file_arg,
 				"--reports-dir=" .. self._reports_dir,

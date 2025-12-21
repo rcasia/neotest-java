@@ -12,10 +12,9 @@ local lib = require("neotest.lib")
 
 local junit_version = ch.config().default_version
 
-local detect_project_type = require("neotest-java.util.detect_project_type")
-
+--- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath)
-	local exists, _ = File.exists(filepath)
+	local exists, _ = File.exists(filepath.to_string())
 	assert(
 		exists,
 		([[
@@ -41,9 +40,9 @@ local NeotestJavaAdapter = {
 		return root
 	end,
 	build_spec = function(args)
-		check_junit_jar(ch.get_context().config.junit_jar)
+		check_junit_jar(ch.config().junit_jar)
 
-		return spec_builder.build_spec(args, ch.get_context().config)
+		return spec_builder.build_spec(args, ch.config())
 	end,
 }
 

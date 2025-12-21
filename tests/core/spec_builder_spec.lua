@@ -1,5 +1,5 @@
 local SpecBuilder = require("neotest-java.core.spec_builder")
-local JunitCommandBuilder = require("neotest-java.command.junit_command_builder")
+local Path = require("neotest-java.util.path")
 
 local function mock_args_tree(data)
 	return {
@@ -21,7 +21,7 @@ describe("SpecBuilder", function()
 			type = "test",
 		})
 		local config = {
-			junit_jar = "my-junit-jar.jar",
+			junit_jar = Path("my-junit-jar.jar"),
 		}
 		local project_type = "maven"
 		local project_paths = {
