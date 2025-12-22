@@ -4,6 +4,7 @@ local log = require("neotest-java.logger")
 local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.types.junit_result")
 local Path = require("neotest-java.util.path")
+local dir_scan = require("neotest-java.util.dir_scan")
 
 local SKIPPED = JunitResult.SKIPPED
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
@@ -106,9 +107,9 @@ end
 local ResultBuilder = {}
 
 --- @param read_file fun(path: neotest-java.Path): string
---- @param scan fun(dir: string, opts: table): string[]
+--- @param scan fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): string[]
 function ResultBuilder.build_results(spec, result, tree, scan, read_file)
-	scan = scan or require("plenary.scandir").scan_dir
+	scan = scan or dir_scan
 	read_file = read_file or require("neotest-java.util.read_file")
 
 	if result.code ~= 0 and result.code ~= 1 then
@@ -121,7 +122,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 	end
 
 	local testcases = load_all_testcases(
-		scan(spec.context.reports_dir.to_string(), { search_pattern = REPORT_FILE_NAMES_PATTERN }),
+		scan(spec.context.reports_dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } }),
 		read_file
 	)
 	local groups = group_by_method_base(testcases)

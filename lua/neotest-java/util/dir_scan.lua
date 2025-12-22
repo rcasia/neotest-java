@@ -21,12 +21,30 @@ local iter_dir = function(dir)
 	end
 end
 
+--- @param patterns string[]
+--- @return fun(path: neotest-java.Path): boolean
+local contains = function(patterns)
+	local has_patterns = type(patterns) == "table" and #patterns
+
+	--- @param path neotest-java.Path
+	return function(path)
+		if not has_patterns then
+			return true
+		end
+
+		return vim.iter(patterns):any(function(pattern)
+			return path.to_string():match(pattern)
+		end)
+	end
+end
+
 ---@class neotest-java.DirScanDependencies
 ---@field iter_dir fun(dir: neotest-java.Path): fun(): string | nil
 
 ---@param dir neotest-java.Path
+---@param opts { search_patterns: string[] }
 ---@param dependencies? neotest-java.DirScanDependencies
-local function scan(dir, dependencies)
+local function scan(dir, opts, dependencies)
 	dependencies = dependencies or {}
 	iter_dir = dependencies.iter_dir or iter_dir
 
@@ -34,6 +52,7 @@ local function scan(dir, dependencies)
 		:filter(function(path)
 			return not should_ignore_path(path)
 		end)
+		:filter(contains(opts.search_patterns))
 		:totable()
 end
 

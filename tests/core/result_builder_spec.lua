@@ -56,9 +56,7 @@ describe("ResultBuilder", function()
 	async.it("throws error when no report files found", function()
 		--given
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return {}
 		end
 
@@ -75,9 +73,7 @@ describe("ResultBuilder", function()
 	async.it("ignores report file when cannot be read", function()
 		--given
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { "TEST-someTest.xml" }
 		end
 		local read_file = function()
@@ -139,9 +135,7 @@ describe("ResultBuilder", function()
 		local file_path = create_tempfile_with_test(file_content)
 		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
 		end
 		local read_file = function()
@@ -210,9 +204,7 @@ describe("ResultBuilder", function()
 		local file_path = create_tempfile_with_test(file_content)
 		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
 		end
 		local read_file = function()
@@ -279,9 +271,7 @@ describe("ResultBuilder", function()
 
 		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
 		end
 		local read_file = function()
@@ -355,9 +345,7 @@ describe("ResultBuilder", function()
 
 		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
 		end
 		local read_file = function()
@@ -437,9 +425,7 @@ describe("ResultBuilder", function()
 
 		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
 		end
 		local read_file = function()
@@ -512,9 +498,7 @@ describe("ResultBuilder", function()
 
 		local tree = plugin.discover_positions(file_path)
 		local scan_dir = function(dir)
-			if dir ~= DEFAULT_SPEC.context.reports_dir.to_string() then
-				error("should scan in spec.context.reports_dir")
-			end
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
 		end
 		local read_file = function()
