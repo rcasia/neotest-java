@@ -121,11 +121,11 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- TEST SELECTORS
 	if position.type == "test" then
-		command:add_test_method(position.id, position.name)
+		command:add_test_method(position.id)
 	else
 		for _, child in tree:iter() do
 			if child.type == "test" then
-				command:add_test_method(child.id, child.name)
+				command:add_test_method(child.id)
 			end
 		end
 	end
