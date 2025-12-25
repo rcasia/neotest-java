@@ -87,7 +87,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	local project_type = deps.detect_project_type(root)
 	--- @type neotest-java.BuildTool
 	local build_tool = deps.build_tool_getter(project_type)
-	local command = CommandBuilder.new(config, project_type)
+	local command = CommandBuilder.new(config)
 	local project = assert(
 		Project.from_root_dir(root, build_tool.get_project_filename(), deps.scan(root)),
 		"project not detected correctly"

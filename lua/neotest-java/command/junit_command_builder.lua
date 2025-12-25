@@ -18,10 +18,9 @@ CommandBuilder.__index = CommandBuilder
 
 --- @param config neotest-java.ConfigOpts
 --- @return CommandBuilder
-CommandBuilder.new = function(config, project_type)
+CommandBuilder.new = function(config)
 	local fields = {
 		_junit_jar = config.junit_jar,
-		_project_type = project_type,
 		_test_references = {},
 	}
 	return setmetatable(fields, CommandBuilder)
