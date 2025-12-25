@@ -16,11 +16,11 @@ local java = binaries.java
 local CommandBuilder = {}
 CommandBuilder.__index = CommandBuilder
 
---- @param config neotest-java.ConfigOpts
+--- @param junit_jar neotest-java.Path
 --- @return CommandBuilder
-CommandBuilder.new = function(config)
+function CommandBuilder.new(junit_jar)
 	local fields = {
-		_junit_jar = config.junit_jar,
+		_junit_jar = junit_jar,
 		_test_references = {},
 	}
 	return setmetatable(fields, CommandBuilder)
