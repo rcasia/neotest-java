@@ -2,6 +2,8 @@ local SpecBuilder = require("neotest-java.core.spec_builder")
 local Path = require("neotest-java.util.path")
 local FakeBuildTool = require("tests.fake_build_tool")
 
+local eq = assert.are.same
+
 local function mock_args_tree(data)
 	return {
 		tree = {
@@ -56,8 +58,22 @@ describe("SpecBuilder", function()
 		})
 
 		-- then
-		assert.are.same({
-			command = "java -Dspring.config.additional-location= -jar my-junit-jar.jar execute --classpath=classpath-file-argument --reports-dir=report_folder --fail-if-no-tests --disable-banner --details=testfeed --config=junit.platform.output.capture.stdout=true --select-class='com.example.ExampleTest' --select-method='com.example.ExampleTest'",
+		eq({
+			command = vim.iter({
+				"java",
+				"-Dspring.config.additional-location=",
+				"-jar",
+				"my-junit-jar.jar",
+				"execute",
+				"--classpath=classpath-file-argument",
+				"--reports-dir=report_folder",
+				"--fail-if-no-tests",
+				"--disable-banner",
+				"--details=testfeed",
+				"--config=junit.platform.output.capture.stdout=true",
+				"--select-class='com.example.ExampleTest'",
+				"--select-method='com.example.ExampleTest'",
+			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
 			},
