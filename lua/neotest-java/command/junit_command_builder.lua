@@ -118,7 +118,7 @@ CommandBuilder.build_junit = function(self, port)
 end
 
 --- @param port? number
---- @return { command: string, args: string[] }
+--- @return string
 CommandBuilder.build_to_string = function(self, port)
 	local c = self:build_junit(port)
 	return c.command .. " " .. table.concat(c.args, " ")
