@@ -16,9 +16,9 @@ local function mock_args_tree(data)
 end
 
 describe("SpecBuilder", function()
-	it("builds spec for one method in unit test class with maven", function()
+	it("builds spec for one method", function()
 		local args = mock_args_tree({
-			id = "com.example.ExampleTest",
+			id = "com.example.ExampleTest#shouldNotFail()",
 			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
 			name = "shouldNotFail",
 			type = "test",
@@ -72,7 +72,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--select-class='com.example.ExampleTest'",
-				"--select-method='com.example.ExampleTest'",
+				"--select-method='com.example.ExampleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
