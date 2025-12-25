@@ -75,10 +75,6 @@ CommandBuilder.build_junit = function(self, port)
 			if v.method_name then
 				table.insert(selectors, "--select-method='" .. v.method_name .. "'")
 			end
-		elseif v.type == "file" then
-			table.insert(selectors, "-c=" .. v.qualified_name)
-		elseif v.type == "dir" then
-			table.insert(selectors, "-p=" .. v.qualified_name)
 		end
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
