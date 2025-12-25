@@ -9,7 +9,7 @@ local java = binaries.java
 --- @class CommandBuilder
 --- @field _junit_jar neotest-java.Path
 --- @field _reports_dir neotest-java.Path
---- @field _test_references any
+--- @field _test_references neotest-java.TestReference
 --- @field _basedir neotest-java.Path
 --- @field _classpath_file_arg string
 --- @field _spring_property_filepaths string[]
