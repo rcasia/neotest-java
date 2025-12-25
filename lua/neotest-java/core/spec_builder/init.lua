@@ -87,7 +87,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	local project_type = deps.detect_project_type(root)
 	--- @type neotest-java.BuildTool
 	local build_tool = deps.build_tool_getter(project_type)
-	local command = CommandBuilder:new(config, project_type)
+	local command = CommandBuilder.new(config, project_type)
 	local project = assert(
 		Project.from_root_dir(root, build_tool.get_project_filename(), deps.scan(root)),
 		"project not detected correctly"
@@ -121,11 +121,11 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- TEST SELECTORS
 	if position.type == "test" then
-		command:test_reference(position.id, position.name, "test")
+		command:add_test_method(position.id, position.name)
 	else
 		for _, child in tree:iter() do
 			if child.type == "test" then
-				command:test_reference(child.id, child.name, "test")
+				command:add_test_method(child.id, child.name)
 			end
 		end
 	end
