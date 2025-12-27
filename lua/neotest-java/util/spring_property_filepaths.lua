@@ -1,7 +1,7 @@
-local p = require("neotest-java.util.compatible_path")
+local Path = require("neotest-java.util.path")
 
---- @param base_dirs string[]
---- @return string[]
+--- @param base_dirs neotest-java.Path[]
+--- @return neotest-java.Path[]
 local function generate_spring_property_filepaths(base_dirs)
 	local prefix = "optional:"
 	local scheme = "file:"
@@ -9,10 +9,10 @@ local function generate_spring_property_filepaths(base_dirs)
 
 	local locations = {}
 	for _, base_dir in ipairs(base_dirs) do
-		local bases = { base_dir .. "/application", base_dir .. "/application-test" }
+		local bases = { base_dir.append("application"), base_dir.append("/application-test") }
 		for _, base in ipairs(bases) do
 			for _, ext in ipairs(exts) do
-				local location = p(prefix .. scheme .. base .. "." .. ext)
+				local location = Path(prefix .. scheme .. base.to_string() .. "." .. ext)
 				table.insert(locations, location)
 			end
 		end
