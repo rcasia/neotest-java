@@ -113,7 +113,11 @@ describe("SpecBuilder", function()
 				return project_paths
 			end,
 			compile = function(base_dir)
-				assert(base_dir == expected_base_dir, "should compile with the expected_base_dir")
+				assert(
+					base_dir == expected_base_dir,
+					"should compile with the expected_base_dir: "
+						.. vim.inspect({ actual = base_dir, expected = expected_base_dir })
+				)
 				return "classpath-file-argument"
 			end,
 			report_folder_name_gen = function()
