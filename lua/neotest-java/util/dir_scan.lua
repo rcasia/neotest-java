@@ -42,9 +42,10 @@ end
 ---@field iter_dir fun(dir: neotest-java.Path): fun(): string | nil
 
 ---@param dir neotest-java.Path
----@param opts { search_patterns: string[] }
+---@param opts? { search_patterns: string[] }
 ---@param dependencies? neotest-java.DirScanDependencies
 local function scan(dir, opts, dependencies)
+	opts = opts or {}
 	dependencies = dependencies or {}
 	iter_dir = dependencies.iter_dir or iter_dir
 
