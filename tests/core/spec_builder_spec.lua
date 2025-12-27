@@ -82,6 +82,74 @@ describe("SpecBuilder", function()
 		}, actual)
 	end)
 
+	it("builds spec for one method with extra args", function()
+		local args = mock_args_tree({
+			id = "com.example.ExampleTest#shouldNotFail()",
+			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
+			name = "shouldNotFail",
+			type = "test",
+		})
+		local config = {
+			junit_jar = Path("my-junit-jar.jar"),
+			jvm_args = { "-myExtraJvmArg" },
+		}
+		local project_paths = {
+			Path("/user/home/root"),
+			Path("/user/home/root/src/test/java/com/example/ExampleTest.java"),
+			Path("/user/home/root/pom.xml"),
+		}
+
+		-- when
+		local actual = SpecBuilder.build_spec(args, config, {
+			mkdir = function() end,
+			chdir = function() end,
+			root_getter = function()
+				return Path("root")
+			end,
+			scan = function()
+				return project_paths
+			end,
+			compile = function()
+				return "classpath-file-argument"
+			end,
+			report_folder_name_gen = function()
+				return Path("report_folder")
+			end,
+			build_tool_getter = function()
+				--- @type neotest-java.BuildTool
+				return FakeBuildTool
+			end,
+			detect_project_type = function()
+				return "maven"
+			end,
+		})
+
+		-- then
+		eq({
+			command = vim.iter({
+				"java",
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties").to_string(),
+				"-myExtraJvmArg",
+				"-jar",
+				"my-junit-jar.jar",
+				"execute",
+				"--classpath=classpath-file-argument",
+				"--reports-dir=report_folder",
+				"--fail-if-no-tests",
+				"--disable-banner",
+				"--details=testfeed",
+				"--config=junit.platform.output.capture.stdout=true",
+				"--select-class='com.example.ExampleTest'",
+				"--select-method='com.example.ExampleTest#shouldNotFail()'",
+			}):join(" "),
+			context = {
+				reports_dir = Path("report_folder"),
+			},
+			cwd = "root",
+			symbol = "shouldNotFail",
+		}, actual)
+	end)
+
 	it("builds spec for one method in a multi-module project", function()
 		local args = mock_args_tree({
 			id = "com.example.ExampleInSecondModuleTest#shouldNotFail()",

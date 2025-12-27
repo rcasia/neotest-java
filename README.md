@@ -82,6 +82,7 @@
 ```lua
 {
   junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
+  jvm_args = {}, -- Additional jvm args to pass when running tests
   incremental_build = true
 }
 ```

@@ -8,6 +8,7 @@ local java = binaries.java
 
 --- @class CommandBuilder
 --- @field _junit_jar neotest-java.Path
+--- @field _jvm_args string[]
 --- @field _reports_dir neotest-java.Path
 --- @field _test_references neotest-java.TestReference
 --- @field _basedir neotest-java.Path
@@ -17,9 +18,11 @@ local CommandBuilder = {}
 CommandBuilder.__index = CommandBuilder
 
 --- @param junit_jar neotest-java.Path
+--- @param jvm_args? string[]
 --- @return CommandBuilder
-function CommandBuilder.new(junit_jar)
+function CommandBuilder.new(junit_jar, jvm_args)
 	local fields = {
+		_jvm_args = jvm_args or {},
 		_junit_jar = junit_jar,
 		_test_references = {},
 	}
@@ -87,10 +90,15 @@ CommandBuilder.build_junit = function(self, port)
 		end)
 		:join(",")
 
+	local jvm_args = {
+		"-Dspring.config.additional-location=" .. additional_location_arg,
+		unpack(self._jvm_args),
+	}
+
 	local junit_command = {
 		command = java(),
-		args = {
-			"-Dspring.config.additional-location=" .. additional_location_arg,
+		args = vim.iter({
+			jvm_args,
 			"-jar",
 			self._junit_jar.to_string(),
 			"execute",
@@ -100,7 +108,9 @@ CommandBuilder.build_junit = function(self, port)
 			"--disable-banner",
 			"--details=testfeed",
 			"--config=junit.platform.output.capture.stdout=true",
-		},
+		})
+			:flatten()
+			:totable(),
 	}
 	-- add selectors
 	for _, v in ipairs(selectors) do
