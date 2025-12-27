@@ -12,7 +12,7 @@ local java = binaries.java
 --- @field _test_references neotest-java.TestReference
 --- @field _basedir neotest-java.Path
 --- @field _classpath_file_arg string
---- @field _spring_property_filepaths string[]
+--- @field _spring_property_filepaths neotest-java.Path[]
 local CommandBuilder = {}
 CommandBuilder.__index = CommandBuilder
 
@@ -52,7 +52,7 @@ function CommandBuilder:classpath_file_arg(classpath_file_arg)
 	return self
 end
 
---- @param property_filepaths string[]
+--- @param property_filepaths neotest-java.Path[]
 function CommandBuilder:spring_property_filepaths(property_filepaths)
 	self._spring_property_filepaths = property_filepaths
 	return self
@@ -79,10 +79,18 @@ CommandBuilder.build_junit = function(self, port)
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
 
+	local additional_location_arg = vim
+		.iter(self._spring_property_filepaths)
+		--- @param path neotest-java.Path
+		:map(function(path)
+			return path.to_string()
+		end)
+		:join(",")
+
 	local junit_command = {
 		command = java(),
 		args = {
-			"-Dspring.config.additional-location=" .. table.concat(self._spring_property_filepaths, ","),
+			"-Dspring.config.additional-location=" .. additional_location_arg,
 			"-jar",
 			self._junit_jar.to_string(),
 			"execute",

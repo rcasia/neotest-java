@@ -9,7 +9,7 @@ local lib = require("neotest.lib")
 ---@field get_build_dirname fun(): neotest-java.Path
 ---@field get_project_filename fun(): string
 ---@field get_module_dependencies fun(root: string): table
----@field get_spring_property_filepaths fun(root?: string): string[]
+---@field get_spring_property_filepaths fun(roots: neotest-java.Path[]): neotest-java.Path[]
 
 ---@type table<string, neotest-java.BuildTool>
 local build_tools = { gradle = gradle, maven = maven }

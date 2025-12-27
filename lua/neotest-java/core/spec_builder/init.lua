@@ -107,6 +107,16 @@ function SpecBuilder.build_spec(args, config, deps)
 	local reports_dir = deps.report_folder_name_gen(build_dir)
 	command:reports_dir(reports_dir)
 
+	--- @type neotest-java.Path[]
+	local module_paths = vim
+		.iter(modules)
+		--- @param mod neotest-java.Module
+		:map(function(mod)
+			return mod.base_dir
+		end)
+		:totable()
+
+	--- @type string[]
 	local module_dirs = vim
 		.iter(modules)
 		--- @param mod neotest-java.Module
@@ -117,7 +127,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module base_dir not found")
 	command:basedir(base_dir)
 
-	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_dirs))
+	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_paths))
 
 	-- TEST SELECTORS
 	if position.type == "test" then

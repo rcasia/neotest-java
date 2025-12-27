@@ -15,11 +15,10 @@ function maven.get_project_filename()
 	return PROJECT_FILE
 end
 
---- @param roots string[]
+--- @param roots neotest-java.Path[]
 function maven.get_spring_property_filepaths(roots)
 	local base_dirs = vim
 		.iter(roots)
-		:map(Path)
 		--- @param r neotest-java.Path
 		:map(function(r)
 			return {

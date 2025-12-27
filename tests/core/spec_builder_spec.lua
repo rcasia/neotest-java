@@ -61,7 +61,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Dspring.config.additional-location=",
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties").to_string(),
 				"-jar",
 				"my-junit-jar.jar",
 				"execute",
@@ -136,7 +136,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Dspring.config.additional-location=",
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties").to_string(),
 				"-jar",
 				"my-junit-jar.jar",
 				"execute",

@@ -14,11 +14,10 @@ function gradle.get_project_filename()
 	return PROJECT_FILENAME
 end
 
---- @param roots string[]
+--- @param roots neotest-java.Path[]
 function gradle.get_spring_property_filepaths(roots)
 	local base_dirs = vim
 		.iter(roots)
-		:map(Path)
 		--- @param root neotest-java.Path
 		:map(function(root)
 			return {
