@@ -100,7 +100,7 @@ describe("SpecBuilder", function()
 			Path("/user/home/root/module-2/pom.xml"),
 			Path("/user/home/root/module-2/src/test/java/com/example/ExampleInSecondModuleTest.java"),
 		}
-		local expected_base_dir = Path("/user/home/root/module-2").to_string()
+		local expected_base_dir = Path("/user/home/root/module-2")
 
 		-- when
 		local actual = SpecBuilder.build_spec(args, config, {
@@ -116,7 +116,7 @@ describe("SpecBuilder", function()
 				assert(
 					base_dir == expected_base_dir,
 					"should compile with the expected_base_dir: "
-						.. vim.inspect({ actual = base_dir, expected = expected_base_dir })
+						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
 				)
 				return "classpath-file-argument"
 			end,

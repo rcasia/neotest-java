@@ -19,7 +19,7 @@ local scan = require("neotest-java.util.dir_scan")
 --- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): neotest-java.Path
 --- @field scan fun(base_dir: neotest-java.Path): neotest-java.Path[]
---- @field compile fun(cwd: string, classpath_file_dir: string, compile_mode: string): string
+--- @field compile fun(cwd: neotest-java.Path, classpath_file_dir: string, compile_mode: string): string
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
@@ -52,7 +52,7 @@ local DEFAULT_DEPENDENCIES = {
 
 	compile = function(cwd, classpath_file_dir, compile_mode)
 		return compilers.jdtls.compile({
-			cwd = cwd,
+			cwd = cwd.to_string(),
 			classpath_file_dir = classpath_file_dir,
 			compile_mode = compile_mode,
 		})
@@ -132,7 +132,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg = deps.compile(base_dir, build_dir.to_string(), compile_mode)
+	local classpath_file_arg = deps.compile(Path(base_dir), build_dir.to_string(), compile_mode)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
