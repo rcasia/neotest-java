@@ -66,8 +66,9 @@ local function load_all_testcases(paths, read_file)
 	assert(#paths ~= 0, "no report file could be generated")
 
 	return flat_map(function(filepath)
-		local ok, data = pcall(read_file, Path(filepath))
+		local ok, data = pcall(read_file, filepath)
 		if not ok then
+			log.error("Error reading file: " .. tostring(filepath))
 			lib.notify("Error reading file: " .. tostring(filepath))
 			return {}
 		end

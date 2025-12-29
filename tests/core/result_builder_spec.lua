@@ -4,6 +4,7 @@ local plugin = require("neotest-java")
 local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
 local Path = require("neotest-java.util.path")
+local eq = require("tests.assertions").eq
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 
@@ -26,14 +27,14 @@ local DEFAULT_SPEC = {
 local tempfiles = {}
 
 ---@param content string
----@return string filepath
+---@return neotest-java.Path filepath
 local function create_tempfile_with_test(content)
 	local path = vim.fn.tempname() .. ".java"
 	table.insert(tempfiles, path)
-	local file = io.open(path, "w")
+	local file = assert(io.open(path, "w"))
 	file:write(content)
 	file:close()
-	return path
+	return Path(path)
 end
 
 describe("ResultBuilder", function()
@@ -102,7 +103,7 @@ describe("ResultBuilder", function()
 
 	async.it("should build results from report", function()
 		--given
-		local file_content = [[
+		local file_path = create_tempfile_with_test([[
 			package com.example;
 			import org.junit.jupiter.api.Test;
 
@@ -119,7 +120,7 @@ describe("ResultBuilder", function()
 							assertTrue(false);
 					}
 			}
-		]]
+		]])
 
 		local report_file = [[
 				<testsuite>
@@ -132,8 +133,7 @@ describe("ResultBuilder", function()
 				</testsuite>
 		]]
 
-		local file_path = create_tempfile_with_test(file_content)
-		local tree = plugin.discover_positions(file_path)
+		local tree = plugin.discover_positions(file_path.to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -202,7 +202,7 @@ describe("ResultBuilder", function()
 			]]
 
 		local file_path = create_tempfile_with_test(file_content)
-		local tree = plugin.discover_positions(file_path)
+		local tree = plugin.discover_positions(file_path.to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -269,7 +269,7 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local tree = plugin.discover_positions(file_path)
+		local tree = plugin.discover_positions(file_path.to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -343,7 +343,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 
-		local tree = plugin.discover_positions(file_path)
+		local tree = plugin.discover_positions(file_path.to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -423,7 +423,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 
-		local tree = plugin.discover_positions(file_path)
+		local tree = plugin.discover_positions(file_path.to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -496,7 +496,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 
-		local tree = plugin.discover_positions(file_path)
+		local tree = plugin.discover_positions(file_path.to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
