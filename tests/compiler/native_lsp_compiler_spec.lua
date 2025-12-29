@@ -8,7 +8,7 @@ local it = require("nio").tests.it
 describe("Native LSP compiler", function()
 	it("works", function()
 		compiler.compile({
-			cwd = Path("/path/to/project"),
+			base_dir = Path("/path/to/project"),
 			classpath_file_dir = "/path/to/classpath/dir",
 			compile_mode = "incremental",
 			dependencies = {

@@ -56,11 +56,11 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 }
 
-local jdtls_compiler = {
-	--- @param args { cwd: neotest-java.Path, classpath_file_dir: string, compile_mode: "full" | "incremental", dependencies?: table, dependencies?: { client_provider: fun(): vim.lsp.Client } }
+local lsp_compiler = {
+	--- @param args { base_dir: neotest-java.Path, compile_mode: "full" | "incremental", dependencies?: table, dependencies?: { client_provider: fun(): vim.lsp.Client } }
 	compile = function(args)
 		local deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, args.dependencies or {})
-		local client = deps.client_provider(args.cwd)
+		local client = deps.client_provider(args.base_dir)
 
 		logger.debug(("compilation in %s mode"):format(args.compile_mode))
 		nio.run(function(_)
@@ -81,4 +81,4 @@ local jdtls_compiler = {
 }
 
 ---@type NeotestJavaCompiler
-return jdtls_compiler
+return lsp_compiler
