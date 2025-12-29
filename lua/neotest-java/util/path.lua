@@ -5,6 +5,7 @@
 --- @field name fun(): string
 --- @field make_relative fun(other: neotest-java.Path): neotest-java.Path
 --- @field contains fun(slug_term: string): boolean
+--- @field slugs string[]
 
 local PATH_METATABLE = {
 	__tostring = function(path)
@@ -92,6 +93,7 @@ local function Path(raw_path, opts)
 	return setmetatable(
 		--- @type neotest-java.Path
 		{
+			slugs = slugs,
 			name = function()
 				return slugs[#slugs]
 			end,
@@ -111,9 +113,9 @@ local function Path(raw_path, opts)
 				return Path(this_string:sub(#base_path_string + 2), opts)
 			end,
 			contains = function(slug_term)
-				local this_slugs = vim.iter(vim.split(to_string(), separator())):filter(is_not_empty):totable()
+				local this_slugs = slugs
 
-				local other_slugs = vim.iter(vim.split(slug_term, separator())):filter(is_not_empty):totable()
+				local other_slugs = Path(slug_term, opts).slugs
 
 				if #other_slugs == 0 or #other_slugs > #this_slugs then
 					return false
