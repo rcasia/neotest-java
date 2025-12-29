@@ -10,7 +10,6 @@ local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 
 local TEMPDIR = os.getenv("TEMP") or os.getenv("TMP") or vim.uv.os_tmpdir()
 local TEMPNAME = TEMPDIR .. "/neotest-java-result-builder-test.txt"
-local MAVEN_REPORTS_DIR = Path(vim.loop.cwd()).append("/tests/fixtures/maven-demo/target/surefire-reports/")
 
 local SUCCESSFUL_RESULT = {
 	code = 0,
@@ -18,9 +17,8 @@ local SUCCESSFUL_RESULT = {
 }
 
 local DEFAULT_SPEC = {
-	cwd = vim.loop.cwd() .. "/tests/fixtures/maven-demo",
 	context = {
-		reports_dir = MAVEN_REPORTS_DIR,
+		reports_dir = Path("tests/fixtures/maven-demo/target/surefire-reports/"),
 	},
 }
 

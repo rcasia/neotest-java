@@ -16,7 +16,7 @@ local iter_dir = function(dir)
 	return function()
 		local name = vim.uv.fs_scandir_next(handle)
 		if name ~= nil then
-			return Path(name)
+			return dir.append(name)
 		end
 	end
 end
