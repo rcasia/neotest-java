@@ -51,6 +51,9 @@ describe("project", function()
 			Path("./tests/fixtures/multi-module-demo/module-b/pom.xml"),
 		})
 
+		local not_found_module = project:find_module_by_filepath(Path("./tests/fixtures/some-other-project"))
+		eq(nil, not_found_module)
+
 		local module_a = project:find_module_by_filepath(
 			Path("./tests/fixtures/multi-module-demo/module-a/src/main/java/com/example/App.java")
 		)
