@@ -8,7 +8,6 @@ local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local Project = require("neotest-java.types.project")
 local ch = require("neotest-java.context_holder")
-local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 local compilers = require("neotest-java.core.spec_builder.compiler")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.util.path")
@@ -124,7 +123,18 @@ function SpecBuilder.build_spec(args, config, deps)
 			return mod.base_dir.to_string()
 		end)
 		:totable()
-	local module = assert(project:find_module_by_filepath(Path(position.path)), "module base_dir not found")
+
+	local filepath = Path(position.path)
+	local module =
+		--
+		project:is_multimodule()
+			--
+			and assert(
+				project:find_module_by_filepath(filepath),
+				"module not found in multimodule project for filepath: " .. filepath.to_string()
+			)
+		or project:get_modules()[1]
+
 	command:basedir(module.base_dir)
 
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_paths))
