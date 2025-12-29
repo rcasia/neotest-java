@@ -54,46 +54,28 @@ end
 
 --- @param filepath neotest-java.Path
 function Project:find_module_by_filepath(filepath)
-	---@type string[]
+	--- @type neotest-java.Path[]
 	local module_dirs = vim.iter(self:get_modules())
 		:map(function(mod)
-			return mod.base_dir.to_string()
+			return mod.base_dir
 		end)
 		:totable()
 
 	--- @type neotest-java.Path[]
-	local _module_dirs = vim.iter(module_dirs):map(Path):totable()
-	--- @type neotest-java.Path
-	local _filepath = Path(filepath.to_string())
-
-	logger.debug("module_dirs", module_dirs)
-	logger.debug("filepath", filepath)
-	if not filepath or filepath == "" then
-		return nil
-	end
-
-	--- @type neotest-java.Path[]
 	local matches = {}
 
-	for _, module_dir in ipairs(_module_dirs) do
+	for _, module_dir in ipairs(module_dirs) do
 		logger.debug(
 			"Checking if module_dir '"
 				.. module_dir.to_string()
 				.. "' is contained in filepath '"
-				.. _filepath.to_string()
+				.. filepath.to_string()
 				.. "'"
 		)
-		if _filepath.contains(module_dir.to_string()) then
+		if filepath.contains(module_dir.to_string()) then
 			table.insert(matches, module_dir)
 		end
 	end
-
-	logger.debug(
-		"Found matches:",
-		vim.tbl_map(function(path)
-			return path.to_string()
-		end, matches)
-	)
 
 	-- Select the longest match from all the matches
 	--- @type neotest-java.Path | nil
@@ -104,18 +86,13 @@ function Project:find_module_by_filepath(filepath)
 		end
 	end
 
-	local module_dir = longest_match and longest_match.to_string()
-	if not module_dir then
+	if not longest_match then
 		return nil
 	end
 
-	for _, mod in ipairs(self:get_modules()) do
-		if mod.base_dir == Path(module_dir) then
-			return mod
-		end
-	end
-
-	return nil
+	return vim.iter(self:get_modules()):find(function(mod)
+		return mod.base_dir == longest_match
+	end)
 end
 
 return Project
