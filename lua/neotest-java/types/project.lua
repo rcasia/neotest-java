@@ -1,5 +1,8 @@
 local Module = require("neotest-java.types.module")
 local logger = require("neotest-java.logger")
+local Path = require("neotest-java.util.path")
+
+local find_module_by_filepath = require("neotest-java.util.find_module_by_filepath")
 
 ---@class neotest-java.Project
 ---@field root_dir neotest-java.Path
@@ -44,6 +47,29 @@ function Project:get_modules()
 	logger.debug("modules: ", base_dirs)
 
 	return modules
+end
+
+--- @param filepath neotest-java.Path
+function Project:find_module_by_filepath(filepath)
+	---@type string[]
+	local module_dirs = vim.iter(self:get_modules())
+		:map(function(mod)
+			return mod.base_dir.to_string()
+		end)
+		:totable()
+
+	local module_dir = find_module_by_filepath(module_dirs, filepath.to_string())
+	if not module_dir then
+		return nil
+	end
+
+	for _, mod in ipairs(self:get_modules()) do
+		if mod.base_dir == Path(module_dir) then
+			return mod
+		end
+	end
+
+	return nil
 end
 
 return Project

@@ -1,52 +1,57 @@
 local logger = require("neotest-java.logger")
+local Path = require("neotest-java.util.path")
 
 ---@param filepath string
 ---@param module_dirs string[]
 ---@return string | nil module_dir
 local find_module_by_filepath = function(module_dirs, filepath)
+	if #module_dirs == 1 then
+		return module_dirs[1]
+	end
+	--- @type neotest-java.Path[]
+	local _module_dirs = vim.iter(module_dirs):map(Path):totable()
+	--- @type neotest-java.Path
+	local _filepath = Path(filepath)
+
 	logger.debug("module_dirs", module_dirs)
 	logger.debug("filepath", filepath)
 	if not filepath or filepath == "" then
 		return nil
 	end
 
-	-- Normalize paths to use forward slashes for Windows compatibility
-	filepath = filepath:gsub("\\", "/")
-	local normalized_module_dirs = vim.tbl_map(function(dir)
-		return dir:gsub("\\", "/")
-	end, module_dirs)
-
+	--- @type neotest-java.Path[]
 	local matches = {}
 
-	for _, module_dir in ipairs(normalized_module_dirs) do
-		-- Escape any special characters in module_dir for pattern matching
-		local escaped_module_dir = module_dir:gsub("([^%w])", "%%%1")
-
-		-- Build patterns to search for the module directory in the filepath
-		local patterns = {
-			"[%./]" .. escaped_module_dir .. "[%./]", -- Module in the middle
-			"^" .. escaped_module_dir .. "[%./]", -- Module at the start
-			"[%./]" .. escaped_module_dir .. "$", -- Module at the end
-			"^" .. escaped_module_dir .. "$", -- Module is the entire path
-		}
-
-		for _, pattern in ipairs(patterns) do
-			if filepath:find(pattern) then
-				table.insert(matches, module_dir)
-				break -- If we found a match for this module_dir, no need to check other patterns
-			end
+	for _, module_dir in ipairs(_module_dirs) do
+		logger.debug(
+			"Checking if module_dir '"
+				.. module_dir.to_string()
+				.. "' is contained in filepath '"
+				.. _filepath.to_string()
+				.. "'"
+		)
+		if _filepath.contains(module_dir.to_string()) then
+			table.insert(matches, module_dir)
 		end
 	end
+
+	logger.debug(
+		"Found matches:",
+		vim.tbl_map(function(path)
+			return path.to_string()
+		end, matches)
+	)
 
 	-- Select the longest match from all the matches
+	--- @type neotest-java.Path | nil
 	local longest_match = nil
-	for _, match in ipairs(matches) do
-		if not longest_match or #match > #longest_match then
-			longest_match = match
+	for _, path in ipairs(matches) do
+		if not longest_match or #path.to_string() > #longest_match.to_string() then
+			longest_match = path
 		end
 	end
 
-	return longest_match
+	return longest_match and longest_match.to_string()
 end
 
 return find_module_by_filepath

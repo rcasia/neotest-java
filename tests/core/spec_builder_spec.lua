@@ -27,9 +27,9 @@ describe("SpecBuilder", function()
 			junit_jar = Path("my-junit-jar.jar"),
 		}
 		local project_paths = {
-			Path("/user/home/root"),
-			Path("/user/home/root/src/test/java/com/example/ExampleTest.java"),
-			Path("/user/home/root/pom.xml"),
+			Path("."),
+			Path("./src/test/java/com/example/ExampleTest.java"),
+			Path("./pom.xml"),
 		}
 
 		-- when
@@ -42,7 +42,13 @@ describe("SpecBuilder", function()
 			scan = function()
 				return project_paths
 			end,
-			compile = function()
+			compile = function(base_dir)
+				local expected_base_dir = Path(".")
+				assert(
+					base_dir == Path("."),
+					"should compile with the project root as base_dir: "
+						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
+				)
 				return "classpath-file-argument"
 			end,
 			report_folder_name_gen = function()

@@ -42,4 +42,31 @@ describe("project", function()
 			eq(testcase.expected, results)
 		end)
 	end
+
+	it("find module by filepath", function()
+		local project = Project.from_root_dir(Path("./tests/fixtures/multi-module-demo"), "pom.xml", {
+
+			Path("./tests/fixtures/multi-module-demo/pom.xml"),
+			Path("./tests/fixtures/multi-module-demo/module-a/pom.xml"),
+			Path("./tests/fixtures/multi-module-demo/module-b/pom.xml"),
+		})
+
+		local module_a = project:find_module_by_filepath(
+			Path("./tests/fixtures/multi-module-demo/module-a/src/main/java/com/example/App.java")
+		)
+		assert(module_a)
+		eq("module-a", module_a.name)
+
+		local module_b = project:find_module_by_filepath(
+			Path("./tests/fixtures/multi-module-demo/module-b/src/main/java/com/example/App.java")
+		)
+		assert(module_b)
+		eq("module-b", module_b.name)
+
+		local root_module = project:find_module_by_filepath(
+			Path("./tests/fixtures/multi-module-demo/src/main/java/com/example/App.java")
+		)
+		assert(root_module)
+		eq("multi-module-demo", root_module.name)
+	end)
 end)

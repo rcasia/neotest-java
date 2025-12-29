@@ -3,6 +3,11 @@ local Path = require("neotest-java.util.path")
 local eq = assert.are.same
 
 describe("Path", function()
+	it("represents a single relative path as a dot", function()
+		eq(".", Path(".").to_string())
+		eq(".", Path("./").to_string())
+	end)
+
 	it("two paths are equal if their string representations are equal", function()
 		local raw_path = "/some/test/path"
 		assert(Path(raw_path) == Path(raw_path), "should be equal when same string")
@@ -11,6 +16,7 @@ describe("Path", function()
 	it("can determine whether it contains a slug or not", function()
 		local path = Path("/home/user/repo")
 		eq(true, path.contains("home"), "should return true")
+		eq(true, path.contains("home/user"), "should return true")
 		eq(false, path.contains("hom"), "should return false")
 	end)
 

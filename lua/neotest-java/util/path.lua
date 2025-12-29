@@ -82,6 +82,10 @@ local function Path(raw_path, opts)
 		if is_absolute and #slugs == 1 then
 			return SEP
 		end
+
+		if #slugs == 0 then
+			return "."
+		end
 		return vim.iter(slugs):join(SEP)
 	end
 
@@ -107,9 +111,28 @@ local function Path(raw_path, opts)
 				return Path(this_string:sub(#base_path_string + 2), opts)
 			end,
 			contains = function(slug_term)
-				return vim.iter(slugs):any(function(slug)
-					return slug == slug_term
-				end)
+				local this_slugs = vim.iter(vim.split(to_string(), separator())):filter(is_not_empty):totable()
+
+				local other_slugs = vim.iter(vim.split(slug_term, separator())):filter(is_not_empty):totable()
+
+				if #other_slugs == 0 or #other_slugs > #this_slugs then
+					return false
+				end
+
+				for i = 1, #this_slugs - #other_slugs + 1 do
+					local match = true
+					for j = 1, #other_slugs do
+						if this_slugs[i + j - 1] ~= other_slugs[j] then
+							match = false
+							break
+						end
+					end
+					if match then
+						return true
+					end
+				end
+
+				return false
 			end,
 			to_string = to_string,
 		},

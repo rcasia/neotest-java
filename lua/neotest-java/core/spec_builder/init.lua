@@ -124,8 +124,8 @@ function SpecBuilder.build_spec(args, config, deps)
 			return mod.base_dir.to_string()
 		end)
 		:totable()
-	local base_dir = assert(find_module_by_filepath(module_dirs, position.path), "module base_dir not found")
-	command:basedir(base_dir)
+	local module = assert(project:find_module_by_filepath(Path(position.path)), "module base_dir not found")
+	command:basedir(module.base_dir)
 
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_paths))
 
@@ -142,7 +142,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg = deps.compile(Path(base_dir), build_dir.to_string(), compile_mode)
+	local classpath_file_arg = deps.compile(module.base_dir, build_dir.to_string(), compile_mode)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
