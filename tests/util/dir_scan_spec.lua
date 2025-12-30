@@ -8,42 +8,33 @@ local it = nio.tests.it
 describe("Dir Scan", function()
 	it("scans", function()
 		local target_dir = Path(".")
+		local expected_dirs = {
+			Path("some-random.log"),
+			Path("src"),
+			Path("tests"),
+			Path("build"),
+		}
 
 		local test_dependencies = {
 			iter_dir = function(dir)
 				assert(target_dir == dir, "should be called with correct dir")
 
-				local dirs = {
-					Path("some-random.log"),
-					Path("src"),
-					Path("tests"),
-					Path("build"),
-				}
-
 				local index = 0
 
 				return function()
 					index = index + 1
-					return dirs[index]
+					return expected_dirs[index]
 				end
 			end,
 		}
 
 		-- with empty opts
 		local empty_opts = {}
-		eq({
-			Path("src"),
-			Path("tests"),
-			Path("build"),
-		}, scan(target_dir, empty_opts, test_dependencies))
+		eq(expected_dirs, scan(target_dir, empty_opts, test_dependencies))
 
 		-- with nil opts
 		local nil_opts = nil
-		eq({
-			Path("src"),
-			Path("tests"),
-			Path("build"),
-		}, scan(target_dir, nil_opts, test_dependencies))
+		eq(expected_dirs, scan(target_dir, nil_opts, test_dependencies))
 	end)
 
 	it("scans with a search pattern", function()

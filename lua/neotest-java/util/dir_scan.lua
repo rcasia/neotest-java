@@ -1,13 +1,3 @@
-local Path = require("neotest-java.util.path")
-local ignore_patterns = require("neotest-java.types.patterns").IGNORE_PATH_PATTERNS
-
---- @param path neotest-java.Path
-local function should_ignore_path(path)
-	return vim.iter(ignore_patterns):any(function(pattern)
-		return path.to_string():match(pattern)
-	end)
-end
-
 --- @param dir neotest-java.Path
 --- @return fun(): neotest-java.Path | nil
 local iter_dir = function(dir)
@@ -49,10 +39,9 @@ local function scan(dir, opts, dependencies)
 	dependencies = dependencies or {}
 	iter_dir = dependencies.iter_dir or iter_dir
 
-	return vim.iter(iter_dir(dir))
-		:filter(function(path)
-			return not should_ignore_path(path)
-		end)
+	return vim
+		--
+		.iter(iter_dir(dir))
 		:filter(contains(opts.search_patterns))
 		:totable()
 end

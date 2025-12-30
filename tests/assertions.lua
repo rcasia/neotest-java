@@ -7,8 +7,11 @@ local M = {}
 local function pretty(value, indent)
 	indent = indent or 0
 	local t = type(value)
+	local mt = getmetatable(value)
 
-	if t == "table" then
+	if t == "table" and mt and mt.__tostring then
+		return tostring(value)
+	elseif t == "table" then
 		local pad = string.rep("  ", indent)
 		local buf = { "{" }
 		for k, v in pairs(value) do
