@@ -88,7 +88,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	local build_tool = deps.build_tool_getter(project_type)
 	local command = CommandBuilder.new(config.junit_jar, config.jvm_args)
 	local project = assert(
-		Project.from_root_dir(root, build_tool.get_project_filename(), deps.scan(root)),
+		Project.from_dirs_and_project_file(deps.scan(root), build_tool.get_project_filename()),
 		"project not detected correctly"
 	)
 	local modules = project:get_modules()

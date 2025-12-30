@@ -3,19 +3,16 @@ local logger = require("neotest-java.logger")
 local Path = require("neotest-java.util.path")
 
 ---@class neotest-java.Project
----@field root_dir neotest-java.Path
 ---@field project_filename string
 ---@field dirs neotest-java.Path[]
 local Project = {}
 Project.__index = Project
 
----@param root_dir neotest-java.Path
----@param project_filename string
 ---@param dirs neotest-java.Path[]
+---@param project_filename string
 ---@return neotest-java.Project
-function Project.from_root_dir(root_dir, project_filename, dirs)
+function Project.from_dirs_and_project_file(dirs, project_filename)
 	local self = setmetatable({}, Project)
-	self.root_dir = root_dir
 	self.project_filename = project_filename
 	self.dirs = dirs
 	return self
@@ -29,7 +26,6 @@ end
 ---@return neotest-java.Module[]
 function Project:get_modules()
 	logger.debug("Searching for project files: ", self.project_filename)
-	logger.debug("Root directory: ", self.root_dir.to_string())
 
 	assert(self.dirs and #self.dirs > 0, "should find at least 1 module in root: " .. tostring(self.root_dir))
 
