@@ -10,11 +10,11 @@ describe("Native LSP compiler", function()
 			client_provider = function(cwd)
 				eq(Path("/path/to/project"), cwd)
 				return {
-					request_sync = function(_, params, opts)
+					request = function(_, params, opts)
 						eq("java/buildWorkspace", params)
 						eq({ forceRebuild = false }, opts)
 
-						return {}
+						return true
 					end,
 				}
 			end,

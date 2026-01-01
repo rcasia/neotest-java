@@ -1,4 +1,5 @@
 local logger = require("neotest-java.logger")
+local nio = require("nio")
 
 --- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
 --- @return NeotestJavaCompiler
@@ -9,12 +10,15 @@ local function LspCompiler(deps)
 
 			logger.debug(("compilation in %s mode"):format(args.compile_mode))
 
-			local response = client:request_sync("java/buildWorkspace", { forceRebuild = args.compile_mode == "full" })
+			nio.run(function()
+				client:request("java/buildWorkspace", { forceRebuild = args.compile_mode == "full" }, function(err)
+					if err then
+						logger.error("compilation failed: " .. vim.inspect(err))
+					end
+				end)
+			end)
 
-			if not response or response.err then
-				logger.error("compilation failed: " .. vim.inspect(response))
-			end
-			logger.debug("compilation complete: " .. vim.inspect(response))
+			logger.debug("compilation complete!")
 		end,
 	}
 end
