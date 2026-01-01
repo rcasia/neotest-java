@@ -1,6 +1,6 @@
 local lib = require("neotest.lib")
 local resolve_package_name = require("neotest-java.util.resolve_package_name")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 
 local PositionsDiscoverer = {}
 

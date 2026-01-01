@@ -3,7 +3,7 @@ local async = require("nio").tests
 local plugin = require("neotest-java")
 local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")

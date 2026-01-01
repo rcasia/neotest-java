@@ -1,6 +1,6 @@
 local jdtls = require("neotest-java.command.jdtls")
 local logger = require("neotest-java.logger")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 
 local binaries = {
 

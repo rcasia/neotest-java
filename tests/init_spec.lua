@@ -1,4 +1,4 @@
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 
 describe("NeotestJava plugin", function()
 	local default_config = {

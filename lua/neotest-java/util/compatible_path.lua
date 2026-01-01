@@ -1,4 +1,4 @@
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 
 ---@param path string
 ---@return string compatible_path

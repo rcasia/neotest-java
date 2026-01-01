@@ -1,5 +1,5 @@
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 local eq = assert.are.same
 
 describe("Spring Property Filepaths", function()

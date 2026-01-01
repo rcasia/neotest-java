@@ -1,4 +1,4 @@
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 local nio = require("nio")
 
 --- @param bufnr number | nil

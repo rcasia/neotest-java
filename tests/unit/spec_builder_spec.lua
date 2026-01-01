@@ -1,5 +1,5 @@
 local SpecBuilder = require("neotest-java.core.spec_builder")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 local FakeBuildTool = require("tests.fake_build_tool")
 
 local assertions = require("tests.assertions")

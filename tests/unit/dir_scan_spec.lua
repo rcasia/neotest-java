@@ -1,5 +1,5 @@
 local nio = require("nio")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 local scan = require("neotest-java.util.dir_scan")
 
 local eq = require("tests.assertions").eq

@@ -1,5 +1,5 @@
 local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq

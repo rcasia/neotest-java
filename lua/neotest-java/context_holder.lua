@@ -1,5 +1,5 @@
 local log = require("neotest-java.logger")
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 
 local DEFAULT_VERSION = "1.10.1"
 local JUNIT_JAR_FILE_NAME = "junit-platform-console-standalone-" .. DEFAULT_VERSION .. ".jar"

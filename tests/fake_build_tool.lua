@@ -1,4 +1,4 @@
-local Path = require("neotest-java.util.path")
+local Path = require("neotest-java.model.path")
 local spring = require("neotest-java.util.spring_property_filepaths")
 
 --- @type neotest-java.BuildTool
