@@ -12,7 +12,6 @@ local NeotestJavaCompiler = {}
 
 ---@type table<string, NeotestJavaCompiler>
 local compilers = {
-	jdtls = require("neotest-java.core.spec_builder.compiler.jdtls"),
 	lsp = LspCompiler({ client_provider = client_provider }),
 }
 
