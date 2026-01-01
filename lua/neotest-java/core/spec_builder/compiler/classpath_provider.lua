@@ -1,5 +1,3 @@
-local logger = require("neotest-java.logger")
-
 --- @class ClasspathProvider
 --- @field get_classpath fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by ":"
 
@@ -25,7 +23,6 @@ local function ClasspathProvider(deps)
 				command = "java.project.getClasspaths",
 				arguments = { buffer_uri, vim.json.encode({ scope = "runtime" }) },
 			})
-			logger.debug("response for runtime: " .. vim.inspect(response_for_runtime))
 
 			local response_for_test = client:request_sync("workspace/executeCommand", {
 				command = "java.project.getClasspaths",
