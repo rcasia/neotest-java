@@ -20,7 +20,7 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 --- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): neotest-java.Path
 --- @field scan fun(base_dir: neotest-java.Path): neotest-java.Path[]
---- @field compile fun(cwd: neotest-java.Path, classpath_file_dir: string, compile_mode: string)
+--- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
@@ -52,7 +52,7 @@ local DEFAULT_DEPENDENCIES = {
 
 	scan = scan,
 
-	compile = function(cwd, classpath_file_dir, compile_mode)
+	compile = function(cwd, compile_mode)
 		compilers.lsp.compile({
 			base_dir = cwd,
 			compile_mode = compile_mode,
@@ -155,7 +155,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	deps.compile(module.base_dir, build_dir.to_string(), compile_mode)
+	deps.compile(module.base_dir, compile_mode)
 
 	local classpath_file_arg = deps.classpath_provider.get_classpath(module.base_dir)
 	command:classpath_file_arg(classpath_file_arg)
