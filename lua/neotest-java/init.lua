@@ -8,8 +8,11 @@ local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
+local Path = require("neotest-java.util.path")
 
 local junit_version = ch.config().default_version
+
+local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 
 --- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath)
@@ -42,6 +45,14 @@ local NeotestJavaAdapter = {
 		check_junit_jar(ch.config().junit_jar)
 
 		return spec_builder.build_spec(args, ch.config())
+	end,
+	get_classpath = function()
+		local classpath_provider = ClasspathProvider({
+			client_provider = require("neotest-java.core.spec_builder.compiler.client_provider"),
+		})
+
+		local classpaths = classpath_provider.get_classpath(Path("."))
+		log.debug("[rcasia] classpath: " .. classpaths)
 	end,
 }
 
