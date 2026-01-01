@@ -49,8 +49,12 @@ describe("SpecBuilder", function()
 					"should compile with the project root as base_dir: "
 						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
 				)
-				return "classpath-file-argument"
 			end,
+			classpath_provider = {
+				get_classpath = function()
+					return "classpath-file-argument"
+				end,
+			},
 			report_folder_name_gen = function()
 				return Path("report_folder")
 			end,
@@ -115,9 +119,12 @@ describe("SpecBuilder", function()
 			scan = function()
 				return project_paths
 			end,
-			compile = function()
-				return "classpath-file-argument"
-			end,
+			compile = function() end,
+			classpath_provider = {
+				get_classpath = function()
+					return "classpath-file-argument"
+				end,
+			},
 			report_folder_name_gen = function()
 				return Path("report_folder")
 			end,
@@ -192,8 +199,12 @@ describe("SpecBuilder", function()
 					"should compile with the expected_base_dir: "
 						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
 				)
-				return "classpath-file-argument"
 			end,
+			classpath_provider = {
+				get_classpath = function()
+					return "classpath-file-argument"
+				end,
+			},
 			report_folder_name_gen = function()
 				return Path("report_folder")
 			end,

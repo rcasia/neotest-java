@@ -20,7 +20,8 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 --- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): neotest-java.Path
 --- @field scan fun(base_dir: neotest-java.Path): neotest-java.Path[]
---- @field compile fun(cwd: neotest-java.Path, classpath_file_dir: string, compile_mode: string): string
+--- @field compile fun(cwd: neotest-java.Path, classpath_file_dir: string, compile_mode: string)
+--- @field classpath_provider neotest-java.ClasspathProvider
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
@@ -56,10 +57,8 @@ local DEFAULT_DEPENDENCIES = {
 			base_dir = cwd,
 			compile_mode = compile_mode,
 		})
-
-		local cp = ClasspathProvider({ client_provider = client_provider })
-		return cp.get_classpath(cwd, {})
 	end,
+	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
 	report_folder_name_gen = function(build_dir)
 		return build_dir.append("junit-reports").append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
@@ -156,7 +155,9 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg = deps.compile(module.base_dir, build_dir.to_string(), compile_mode)
+	deps.compile(module.base_dir, build_dir.to_string(), compile_mode)
+
+	local classpath_file_arg = deps.classpath_provider.get_classpath(module.base_dir)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
