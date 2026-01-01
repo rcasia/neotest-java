@@ -12,6 +12,8 @@ local compilers = require("neotest-java.core.spec_builder.compiler")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.util.path")
 local scan = require("neotest-java.util.dir_scan")
+local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
+local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -50,11 +52,13 @@ local DEFAULT_DEPENDENCIES = {
 	scan = scan,
 
 	compile = function(cwd, classpath_file_dir, compile_mode)
-		return compilers.jdtls.compile({
-			cwd = cwd.to_string(),
-			classpath_file_dir = classpath_file_dir,
+		compilers.lsp.compile({
+			base_dir = cwd,
 			compile_mode = compile_mode,
 		})
+
+		local cp = ClasspathProvider({ client_provider = client_provider })
+		return cp.get_classpath(cwd, {})
 	end,
 	report_folder_name_gen = function(build_dir)
 		return build_dir.append("junit-reports").append(nio.fn.strftime("%d%m%y%H%M%S"))
