@@ -3,7 +3,6 @@ local Path = require("neotest-java.util.path")
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
-local it = require("nio").tests.it
 
 describe("Native LSP compiler", function()
 	it("works", function()
@@ -11,9 +10,11 @@ describe("Native LSP compiler", function()
 			client_provider = function(cwd)
 				eq(Path("/path/to/project"), cwd)
 				return {
-					request = function(_, params, opts)
+					request_sync = function(_, params, opts)
 						eq("java/buildWorkspace", params)
 						eq({ forceRebuild = false }, opts)
+
+						return {}
 					end,
 				}
 			end,
