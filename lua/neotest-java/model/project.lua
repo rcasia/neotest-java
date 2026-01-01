@@ -37,6 +37,17 @@ function Project:get_modules()
 	return self._modules
 end
 
+--- @return neotest-java.Path[]
+function Project:get_module_dirs()
+	return vim
+		.iter(self:get_modules())
+		--- @param mod neotest-java.Module
+		:map(function(mod)
+			return mod.base_dir
+		end)
+		:totable()
+end
+
 --- @param filepath neotest-java.Path
 --- @return neotest-java.Module | nil
 function Project:find_module_by_filepath(filepath)

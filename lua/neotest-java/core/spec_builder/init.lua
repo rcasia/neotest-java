@@ -94,7 +94,6 @@ function SpecBuilder.build_spec(args, config, deps)
 		Project.from_dirs_and_project_file(deps.scan(root), build_tool.get_project_filename()),
 		"project not detected correctly"
 	)
-	local modules = project:get_modules()
 
 	-- make sure we are in root_dir
 	deps.chdir(root)
@@ -109,24 +108,6 @@ function SpecBuilder.build_spec(args, config, deps)
 	local reports_dir = deps.report_folder_name_gen(build_dir)
 	command:reports_dir(reports_dir)
 
-	--- @type neotest-java.Path[]
-	local module_paths = vim
-		.iter(modules)
-		--- @param mod neotest-java.Module
-		:map(function(mod)
-			return mod.base_dir
-		end)
-		:totable()
-
-	--- @type string[]
-	local module_dirs = vim
-		.iter(modules)
-		--- @param mod neotest-java.Module
-		:map(function(mod)
-			return mod.base_dir.to_string()
-		end)
-		:totable()
-
 	local filepath = Path(position.path)
 	local module =
 		--
@@ -140,7 +121,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	command:basedir(module.base_dir)
 
-	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(module_paths))
+	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(project:get_module_dirs()))
 
 	-- TEST SELECTORS
 	if position.type == "test" then
