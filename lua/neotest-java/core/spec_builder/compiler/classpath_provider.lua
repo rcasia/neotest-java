@@ -1,7 +1,7 @@
 local logger = require("neotest-java.logger")
 
 --- @class ClasspathProvider
---- @field get_classpath fun(base_dir: neotest-java.Path, additional_classpath_entries?: string[]): string
+--- @field get_classpath fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by ":"
 
 --- @class GetClasspathResponse
 --- @field classpaths string[]
@@ -9,6 +9,7 @@ local logger = require("neotest-java.logger")
 --- @field projectRoot string
 
 --- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
+--- @return ClasspathProvider
 local function ClasspathProvider(deps)
 	return {
 		get_classpath = function(base_dir, additional_classpath_entries)
@@ -31,10 +32,19 @@ local function ClasspathProvider(deps)
 				arguments = { buffer_uri, vim.json.encode({ scope = "test" }) },
 			})
 
+			local additional_classpath_entries_strings = vim
+				--
+				.iter(additional_classpath_entries)
+				--- @param path neotest-java.Path
+				:map(function(path)
+					return path.to_string()
+				end)
+				:totable()
+
 			return vim.iter({
 				assert(response_for_runtime).result.classpaths,
 				assert(response_for_test).result.classpaths,
-				additional_classpath_entries,
+				additional_classpath_entries_strings,
 			})
 				:flatten()
 				:join(":")

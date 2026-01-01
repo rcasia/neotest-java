@@ -36,7 +36,7 @@ describe("Classpath Provider", function()
 
 		eq(
 			"source_classpath:test_classpath:additional_classpath",
-			classpath_provider.get_classpath(base_dir, { "additional_classpath" })
+			classpath_provider.get_classpath(base_dir, { Path("additional_classpath") })
 		)
 	end)
 end)
