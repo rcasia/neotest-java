@@ -12,13 +12,16 @@ local compilers = require("neotest-java.core.spec_builder.compiler")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.util.path")
 local scan = require("neotest-java.util.dir_scan")
+local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
+local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
 --- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): neotest-java.Path
---- @field scan fun(base_dir: neotest-java.Path): neotest-java.Path[]
---- @field compile fun(cwd: neotest-java.Path, classpath_file_dir: string, compile_mode: string): string
+--- @field scan fun(base_dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
+--- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
+--- @field classpath_provider neotest-java.ClasspathProvider
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
@@ -49,13 +52,13 @@ local DEFAULT_DEPENDENCIES = {
 
 	scan = scan,
 
-	compile = function(cwd, classpath_file_dir, compile_mode)
-		return compilers.jdtls.compile({
-			cwd = cwd.to_string(),
-			classpath_file_dir = classpath_file_dir,
+	compile = function(cwd, compile_mode)
+		compilers.lsp.compile({
+			base_dir = cwd,
 			compile_mode = compile_mode,
 		})
 	end,
+	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
 	report_folder_name_gen = function(build_dir)
 		return build_dir.append("junit-reports").append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
@@ -152,7 +155,12 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	-- COMPILATION STEP
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
-	local classpath_file_arg = deps.compile(module.base_dir, build_dir.to_string(), compile_mode)
+	deps.compile(module.base_dir, compile_mode)
+
+	local classpath_file_arg = deps.classpath_provider.get_classpath(
+		module.base_dir,
+		deps.scan(module.base_dir, { search_patterns = { Path("test/resources$").to_string() } })
+	)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY

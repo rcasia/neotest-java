@@ -1,21 +1,18 @@
-local jdtls_compiler = require("neotest-java.core.spec_builder.compiler.jdtls")
+local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
+local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
 
 ---@class NeotestJavaCompiler.Opts
----@field cwd string
----@field classpath_file_dir string
----@field compile_mode string
+---@field base_dir neotest-java.Path
+---@field compile_mode "full" | "incremental"
 
 --- Interface for Java compilers
 ---@class NeotestJavaCompiler
+---@field compile fun(opts: NeotestJavaCompiler.Opts): string classpath_file_arg
 local NeotestJavaCompiler = {}
-
----@param opts NeotestJavaCompiler.Opts
----@return string classpath_file_arg
-function NeotestJavaCompiler.compile(opts) end
 
 ---@type table<string, NeotestJavaCompiler>
 local compilers = {
-	jdtls = jdtls_compiler,
+	lsp = LspCompiler({ client_provider = client_provider }),
 }
 
 return compilers

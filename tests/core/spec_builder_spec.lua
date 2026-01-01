@@ -2,7 +2,8 @@ local SpecBuilder = require("neotest-java.core.spec_builder")
 local Path = require("neotest-java.util.path")
 local FakeBuildTool = require("tests.fake_build_tool")
 
-local eq = assert.are.same
+local assertions = require("tests.assertions")
+local eq = assertions.eq
 
 local function mock_args_tree(data)
 	return {
@@ -37,9 +38,18 @@ describe("SpecBuilder", function()
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
-				return Path("root")
+				return Path(".")
 			end,
-			scan = function()
+			scan = function(base_dir, opts)
+				if base_dir ~= Path(".") then
+					error("unexpected base_dir in scan: " .. base_dir.to_string())
+				end
+
+				opts = opts or {}
+				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$").to_string() then
+					return { Path("additional1"), Path("additional2") }
+				end
+
 				return project_paths
 			end,
 			compile = function(base_dir)
@@ -49,8 +59,15 @@ describe("SpecBuilder", function()
 					"should compile with the project root as base_dir: "
 						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
 				)
-				return "classpath-file-argument"
 			end,
+			classpath_provider = {
+				get_classpath = function(base_dir, additional_classpaths)
+					eq(Path("."), base_dir)
+					eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
+
+					return "classpath-file-argument"
+				end,
+			},
 			report_folder_name_gen = function()
 				return Path("report_folder")
 			end,
@@ -83,7 +100,7 @@ describe("SpecBuilder", function()
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = "root",
+			cwd = ".",
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
@@ -115,9 +132,12 @@ describe("SpecBuilder", function()
 			scan = function()
 				return project_paths
 			end,
-			compile = function()
-				return "classpath-file-argument"
-			end,
+			compile = function() end,
+			classpath_provider = {
+				get_classpath = function()
+					return "classpath-file-argument"
+				end,
+			},
 			report_folder_name_gen = function()
 				return Path("report_folder")
 			end,
@@ -192,8 +212,12 @@ describe("SpecBuilder", function()
 					"should compile with the expected_base_dir: "
 						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
 				)
-				return "classpath-file-argument"
 			end,
+			classpath_provider = {
+				get_classpath = function()
+					return "classpath-file-argument"
+				end,
+			},
 			report_folder_name_gen = function()
 				return Path("report_folder")
 			end,
