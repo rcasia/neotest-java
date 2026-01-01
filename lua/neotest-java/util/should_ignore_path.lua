@@ -1,4 +1,4 @@
-local ignore_patterns = require("neotest-java.types.patterns").IGNORE_PATH_PATTERNS
+local ignore_patterns = require("neotest-java.model.patterns").IGNORE_PATH_PATTERNS
 
 -- Function to determine if a path should be ignored in Maven or Gradle projects
 local function should_ignore_path(path)

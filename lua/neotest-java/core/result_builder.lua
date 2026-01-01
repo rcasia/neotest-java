@@ -2,7 +2,7 @@ local xml = require("neotest.lib.xml")
 local flat_map = require("neotest-java.util.flat_map")
 local log = require("neotest-java.logger")
 local lib = require("neotest.lib")
-local JunitResult = require("neotest-java.types.junit_result")
+local JunitResult = require("neotest-java.model.junit_result")
 local dir_scan = require("neotest-java.util.dir_scan")
 
 local SKIPPED = JunitResult.SKIPPED

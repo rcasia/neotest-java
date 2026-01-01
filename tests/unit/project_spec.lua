@@ -1,4 +1,4 @@
-local Project = require("neotest-java.types.project")
+local Project = require("neotest-java.model.project")
 local Path = require("neotest-java.util.path")
 
 local eq = assert.are.same

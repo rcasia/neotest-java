@@ -1,4 +1,4 @@
-local Module = require("neotest-java.types.module")
+local Module = require("neotest-java.model.module")
 
 ---@class neotest-java.Project
 ---@field project_filename string

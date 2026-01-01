@@ -1,4 +1,4 @@
-local JAVA_TEST_FILE_PATTERNS = require("neotest-java.types.patterns").JAVA_TEST_FILE_PATTERNS
+local JAVA_TEST_FILE_PATTERNS = require("neotest-java.model.patterns").JAVA_TEST_FILE_PATTERNS
 local root_finder = require("neotest-java.core.root_finder")
 local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.util.path")
