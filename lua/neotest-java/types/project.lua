@@ -1,12 +1,21 @@
 local Module = require("neotest-java.types.module")
-local logger = require("neotest-java.logger")
-local Path = require("neotest-java.util.path")
 
 ---@class neotest-java.Project
 ---@field project_filename string
----@field dirs neotest-java.Path[]
+---@field private _modules neotest-java.Module[]
 local Project = {}
 Project.__index = Project
+
+local modules_from_dirs_and_project_file = function(dirs, project_filename)
+	---@type table<neotest-java.Module>
+	local modules = {}
+	for _, path in ipairs(dirs) do
+		if path.to_string():find(project_filename) then
+			modules[#modules + 1] = Module.new(path.parent())
+		end
+	end
+	return modules
+end
 
 ---@param dirs neotest-java.Path[]
 ---@param project_filename string
@@ -14,7 +23,7 @@ Project.__index = Project
 function Project.from_dirs_and_project_file(dirs, project_filename)
 	local self = setmetatable({}, Project)
 	self.project_filename = project_filename
-	self.dirs = dirs
+	self._modules = modules_from_dirs_and_project_file(dirs, project_filename)
 	return self
 end
 
@@ -25,27 +34,7 @@ end
 
 ---@return neotest-java.Module[]
 function Project:get_modules()
-	logger.debug("Searching for project files: ", self.project_filename)
-
-	assert(self.dirs and #self.dirs > 0, "should find at least 1 module in root: " .. tostring(self.root_dir))
-
-	logger.debug("Found project directories: ", self.dirs)
-
-	---@type table<neotest-java.Module>
-	local modules = {}
-	for _, path in ipairs(self.dirs) do
-		if path.to_string():find(self.project_filename) then
-			modules[#modules + 1] = Module.new(path.parent())
-		end
-	end
-
-	local base_dirs = {}
-	for _, mod in ipairs(modules) do
-		base_dirs[#base_dirs + 1] = mod.base_dir
-	end
-	logger.debug("modules: ", base_dirs)
-
-	return modules
+	return self._modules
 end
 
 --- @param filepath neotest-java.Path
