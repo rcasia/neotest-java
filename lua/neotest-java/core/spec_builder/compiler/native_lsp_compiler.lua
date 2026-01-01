@@ -56,29 +56,29 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 }
 
-local lsp_compiler = {
-	--- @param args { base_dir: neotest-java.Path, compile_mode: "full" | "incremental", dependencies?: table, dependencies?: { client_provider: fun(): vim.lsp.Client } }
-	compile = function(args)
-		local deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, args.dependencies or {})
-		local client = deps.client_provider(args.base_dir)
+--- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
+--- @return NeotestJavaCompiler
+local function Compiler(deps)
+	return {
+		compile = function(args)
+			local client = deps.client_provider(args.base_dir)
 
-		logger.debug(("compilation in %s mode"):format(args.compile_mode))
-		nio.run(function(_)
-			nio.scheduler()
-			client:request(
-				"java/buildWorkspace",
-				{ forceRebuild = args.compile_mode == "full" },
-				function(err, result, ctx)
-					if err then
-						logger.error("compilation failed: " .. vim.inspect(err))
+			logger.debug(("compilation in %s mode"):format(args.compile_mode))
+			nio.run(function(_)
+				nio.scheduler()
+				client:request(
+					"java/buildWorkspace",
+					{ forceRebuild = args.compile_mode == "full" },
+					function(err, result, ctx)
+						if err then
+							logger.error("compilation failed: " .. vim.inspect(err))
+						end
 					end
-				end,
-				vim.api.nvim_get_current_buf()
-			)
-		end):wait()
-		logger.debug("compilation complete!")
-	end,
-}
+				)
+			end):wait()
+			logger.debug("compilation complete!")
+		end,
+	}
+end
 
----@type NeotestJavaCompiler
-return lsp_compiler
+return Compiler
