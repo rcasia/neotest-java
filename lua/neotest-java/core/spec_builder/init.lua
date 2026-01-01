@@ -19,7 +19,7 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 --- @field mkdir fun(dir: neotest-java.Path)
 --- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): neotest-java.Path
---- @field scan fun(base_dir: neotest-java.Path): neotest-java.Path[]
+--- @field scan fun(base_dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
 --- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
@@ -157,7 +157,10 @@ function SpecBuilder.build_spec(args, config, deps)
 	local compile_mode = ch.config().incremental_build and "incremental" or "full"
 	deps.compile(module.base_dir, compile_mode)
 
-	local classpath_file_arg = deps.classpath_provider.get_classpath(module.base_dir)
+	local classpath_file_arg = deps.classpath_provider.get_classpath(
+		module.base_dir,
+		deps.scan(module.base_dir, { search_patterns = { Path("test/resources$").to_string() } })
+	)
 	command:classpath_file_arg(classpath_file_arg)
 
 	-- DAP STRATEGY
