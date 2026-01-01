@@ -1,5 +1,5 @@
 local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
-local LspCompiler = require("neotest-java.core.spec_builder.compiler.native_lsp_compiler")
+local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
 
 ---@class NeotestJavaCompiler.Opts
 ---@field base_dir neotest-java.Path
