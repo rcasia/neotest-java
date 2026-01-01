@@ -21,7 +21,6 @@ describe("Native LSP compiler", function()
 
 		compiler.compile({
 			base_dir = Path("/path/to/project"),
-			classpath_file_dir = "/path/to/classpath/dir",
 			compile_mode = "incremental",
 		})
 	end)
