@@ -4,7 +4,8 @@ local log = require("neotest-java.logger")
 local nio = require("nio")
 local Job = require("plenary.job")
 local lib = require("neotest.lib")
-local repl = require("dap.repl")
+
+local _, repl = pcall(require, "dap.repl")
 
 ---@class neotest-java.BuildTool
 ---@field get_build_dirname fun(): neotest-java.Path
@@ -45,9 +46,11 @@ build_tools.launch_debug_test = function(command, args, cwd)
 				return
 			end
 			stderr[#stderr + 1] = data
-			vim.schedule(function()
-				repl.append(data)
-			end)
+			if repl then
+				vim.schedule(function()
+					repl.append(data)
+				end)
+			end
 		end,
 		on_stdout = function(_, data)
 			if data == nil then
@@ -56,9 +59,11 @@ build_tools.launch_debug_test = function(command, args, cwd)
 			if string.find(data, "Listening") then
 				test_command_started_listening.set()
 			end
-			vim.schedule(function()
-				repl.append(data)
-			end)
+			if repl then
+				vim.schedule(function()
+					repl.append(data)
+				end)
+			end
 		end,
 		on_exit = function(_, code)
 			terminated_command_event.set()

@@ -163,6 +163,14 @@ end
 ---@return neotest.Result
 function JunitResult:result()
 	local status, failures = self:status()
+
+	if status == PASSED then
+		return {
+			status = status,
+			output = create_file_with_content(self:output()),
+		}
+	end
+
 	local failure_message = ""
 	if failures then
 		for i, failure in ipairs(failures) do

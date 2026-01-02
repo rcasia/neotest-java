@@ -84,6 +84,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
+				"-Duser.dir=.",
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
@@ -94,8 +95,8 @@ describe("SpecBuilder", function()
 				"--disable-banner",
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
-				"--select-class='com.example.ExampleTest'",
-				"--select-method='com.example.ExampleTest#shouldNotFail()'",
+				"--config=junit.platform.output.capture.stderr=true",
+				"--select-method=com.example.ExampleTest#shouldNotFail()",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
@@ -154,6 +155,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
+				"-Duser.dir=/user/home/root",
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-myExtraJvmArg",
 				"-jar",
@@ -165,13 +167,13 @@ describe("SpecBuilder", function()
 				"--disable-banner",
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
-				"--select-class='com.example.ExampleTest'",
-				"--select-method='com.example.ExampleTest#shouldNotFail()'",
+				"--config=junit.platform.output.capture.stderr=true",
+				"--select-method=com.example.ExampleTest#shouldNotFail()",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = "root",
+			cwd = "/user/home/root",
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
@@ -234,6 +236,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
+				"-Duser.dir=/user/home/root/module-2",
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
@@ -244,13 +247,13 @@ describe("SpecBuilder", function()
 				"--disable-banner",
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
-				"--select-class='com.example.ExampleInSecondModuleTest'",
-				"--select-method='com.example.ExampleInSecondModuleTest#shouldNotFail()'",
+				"--config=junit.platform.output.capture.stderr=true",
+				"--select-method=com.example.ExampleInSecondModuleTest#shouldNotFail()",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = "root",
+			cwd = "/user/home/root/module-2",
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
