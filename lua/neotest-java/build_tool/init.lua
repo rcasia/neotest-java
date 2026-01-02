@@ -38,7 +38,7 @@ build_tools.launch_debug_test = function(command, args, cwd)
 	local stderr = {}
 	local job = Job:new({
 		command = command,
-		cwd = cwd,
+		cwd = cwd:to_string(),
 		args = args,
 		on_stderr = function(_, data)
 			if data == nil then
