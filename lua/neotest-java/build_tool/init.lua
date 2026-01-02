@@ -27,7 +27,7 @@ end
 
 ---@param command string
 ---@param args string[]
----@param cwd string
+---@param cwd neotest-java.Path
 ---@return nio.control.Event
 build_tools.launch_debug_test = function(command, args, cwd)
 	lib.notify("Running debug test", vim.log.levels.INFO)
@@ -76,7 +76,9 @@ build_tools.launch_debug_test = function(command, args, cwd)
 		end,
 	})
 	log.debug("starting job with command: ", command, " ", table.concat(args, " "))
-	repl.clear()
+	if repl then
+		repl.clear()
+	end
 	job:start()
 	test_command_started_listening.wait()
 
