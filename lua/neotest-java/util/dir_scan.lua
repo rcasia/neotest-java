@@ -1,5 +1,9 @@
+--- @class neotest-java.DirScanResultItem
+--- @field path neotest-java.Path
+--- @field typ "directory" | "file"
+
 --- @param dir neotest-java.Path
---- @return fun(): { path: neotest-java.Path, typ: "directory" | "file" } | nil
+--- @return fun(): neotest-java.DirScanResultItem | nil
 local iter_dir = function(dir)
 	local handle = assert(vim.uv.fs_scandir(dir:to_string()))
 
@@ -29,7 +33,7 @@ local contains = function(patterns)
 end
 
 ---@class neotest-java.DirScanDependencies
----@field iter_dir fun(dir: neotest-java.Path): fun(): string | nil
+---@field iter_dir fun(dir: neotest-java.Path): fun(): neotest-java.DirScanResultItem | nil
 
 ---@param dir neotest-java.Path
 ---@param opts? { search_patterns: string[] }
