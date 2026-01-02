@@ -84,7 +84,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Duser.dir=.",
+				"-Duser.dir=" .. Path("."):to_string(),
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
@@ -155,7 +155,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Duser.dir=/user/home/root",
+				"-Duser.dir=" .. Path("/user/home/root"):to_string(),
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-myExtraJvmArg",
 				"-jar",
@@ -236,7 +236,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Duser.dir=/user/home/root/module-2",
+				"-Duser.dir=" .. Path("/user/home/root/module-2"):to_string(),
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
