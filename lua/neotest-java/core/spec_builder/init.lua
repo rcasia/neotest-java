@@ -60,7 +60,7 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
 	report_folder_name_gen = function(module_dir, build_dir)
-		local base = (module_dir and module_dir:append(build_dir)) or build_dir
+		local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
 		return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
 	build_tool_getter = function(project_type)

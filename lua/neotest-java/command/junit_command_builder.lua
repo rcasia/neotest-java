@@ -109,6 +109,7 @@ CommandBuilder.build_junit = function(self, port)
 			"--disable-banner",
 			"--details=testfeed",
 			"--config=junit.platform.output.capture.stdout=true",
+			"--config=junit.platform.output.capture.stderr=true",
 		})
 			:flatten()
 			:totable(),
@@ -119,7 +120,7 @@ CommandBuilder.build_junit = function(self, port)
 	end
 
 	if self._basedir then
-		table.insert(junit_command.args, 1, "-Duser.dir=" .. self._basedir)
+		table.insert(junit_command.args, 1, "-Duser.dir=" .. self._basedir:to_string())
 	end
 
 	-- add debug arguments if debug port is specified
