@@ -101,7 +101,7 @@ describe("SpecBuilder", function()
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = ".",
+			cwd = Path("."):to_string(),
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
@@ -173,7 +173,7 @@ describe("SpecBuilder", function()
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = "/user/home/root",
+			cwd = Path("/user/home/root"):to_string(),
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
@@ -253,7 +253,7 @@ describe("SpecBuilder", function()
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = "/user/home/root/module-2",
+			cwd = Path("/user/home/root/module-2"):to_string(),
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
