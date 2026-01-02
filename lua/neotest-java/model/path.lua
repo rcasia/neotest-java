@@ -39,24 +39,19 @@ local remove_separator = function(s)
 	return clean
 end
 
-local SEPARATOR_CACHE = nil
 local separator = function()
-	if SEPARATOR_CACHE then
-		return SEPARATOR_CACHE
-	end
 	if vim.fn.has("win64") == 1 or vim.fn.has("win32") == 1 then
-		SEPARATOR_CACHE = WINDOWS_SEPARATOR
 		return WINDOWS_SEPARATOR
 	end
-	SEPARATOR_CACHE = UNIX_SEPARATOR
 	return UNIX_SEPARATOR
 end
+local SEPARATOR = separator()
 
 --- @return neotest-java.Path
 --- @param raw_path string
 --- @param opts? { separator?: fun(): string }
 local function Path(raw_path, opts)
-	local SEP = (opts and opts.separator) and opts.separator() or separator()
+	local SEP = (opts and opts.separator) and opts.separator() or SEPARATOR
 
 	local first_char = raw_path:sub(1, 1)
 	local is_absolute =
