@@ -1,5 +1,9 @@
+--- @class neotest-java.DirScanResultItem
+--- @field path neotest-java.Path
+--- @field typ "directory" | "file"
+
 --- @param dir neotest-java.Path
---- @return fun(): { path: neotest-java.Path, typ: "directory" | "file" } | nil
+--- @return fun(): neotest-java.DirScanResultItem | nil
 local iter_dir = function(dir)
 	local handle = assert(vim.uv.fs_scandir(dir:to_string()))
 
@@ -29,7 +33,7 @@ local contains = function(patterns)
 end
 
 ---@class neotest-java.DirScanDependencies
----@field iter_dir fun(dir: neotest-java.Path): fun(): string | nil
+---@field iter_dir fun(dir: neotest-java.Path): fun(): neotest-java.DirScanResultItem | nil
 
 ---@param dir neotest-java.Path
 ---@param opts? { search_patterns: string[] }
@@ -39,52 +43,23 @@ local function scan(dir, opts, dependencies)
 	dependencies = dependencies or {}
 	iter_dir = dependencies.iter_dir or iter_dir
 
-	local seen = {}
-	--- @return {path: neotest-java.Path, typ: "directory" | "file"}[]
-	local find = function(_dir)
-		seen[_dir:to_string()] = true
-		return vim
-			--
-			.iter(iter_dir(_dir))
-			:totable()
+	local stack = { dir }
+	local result = {}
+	local filter = contains(opts.search_patterns)
+
+	while #stack > 0 do
+		local current_dir = table.remove(stack)
+		for entry in iter_dir(current_dir) do
+			if entry.typ == "directory" then
+				table.insert(stack, entry.path)
+			end
+			if filter(entry.path) then
+				table.insert(result, entry.path)
+			end
+		end
 	end
 
-	--- @type {path: neotest-java.Path, typ: "directory" | "file"}[]
-	local result = find(dir)
-	local all_seen = function()
-		return vim.iter(result)
-			:filter(function(result)
-				return result.typ == "directory"
-			end)
-			:all(function(obj)
-				local path_str = obj.path:to_string()
-				return seen[path_str]
-			end)
-	end
-
-	local hard_limit = 10000
-	while not all_seen() do
-		hard_limit = hard_limit - 1
-		assert(hard_limit > 0, "Dir scan exceeded hard limit")
-
-		local next_dir = vim.iter(result)
-			:filter(function(r)
-				return r.typ == "directory"
-			end)
-			:find(function(obj)
-				assert(obj.typ == "directory")
-				local path_str = obj.path:to_string()
-				return not seen[path_str]
-			end)
-
-		result = vim.list_extend(result, find(next_dir.path))
-	end
-	return vim.iter(result)
-		:map(function(obj)
-			return obj.path
-		end)
-		:filter(contains(opts.search_patterns))
-		:totable()
+	return result
 end
 
 return scan
