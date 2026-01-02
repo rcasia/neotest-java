@@ -117,6 +117,10 @@ CommandBuilder.build_junit = function(self, port)
 		table.insert(junit_command.args, v)
 	end
 
+	if self._basedir then
+		table.insert(junit_command.args, 1, "-Duser.dir=" .. self._basedir)
+	end
+
 	-- add debug arguments if debug port is specified
 	if port then
 		table.insert(junit_command.args, 1, "-Xdebug")

@@ -22,7 +22,7 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 --- @field scan fun(base_dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
 --- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
---- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
+--- @field report_folder_name_gen fun(module_dir: neotest-java.Path, build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
 
@@ -59,8 +59,9 @@ local DEFAULT_DEPENDENCIES = {
 		})
 	end,
 	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
-	report_folder_name_gen = function(build_dir)
-		return build_dir:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
+	report_folder_name_gen = function(module_dir, build_dir)
+		local base = (module_dir and module_dir:append(build_dir)) or build_dir
+		return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
 	build_tool_getter = function(project_type)
 		return build_tools.get(project_type)
@@ -104,10 +105,6 @@ function SpecBuilder.build_spec(args, config, deps)
 	deps.mkdir(build_dir)
 	deps.mkdir(build_dir:parent())
 
-	-- JUNIT REPORT DIRECTORY
-	local reports_dir = deps.report_folder_name_gen(build_dir)
-	command:reports_dir(reports_dir)
-
 	local filepath = Path(position.path)
 	local module =
 		--
@@ -120,6 +117,10 @@ function SpecBuilder.build_spec(args, config, deps)
 		or project:get_modules()[1]
 
 	command:basedir(module.base_dir)
+
+	-- JUNIT REPORT DIRECTORY
+	local reports_dir = deps.report_folder_name_gen(module.base_dir, build_dir)
+	command:reports_dir(reports_dir)
 
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(project:get_module_dirs()))
 
