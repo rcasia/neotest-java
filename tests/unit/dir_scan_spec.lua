@@ -1,9 +1,7 @@
-local nio = require("nio")
 local Path = require("neotest-java.model.path")
 local scan = require("neotest-java.util.dir_scan")
 
 local eq = require("tests.assertions").eq
-local it = nio.tests.it
 
 describe("Dir Scan", function()
 	it("scans", function()

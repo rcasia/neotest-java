@@ -1,6 +1,5 @@
 local plugin = require("neotest-java")
 local FileChecker = require("neotest-java.core.file_checker")
-local it = require("nio").tests.it -- async
 local Path = require("neotest-java.model.path")
 
 describe("file_checker", function()
