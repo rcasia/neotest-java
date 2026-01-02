@@ -52,17 +52,6 @@ end
 local function Path(raw_path, opts)
 	local SEP = (opts and opts.separator) and opts.separator() or separator()
 
-	local slugs = vim
-		--
-		.iter(vim.split(raw_path, WINDOWS_SEPARATOR))
-		:map(function(s)
-			return vim.split(s, UNIX_SEPARATOR)
-		end)
-		:flatten()
-		:filter(is_not_empty)
-		:filter(is_not_dot)
-		:map(remove_separator)
-		:totable()
 	local first_char = raw_path:sub(1, 1)
 	local is_absolute =
 		--
@@ -70,16 +59,34 @@ local function Path(raw_path, opts)
 		--
 		or first_char == WINDOWS_SEPARATOR
 
-	if is_absolute then
-		table.insert(slugs, 1, "")
+	local slugs_fn = function()
+		local slugs = vim
+			--
+			.iter(vim.split(raw_path, WINDOWS_SEPARATOR))
+			:map(function(s)
+				return vim.split(s, UNIX_SEPARATOR)
+			end)
+			:flatten()
+			:filter(is_not_empty)
+			:filter(is_not_dot)
+			:map(remove_separator)
+			:totable()
+
+		if is_absolute then
+			table.insert(slugs, 1, "")
+		end
+
+		local has_relative_dot = raw_path:sub(1, 2) == "." .. UNIX_SEPARATOR
+			or raw_path:sub(1, 2) == "." .. WINDOWS_SEPARATOR
+		if has_relative_dot then
+			table.insert(slugs, 1, ".")
+		end
+
+		return slugs
 	end
 
-	local has_relative_dot = raw_path:sub(1, 2) == "." .. UNIX_SEPARATOR
-		or raw_path:sub(1, 2) == "." .. WINDOWS_SEPARATOR
-	if has_relative_dot then
-		table.insert(slugs, 1, ".")
-	end
 	local to_string = function()
+		local slugs = slugs_fn()
 		if is_absolute and #slugs == 1 then
 			return SEP
 		end
@@ -93,14 +100,16 @@ local function Path(raw_path, opts)
 	return setmetatable(
 		--- @type neotest-java.Path
 		{
-			slugs = slugs,
+			slugs = slugs_fn,
 			name = function()
+				local slugs = slugs_fn()
 				return slugs[#slugs]
 			end,
 			append = function(other)
 				return Path(raw_path .. SEP .. other, opts)
 			end,
 			parent = function()
+				local slugs = slugs_fn()
 				if is_absolute and #slugs == 2 then
 					return Path(SEP, opts)
 				end
@@ -113,9 +122,9 @@ local function Path(raw_path, opts)
 				return Path(this_string:sub(#base_path_string + 2), opts)
 			end,
 			contains = function(slug_term)
-				local this_slugs = slugs
+				local this_slugs = slugs_fn()
 
-				local other_slugs = Path(slug_term, opts).slugs
+				local other_slugs = Path(slug_term, opts).slugs()
 
 				if #other_slugs == 0 or #other_slugs > #this_slugs then
 					return false
