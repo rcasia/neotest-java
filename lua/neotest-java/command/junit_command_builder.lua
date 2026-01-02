@@ -96,6 +96,10 @@ CommandBuilder.build_junit = function(self, port)
 		unpack(self._jvm_args),
 	}
 
+	if self._basedir then
+		table.insert(jvm_args, 1, "-Duser.dir=" .. self._basedir:to_string())
+	end
+
 	local junit_command = {
 		command = java(),
 		args = vim.iter({
@@ -117,10 +121,6 @@ CommandBuilder.build_junit = function(self, port)
 	-- add selectors
 	for _, v in ipairs(selectors) do
 		table.insert(junit_command.args, v)
-	end
-
-	if self._basedir then
-		table.insert(junit_command.args, 1, "-Duser.dir=" .. self._basedir:to_string())
 	end
 
 	-- add debug arguments if debug port is specified
