@@ -8,25 +8,25 @@ describe("Dir Scan", function()
 		local target_dir = Path(".")
 
 		local nested_dirs = {
-			[Path(".").to_string()] = {
+			[Path("."):to_string()] = {
 				Path("./some"),
 			},
 
-			[Path("./some").to_string()] = {
+			[Path("./some"):to_string()] = {
 				Path("./some/inner"),
 				Path("./some/random.log"),
 			},
 
-			[Path("./some/inner").to_string()] = {
+			[Path("./some/inner"):to_string()] = {
 				Path("./some/inner/image.png"),
 			},
 		}
 
 		local test_dependencies = {
 			iter_dir = function(dir)
-				assert(dir ~= Path("./some/random.log"), "should not scan files. found: " .. dir.to_string())
-				assert(dir ~= Path("./some/inner/image.png"), "should not scan files. found: " .. dir.to_string())
-				local dirs = nested_dirs[dir.to_string()] or {}
+				assert(dir ~= Path("./some/random.log"), "should not scan files. found: " .. dir:to_string())
+				assert(dir ~= Path("./some/inner/image.png"), "should not scan files. found: " .. dir:to_string())
+				local dirs = nested_dirs[dir:to_string()] or {}
 
 				local index = 0
 
@@ -36,7 +36,7 @@ describe("Dir Scan", function()
 					if new_path == nil then
 						return nil
 					end
-					local typ = nested_dirs[new_path.to_string()] and "directory" or "file"
+					local typ = nested_dirs[new_path:to_string()] and "directory" or "file"
 					return { path = dirs[index], typ = typ }
 				end
 			end,

@@ -9,10 +9,10 @@ local function generate_spring_property_filepaths(base_dirs)
 
 	local locations = {}
 	for _, base_dir in ipairs(base_dirs) do
-		local bases = { base_dir.append("application"), base_dir.append("application-test") }
+		local bases = { base_dir:append("application"), base_dir:append("application-test") }
 		for _, base in ipairs(bases) do
 			for _, ext in ipairs(exts) do
-				local location = Path(prefix .. scheme .. base.to_string() .. "." .. ext)
+				local location = Path(prefix .. scheme .. base:to_string() .. "." .. ext)
 				table.insert(locations, location)
 			end
 		end

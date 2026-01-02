@@ -10,8 +10,8 @@ local modules_from_dirs_and_project_file = function(dirs, project_filename)
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, path in ipairs(dirs) do
-		if path.to_string():find(project_filename) then
-			modules[#modules + 1] = Module.new(path.parent())
+		if path:to_string():find(project_filename) then
+			modules[#modules + 1] = Module.new(path:parent())
 		end
 	end
 	return modules
@@ -55,12 +55,12 @@ function Project:find_module_by_filepath(filepath)
 		.iter(self:get_modules())
 		---@param mod neotest-java.Module
 		:filter(function(mod)
-			return filepath.contains(mod.base_dir.to_string())
+			return filepath:contains(mod.base_dir:to_string())
 		end)
 		--- @param acc neotest-java.Module | nil
 		--- @param mod neotest-java.Module
 		:fold(nil, function(acc, mod)
-			if not acc or #mod.base_dir.to_string() > #acc.base_dir.to_string() then
+			if not acc or #mod.base_dir:to_string() > #acc.base_dir:to_string() then
 				acc = mod
 			end
 			return acc

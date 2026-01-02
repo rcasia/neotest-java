@@ -1,13 +1,13 @@
 -- === BENCHMARKING PATH IMPLEMENTATION (N=100000) ===
--- Native (vim.fs + strings)      : 82.23 ms (0.0008 ms/op)
--- Path Struct                    : 749.90 ms (0.0075 ms/op)
--- Allocation Cost (Path())       : 60.34 ms (0.0006 ms/op)
--- Plenary Path (Creation)        : 196.01 ms (0.0020 ms/op)
--- Plenary Path (Parent)          : 1777.23 ms (0.0178 ms/op)
+-- Native (vim.fs + strings)      : 83.88 ms (0.0008 ms/op)
+-- Path Struct                    : 550.41 ms (0.0055 ms/op)
+-- Allocation Cost (Path())       : 10.25 ms (0.0001 ms/op)
+-- Plenary Path (Creation)        : 199.67 ms (0.0020 ms/op)
+-- Plenary Path (Parent)          : 1843.74 ms (0.0184 ms/op)
 --
 -- === MEMORY FOOTPRINT ===
--- Path (Allocation)              : 6191.72 KB total (0.0619 KB/op)
--- Plenary Path (Creation)        : 18460.50 KB total (0.1846 KB/op)
+-- Path (Allocation)              : 21875.00 KB total (0.2188 KB/op)
+-- Plenary Path (Creation)        : 21256.73 KB total (0.2126 KB/op)
 
 local has_plenary, PlenaryPath = pcall(require, "plenary.path")
 
@@ -53,8 +53,8 @@ end)
 
 benchmark("Path Struct", function()
 	local p = Path(LONG_PATH)
-	local parent = p.parent()
-	local _ = parent.append("new_file.lua")
+	local parent = p:parent()
+	local _ = parent:append("new_file.lua")
 end)
 
 benchmark("Allocation Cost (Path())", function()

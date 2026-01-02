@@ -6,7 +6,7 @@ local scan = require("plenary.scandir")
 --- @return "maven"|"gradle"|"unknown"
 local function detect_project_type(root_dir, scandir)
 	scandir = scandir or scan.scan_dir
-	local files = scandir(root_dir.to_string(), {
+	local files = scandir(root_dir:to_string(), {
 		hidden = false,
 		add_dirs = false,
 		depth = math.huge,

@@ -63,7 +63,7 @@ describe("project", function()
 		},
 	}
 	for _, testcase in ipairs(testscases) do
-		it("should get modules: " .. testcase.input.root_dir.to_string(), function()
+		it("should get modules: " .. testcase.input.root_dir:to_string(), function()
 			local project = Project.from_dirs_and_project_file(testcase.input.dirs, testcase.input.project_filename)
 
 			local results = {}

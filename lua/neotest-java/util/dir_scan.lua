@@ -1,12 +1,12 @@
 --- @param dir neotest-java.Path
 --- @return fun(): { path: neotest-java.Path, typ: "directory" | "file" } | nil
 local iter_dir = function(dir)
-	local handle = assert(vim.uv.fs_scandir(dir.to_string()))
+	local handle = assert(vim.uv.fs_scandir(dir:to_string()))
 
 	return function()
 		local name, typ = vim.uv.fs_scandir_next(handle)
 		if name ~= nil then
-			return { path = dir.append(name), typ = typ }
+			return { path = dir:append(name), typ = typ }
 		end
 	end
 end
@@ -23,7 +23,7 @@ local contains = function(patterns)
 		end
 
 		return vim.iter(patterns):any(function(pattern)
-			return path.to_string():match(pattern)
+			return path:to_string():match(pattern)
 		end)
 	end
 end
@@ -42,7 +42,7 @@ local function scan(dir, opts, dependencies)
 	local seen = {}
 	--- @return {path: neotest-java.Path, typ: "directory" | "file"}[]
 	local find = function(_dir)
-		seen[_dir.to_string()] = true
+		seen[_dir:to_string()] = true
 		return vim
 			--
 			.iter(iter_dir(_dir))
@@ -57,7 +57,7 @@ local function scan(dir, opts, dependencies)
 				return result.typ == "directory"
 			end)
 			:all(function(obj)
-				local path_str = obj.path.to_string()
+				local path_str = obj.path:to_string()
 				return seen[path_str]
 			end)
 	end
@@ -73,7 +73,7 @@ local function scan(dir, opts, dependencies)
 			end)
 			:find(function(obj)
 				assert(obj.typ == "directory")
-				local path_str = obj.path.to_string()
+				local path_str = obj.path:to_string()
 				return not seen[path_str]
 			end)
 

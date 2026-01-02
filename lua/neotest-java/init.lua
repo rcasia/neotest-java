@@ -13,7 +13,7 @@ local junit_version = ch.config().default_version
 
 --- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath)
-	local exists, _ = File.exists(filepath.to_string())
+	local exists, _ = File.exists(filepath:to_string())
 	assert(
 		exists,
 		([[

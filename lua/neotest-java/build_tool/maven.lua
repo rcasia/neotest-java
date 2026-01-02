@@ -22,8 +22,8 @@ function maven.get_spring_property_filepaths(roots)
 		--- @param r neotest-java.Path
 		:map(function(r)
 			return {
-				r.append("classes"),
-				r.append("test-classes"),
+				r:append("classes"),
+				r:append("test-classes"),
 			}
 		end)
 		:flatten()

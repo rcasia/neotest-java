@@ -17,7 +17,7 @@ end
 local function find_any_java_file(dir)
 	return Path(
 		assert(
-			vim.iter(nio.fn.globpath(dir.to_string(), Path("**/*.java").to_string(), false, true)):next(),
+			vim.iter(nio.fn.globpath(dir:to_string(), Path("**/*.java"):to_string(), false, true)):next(),
 			"No Java file found in the current directory."
 		)
 	)
@@ -26,8 +26,8 @@ end
 --- @param path neotest-java.Path
 --- @return number bufnr
 local function preload_file_for_lsp(path)
-	local buf = vim.fn.bufadd(path.to_string()) -- allocates buffer ID
-	vim.fn.bufload(path.to_string()) -- preload lines
+	local buf = vim.fn.bufadd(path:to_string()) -- allocates buffer ID
+	vim.fn.bufload(path:to_string()) -- preload lines
 
 	return buf
 end

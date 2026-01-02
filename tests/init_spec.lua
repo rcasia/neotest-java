@@ -14,8 +14,8 @@ describe("NeotestJava plugin", function()
 		-- then
 		local actual_config = require("neotest-java.context_holder").get_context().config
 		assert.are.same(
-			{ unpack(default_config), junit_jar = default_config.junit_jar.to_string() },
-			{ unpack(actual_config), junit_jar = actual_config.junit_jar.to_string() }
+			{ unpack(default_config), junit_jar = default_config.junit_jar:to_string() },
+			{ unpack(actual_config), junit_jar = actual_config.junit_jar:to_string() }
 		)
 	end)
 
@@ -26,8 +26,8 @@ describe("NeotestJava plugin", function()
 		-- then
 		local actual_config = require("neotest-java.context_holder").get_context().config
 		assert.are.same(
-			{ unpack(default_config), junit_jar = default_config.junit_jar.to_string() },
-			{ unpack(actual_config), junit_jar = actual_config.junit_jar.to_string() }
+			{ unpack(default_config), junit_jar = default_config.junit_jar:to_string() },
+			{ unpack(actual_config), junit_jar = actual_config.junit_jar:to_string() }
 		)
 	end)
 end)

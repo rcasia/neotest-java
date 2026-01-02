@@ -86,7 +86,7 @@ CommandBuilder.build_junit = function(self, port)
 		.iter(self._spring_property_filepaths)
 		--- @param path neotest-java.Path
 		:map(function(path)
-			return path.to_string()
+			return path:to_string()
 		end)
 		:join(",")
 
@@ -100,10 +100,10 @@ CommandBuilder.build_junit = function(self, port)
 		args = vim.iter({
 			jvm_args,
 			"-jar",
-			self._junit_jar.to_string(),
+			self._junit_jar:to_string(),
 			"execute",
 			"--classpath=" .. self._classpath_file_arg,
-			"--reports-dir=" .. self._reports_dir.to_string(),
+			"--reports-dir=" .. self._reports_dir:to_string(),
 			"--fail-if-no-tests",
 			"--disable-banner",
 			"--details=testfeed",

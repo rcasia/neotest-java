@@ -4,8 +4,8 @@ local eq = assert.are.same
 
 describe("Path", function()
 	it("represents a single relative path as a dot", function()
-		eq(".", Path(".").to_string())
-		eq(".", Path("./").to_string())
+		eq(".", Path("."):to_string())
+		eq(".", Path("./"):to_string())
 	end)
 
 	it("two paths are equal if their string representations are equal", function()
@@ -15,9 +15,9 @@ describe("Path", function()
 
 	it("can determine whether it contains a slug or not", function()
 		local path = Path("/home/user/repo")
-		eq(true, path.contains("home"), "should return true")
-		eq(true, path.contains("home/user"), "should return true")
-		eq(false, path.contains("hom"), "should return false")
+		eq(true, path:contains("home"), "should return true")
+		eq(true, path:contains("home/user"), "should return true")
+		eq(false, path:contains("hom"), "should return false")
 	end)
 
 	local relative_cases = {
@@ -47,9 +47,9 @@ describe("Path", function()
 			local base_path = Path(case.base_path)
 			local full_path = Path(case.full_path)
 
-			local relative_path = full_path.make_relative(base_path)
+			local relative_path = full_path:make_relative(base_path)
 
-			eq(Path(case.expected_relative).to_string(), relative_path.to_string())
+			eq(Path(case.expected_relative):to_string(), relative_path:to_string())
 		end)
 	end
 
@@ -102,7 +102,7 @@ describe("Path", function()
 					return case.separator
 				end,
 			})
-			eq(case.expected, path.to_string())
+			eq(case.expected, path:to_string())
 		end)
 	end
 
@@ -133,7 +133,7 @@ describe("Path", function()
 					return case.separator
 				end,
 			})
-			eq(case.expected_parent, path.parent().to_string())
+			eq(case.expected_parent, path:parent():to_string())
 		end)
 	end
 
@@ -158,7 +158,7 @@ describe("Path", function()
 					return case.separator
 				end,
 			})
-			eq(case.expected, path.append(case.append_path).to_string())
+			eq(case.expected, path:append(case.append_path):to_string())
 		end)
 	end
 end)

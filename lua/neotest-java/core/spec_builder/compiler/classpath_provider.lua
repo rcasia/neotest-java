@@ -34,7 +34,7 @@ local function ClasspathProvider(deps)
 				.iter(additional_classpath_entries)
 				--- @param path neotest-java.Path
 				:map(function(path)
-					return path.to_string()
+					return path:to_string()
 				end)
 				:totable()
 

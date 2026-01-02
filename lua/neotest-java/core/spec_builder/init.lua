@@ -31,11 +31,11 @@ local SpecBuilder = {}
 --- @type neotest-java.BuildSpecDependencies
 local DEFAULT_DEPENDENCIES = {
 	mkdir = function(dir)
-		vim.uv.fs_mkdir(dir.to_string(), 493)
+		vim.uv.fs_mkdir(dir:to_string(), 493)
 	end,
 
 	chdir = function(dir)
-		nio.fn.chdir(dir.to_string())
+		nio.fn.chdir(dir:to_string())
 	end,
 
 	root_getter = function()
@@ -60,7 +60,7 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
 	report_folder_name_gen = function(build_dir)
-		return build_dir.append("junit-reports").append(nio.fn.strftime("%d%m%y%H%M%S"))
+		return build_dir:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
 	build_tool_getter = function(project_type)
 		return build_tools.get(project_type)
@@ -102,7 +102,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	local build_dir = build_tool.get_build_dirname()
 
 	deps.mkdir(build_dir)
-	deps.mkdir(build_dir.parent())
+	deps.mkdir(build_dir:parent())
 
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir = deps.report_folder_name_gen(build_dir)
@@ -115,7 +115,7 @@ function SpecBuilder.build_spec(args, config, deps)
 			--
 			and assert(
 				project:find_module_by_filepath(filepath),
-				"module not found in multimodule project for filepath: " .. filepath.to_string()
+				"module not found in multimodule project for filepath: " .. filepath:to_string()
 			)
 		or project:get_modules()[1]
 
@@ -140,7 +140,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	local classpath_file_arg = deps.classpath_provider.get_classpath(
 		module.base_dir,
-		deps.scan(module.base_dir, { search_patterns = { Path("test/resources$").to_string() } })
+		deps.scan(module.base_dir, { search_patterns = { Path("test/resources$"):to_string() } })
 	)
 	command:classpath_file_arg(classpath_file_arg)
 
@@ -153,7 +153,7 @@ function SpecBuilder.build_spec(args, config, deps)
 		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
 
-		local project_name = vim.fn.fnamemodify(root.to_string(), ":t")
+		local project_name = vim.fn.fnamemodify(root:to_string(), ":t")
 		return {
 			strategy = {
 				type = "java",
@@ -163,7 +163,7 @@ function SpecBuilder.build_spec(args, config, deps)
 				port = port,
 				projectName = project_name,
 			},
-			cwd = root.to_string(),
+			cwd = root:to_string(),
 			symbol = position.type == "test" and position.name or nil,
 			context = {
 				strategy = args.strategy,
@@ -177,7 +177,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	logger.info("junit command: ", command:build_to_string())
 	return {
 		command = command:build_to_string(),
-		cwd = root.to_string(),
+		cwd = root:to_string(),
 		symbol = position.name,
 		context = { reports_dir = reports_dir },
 	}

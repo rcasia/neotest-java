@@ -8,7 +8,7 @@ local binaries = {
 		local ok, jdtls_java_home = pcall(jdtls.get_java_home)
 
 		if ok then
-			return Path(jdtls_java_home).append("/bin/java").to_string()
+			return Path(jdtls_java_home):append("/bin/java"):to_string()
 		end
 
 		logger.warn("JAVA_HOME setting not found in jdtls. Using defualt binary: java")
@@ -19,7 +19,7 @@ local binaries = {
 		local ok, jdtls_java_home = pcall(jdtls.get_java_home)
 
 		if ok then
-			return Path(jdtls_java_home).append("/bin/javac").to_string()
+			return Path(jdtls_java_home):append("/bin/javac"):to_string()
 		end
 
 		logger.warn("JAVA_HOME setting not found in jdtls. Using default: javac")

@@ -32,12 +32,12 @@ function FileChecker.is_test_file(file_path, dependencies)
 	local my_path = Path(file_path)
 	local base_dir = deps.root_getter()
 
-	local relative_path = my_path.make_relative(base_dir)
-	if relative_path.contains("main") then
+	local relative_path = my_path:make_relative(base_dir)
+	if relative_path:contains("main") then
 		return false
 	end
 	for _, pattern in ipairs(JAVA_TEST_FILE_PATTERNS) do
-		if string.find(relative_path.to_string(), pattern) then
+		if string.find(relative_path:to_string(), pattern) then
 			return true
 		end
 	end

@@ -42,11 +42,11 @@ describe("SpecBuilder", function()
 			end,
 			scan = function(base_dir, opts)
 				if base_dir ~= Path(".") then
-					error("unexpected base_dir in scan: " .. base_dir.to_string())
+					error("unexpected base_dir in scan: " .. base_dir:to_string())
 				end
 
 				opts = opts or {}
-				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$").to_string() then
+				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
 					return { Path("additional1"), Path("additional2") }
 				end
 
@@ -57,7 +57,7 @@ describe("SpecBuilder", function()
 				assert(
 					base_dir == Path("."),
 					"should compile with the project root as base_dir: "
-						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
+						.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
 				)
 			end,
 			classpath_provider = {
@@ -84,7 +84,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties").to_string(),
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
 				"execute",
@@ -154,7 +154,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties").to_string(),
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-myExtraJvmArg",
 				"-jar",
 				"my-junit-jar.jar",
@@ -210,7 +210,7 @@ describe("SpecBuilder", function()
 				assert(
 					base_dir == expected_base_dir,
 					"should compile with the expected_base_dir: "
-						.. vim.inspect({ actual = base_dir.to_string(), expected = expected_base_dir.to_string() })
+						.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
 				)
 			end,
 			classpath_provider = {
@@ -234,7 +234,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties").to_string(),
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
 				"execute",

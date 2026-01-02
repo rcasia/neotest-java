@@ -21,8 +21,8 @@ function gradle.get_spring_property_filepaths(roots)
 		--- @param root neotest-java.Path
 		:map(function(root)
 			return {
-				root.append("main"),
-				root.append("test"),
+				root:append("main"),
+				root:append("test"),
 			}
 		end)
 		:flatten()

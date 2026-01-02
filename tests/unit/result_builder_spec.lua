@@ -131,7 +131,7 @@ describe("ResultBuilder", function()
 				</testsuite>
 		]]
 
-		local tree = plugin.discover_positions(file_path.to_string())
+		local tree = plugin.discover_positions(file_path:to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -200,7 +200,7 @@ describe("ResultBuilder", function()
 			]]
 
 		local file_path = create_tempfile_with_test(file_content)
-		local tree = plugin.discover_positions(file_path.to_string())
+		local tree = plugin.discover_positions(file_path:to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -267,7 +267,7 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		local tree = plugin.discover_positions(file_path.to_string())
+		local tree = plugin.discover_positions(file_path:to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -341,7 +341,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 
-		local tree = plugin.discover_positions(file_path.to_string())
+		local tree = plugin.discover_positions(file_path:to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -421,7 +421,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 
-		local tree = plugin.discover_positions(file_path.to_string())
+		local tree = plugin.discover_positions(file_path:to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -494,7 +494,7 @@ describe("ResultBuilder", function()
 
 		local file_path = create_tempfile_with_test(file_content)
 
-		local tree = plugin.discover_positions(file_path.to_string())
+		local tree = plugin.discover_positions(file_path:to_string())
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }

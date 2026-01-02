@@ -11,11 +11,11 @@ describe("file_checker", function()
 			end,
 		}
 		local test_files = {
-			base_path.append("src/test/java/neotest/NeotestTest.java").to_string(),
-			base_path.append("src/test/java/neotest/RepositoryTests.java").to_string(),
-			base_path.append("src/test/java/neotest/NeotestIT.java").to_string(),
-			base_path.append("src/test/java/neotest/ProductAceptanceTests.java").to_string(),
-			base_path.append("src/test/java/neotest/domain/ProductAceptanceTests.java").to_string(),
+			base_path:append("src/test/java/neotest/NeotestTest.java"):to_string(),
+			base_path:append("src/test/java/neotest/RepositoryTests.java"):to_string(),
+			base_path:append("src/test/java/neotest/NeotestIT.java"):to_string(),
+			base_path:append("src/test/java/neotest/ProductAceptanceTests.java"):to_string(),
+			base_path:append("src/test/java/neotest/domain/ProductAceptanceTests.java"):to_string(),
 		}
 
 		for _, file_path in ipairs(test_files) do
