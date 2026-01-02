@@ -1,7 +1,15 @@
 -- === BENCHMARKING PATH IMPLEMENTATION (N=100000) ===
--- Native (vim.fs + strings)      : 76.40 ms (0.0008 ms/op)
--- Path Struct                    : 759.45 ms (0.0076 ms/op)
--- Allocation Cost (Path())       : 55.09 ms (0.0006 ms/op)
+-- Native (vim.fs + strings)      : 82.23 ms (0.0008 ms/op)
+-- Path Struct                    : 749.90 ms (0.0075 ms/op)
+-- Allocation Cost (Path())       : 60.34 ms (0.0006 ms/op)
+-- Plenary Path (Creation)        : 196.01 ms (0.0020 ms/op)
+-- Plenary Path (Parent)          : 1777.23 ms (0.0178 ms/op)
+--
+-- === MEMORY FOOTPRINT ===
+-- Path (Allocation)              : 6191.72 KB total (0.0619 KB/op)
+-- Plenary Path (Creation)        : 18460.50 KB total (0.1846 KB/op)
+
+local has_plenary, PlenaryPath = pcall(require, "plenary.path")
 
 local Path = require("neotest-java.model.path")
 
@@ -19,6 +27,19 @@ local function benchmark(name, fn)
 	local end_time = vim.uv.hrtime()
 	local duration_ms = (end_time - start) / 1000000
 	print(string.format("%-30s : %.2f ms (%.4f ms/op)", name, duration_ms, duration_ms / ITERATIONS))
+end
+
+local function benchmark_memory(name, fn)
+	collectgarbage()
+	local before = collectgarbage("count") -- in KB
+
+	for _ = 1, ITERATIONS do
+		fn()
+	end
+
+	local after = collectgarbage("count")
+	local diff = after - before
+	print(string.format("%-30s : %.2f KB total (%.4f KB/op)", name, diff, diff / ITERATIONS))
 end
 
 print(string.format("=== BENCHMARKING PATH IMPLEMENTATION (N=%d) ===", ITERATIONS))
@@ -39,3 +60,29 @@ end)
 benchmark("Allocation Cost (Path())", function()
 	local _ = Path(LONG_PATH)
 end)
+
+if has_plenary then
+	benchmark("Plenary Path (Creation)", function()
+		local _ = PlenaryPath:new(LONG_PATH)
+	end)
+
+	benchmark("Plenary Path (Parent)", function()
+		local p = PlenaryPath:new(LONG_PATH)
+		local _ = p:parent()
+	end)
+else
+	print("Skipping Plenary benchmark (plugin not found)")
+end
+
+print("\n=== MEMORY FOOTPRINT ===")
+benchmark_memory("Path (Allocation)", function()
+	local _ = Path(LONG_PATH)
+end)
+
+if has_plenary then
+	benchmark_memory("Plenary Path (Creation)", function()
+		local _ = PlenaryPath:new(LONG_PATH)
+	end)
+else
+	print("Skipping Plenary benchmark (plugin not found)")
+end
