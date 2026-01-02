@@ -39,10 +39,16 @@ local remove_separator = function(s)
 	return clean
 end
 
+local SEPARATOR_CACHE = nil
 local separator = function()
+	if SEPARATOR_CACHE then
+		return SEPARATOR_CACHE
+	end
 	if vim.fn.has("win64") == 1 or vim.fn.has("win32") == 1 then
+		SEPARATOR_CACHE = WINDOWS_SEPARATOR
 		return WINDOWS_SEPARATOR
 	end
+	SEPARATOR_CACHE = UNIX_SEPARATOR
 	return UNIX_SEPARATOR
 end
 

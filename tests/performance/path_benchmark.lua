@@ -1,7 +1,7 @@
 -- === BENCHMARKING PATH IMPLEMENTATION (N=100000) ===
--- Native (vim.fs + strings)      : 75.85 ms (0.0008 ms/op)
--- Your Path Struct               : 932.97 ms (0.0093 ms/op)
--- Allocation Cost (Path())       : 119.96 ms (0.0012 ms/op)
+-- Native (vim.fs + strings)      : 76.40 ms (0.0008 ms/op)
+-- Path Struct                    : 759.45 ms (0.0076 ms/op)
+-- Allocation Cost (Path())       : 55.09 ms (0.0006 ms/op)
 
 local Path = require("neotest-java.model.path")
 
