@@ -13,20 +13,17 @@ local function ClasspathProvider(deps)
 		get_classpath = function(base_dir, additional_classpath_entries)
 			additional_classpath_entries = additional_classpath_entries or {}
 
-			local bufnr = vim.api.nvim_get_current_buf()
-			local bufname = vim.api.nvim_buf_get_name(bufnr)
-			local buffer_uri = vim.uri_from_fname(bufname)
-
+			local base_dir_uri = vim.uri_from_fname(base_dir:to_string())
 			local client = deps.client_provider(base_dir)
 
 			local response_for_runtime = client:request_sync("workspace/executeCommand", {
 				command = "java.project.getClasspaths",
-				arguments = { buffer_uri, vim.json.encode({ scope = "runtime" }) },
+				arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
 			})
 
 			local response_for_test = client:request_sync("workspace/executeCommand", {
 				command = "java.project.getClasspaths",
-				arguments = { buffer_uri, vim.json.encode({ scope = "test" }) },
+				arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
 			})
 
 			local additional_classpath_entries_strings = vim

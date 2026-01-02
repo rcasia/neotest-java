@@ -16,7 +16,7 @@ describe("Classpath Provider", function()
 					request_sync = function(_, method, params)
 						eq(method, "workspace/executeCommand")
 						eq(params.command, "java.project.getClasspaths")
-						-- eq(params.arguments[1], "test-uri") -- TODO: look at it later
+						eq(params.arguments[1], "file://some")
 						assert(params.arguments[2], "Expected second argument to be present")
 						local options = vim.json.decode(params.arguments[2])
 
