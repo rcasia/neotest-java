@@ -27,7 +27,7 @@ local Binaries = function(deps)
 
 			local jdtls_java_home = res.result["org.eclipse.jdt.ls.core.vm.location"]
 
-			return Path(jdtls_java_home):append("/bin/java"):to_string()
+			return Path(jdtls_java_home):append("/bin/java")
 		end,
 	}
 end

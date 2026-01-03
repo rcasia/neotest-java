@@ -24,6 +24,6 @@ describe("Binaries", function()
 
 		local bin = Binaries({ client_provider = test_client_provider })
 		local result = bin.java(expected_cwd)
-		eq("my_java_home/bin/java", result)
+		eq(Path("my_java_home/bin/java"), result)
 	end)
 end)
