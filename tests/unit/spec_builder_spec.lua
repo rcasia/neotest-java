@@ -78,6 +78,11 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			binaries = {
+				java = function()
+					return Path("java")
+				end,
+			},
 		})
 
 		-- then
@@ -148,6 +153,11 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			binaries = {
+				java = function()
+					return Path("java")
+				end,
+			},
 		})
 
 		-- then
@@ -228,6 +238,11 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			binaries = {
+				java = function()
+					return Path("java")
+				end,
+			},
 		})
 
 		-- then

@@ -2,7 +2,11 @@ local Path = require("neotest-java.model.path")
 
 local logger = require("neotest-java.logger")
 
+--- @class neotest-java.LspBinaries
+--- @field java fun(cwd: neotest-java.Path): neotest-java.Path
+
 --- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
+--- @return neotest-java.LspBinaries
 local Binaries = function(deps)
 	return {
 

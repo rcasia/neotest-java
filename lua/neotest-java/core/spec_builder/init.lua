@@ -14,6 +14,7 @@ local Path = require("neotest-java.model.path")
 local scan = require("neotest-java.util.dir_scan")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
+local Binaries = require("neotest-java.command.binaries_2")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -25,6 +26,7 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 --- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
+--- @field binaries neotest-java.LspBinaries
 
 local SpecBuilder = {}
 
@@ -68,6 +70,7 @@ local DEFAULT_DEPENDENCIES = {
 	detect_project_type = function(base_dir)
 		return detect_project_type(base_dir)
 	end,
+	binaries = Binaries({ client_provider = client_provider }),
 }
 
 ---@param args neotest.RunArgs
@@ -85,6 +88,7 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	local tree = args.tree
 	local position = tree:data()
+	local filepath = Path(position.path)
 	local root = deps.root_getter()
 	local project_type = deps.detect_project_type(root)
 	--- @type neotest-java.BuildTool
@@ -104,11 +108,13 @@ function SpecBuilder.build_spec(args, config, deps)
 	deps.mkdir(build_dir)
 	deps.mkdir(build_dir:parent())
 
+	-- JAVA BIN
+	command:java_bin(deps.binaries.java(filepath:parent()))
+
 	-- JUNIT REPORT DIRECTORY
 	local reports_dir = deps.report_folder_name_gen(build_dir)
 	command:reports_dir(reports_dir)
 
-	local filepath = Path(position.path)
 	local module =
 		--
 		project:is_multimodule()
