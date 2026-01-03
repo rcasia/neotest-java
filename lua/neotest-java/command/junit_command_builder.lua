@@ -1,5 +1,4 @@
 local binaries = require("neotest-java.command.binaries")
-local java = binaries.java
 
 --- @class neotest-java.TestReference
 --- @field qualified_name string
@@ -7,6 +6,7 @@ local java = binaries.java
 --- @field type "test" | "file" | "dir"
 
 --- @class CommandBuilder
+--- @field _java_bin neotest-java.Path
 --- @field _junit_jar neotest-java.Path
 --- @field _jvm_args string[]
 --- @field _reports_dir neotest-java.Path
@@ -27,6 +27,11 @@ function CommandBuilder.new(junit_jar, jvm_args)
 		_test_references = {},
 	}
 	return setmetatable(fields, CommandBuilder)
+end
+
+function CommandBuilder:java_bin(java_bin)
+	self._java_bin = java_bin
+	return self
 end
 
 function CommandBuilder:add_test_method(qualified_name)
@@ -65,6 +70,7 @@ end
 --- @param port? number
 --- @return { command: string, args: string[] }
 CommandBuilder.build_junit = function(self, port)
+	assert(self._java_bin, "java_bin cannot be nil")
 	assert(self._test_references, "test_references cannot be nil")
 	assert(self._basedir, "basedir cannot be nil")
 	assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
@@ -101,7 +107,7 @@ CommandBuilder.build_junit = function(self, port)
 	end
 
 	local junit_command = {
-		command = java(),
+		command = self._java_bin:to_string(),
 		args = vim.iter({
 			jvm_args,
 			"-jar",

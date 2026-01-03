@@ -1,30 +1,35 @@
-local jdtls = require("neotest-java.command.jdtls")
-local logger = require("neotest-java.logger")
 local Path = require("neotest-java.model.path")
 
-local binaries = {
+local logger = require("neotest-java.logger")
 
-	java = function()
-		local ok, jdtls_java_home = pcall(jdtls.get_java_home)
+--- @class neotest-java.LspBinaries
+--- @field java fun(cwd: neotest-java.Path): neotest-java.Path
 
-		if ok then
-			return Path(jdtls_java_home):append("/bin/java"):to_string()
-		end
+--- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
+--- @return neotest-java.LspBinaries
+local Binaries = function(deps)
+	return {
 
-		logger.warn("JAVA_HOME setting not found in jdtls. Using defualt binary: java")
-		return "java"
-	end,
+		--- @param cwd neotest-java.Path
+		java = function(cwd)
+			local client = deps.client_provider(cwd)
 
-	javac = function()
-		local ok, jdtls_java_home = pcall(jdtls.get_java_home)
+			logger.debug("Resolving Java binary via JDTLS for cwd: " .. cwd:to_string())
 
-		if ok then
-			return Path(jdtls_java_home):append("/bin/javac"):to_string()
-		end
+			local cmd = {
 
-		logger.warn("JAVA_HOME setting not found in jdtls. Using default: javac")
-		return "javac"
-	end,
-}
+				command = "java.project.getSettings",
+				arguments = { vim.uri_from_fname(cwd:to_string()), { "org.eclipse.jdt.ls.core.vm.location" } },
+			}
+			local res = client:request_sync("workspace/executeCommand", cmd)
+			assert(res, "No response from lsp server when getting Java home.")
+			assert(not res.err, "Error while getting Java home from lsp server: " .. vim.inspect(res.err))
 
-return binaries
+			local jdtls_java_home = res.result["org.eclipse.jdt.ls.core.vm.location"]
+
+			return Path(jdtls_java_home):append("/bin/java")
+		end,
+	}
+end
+
+return Binaries
