@@ -65,6 +65,5 @@ return {
 
 		health.start("Required binaries")
 		check_bin(binaries.java())
-		check_bin(binaries.javac())
 	end,
 }
