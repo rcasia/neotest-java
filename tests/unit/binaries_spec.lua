@@ -1,7 +1,7 @@
 local assertions = require("tests.assertions")
 local eq = assertions.eq
 
-local Binaries = require("neotest-java.command.binaries_2")
+local Binaries = require("neotest-java.command.binaries")
 local Path = require("neotest-java.model.path")
 
 describe("Binaries", function()
