@@ -18,7 +18,7 @@ local function find_any_java_file(dir)
 	return Path(
 		assert(
 			vim.iter(nio.fn.globpath(dir:to_string(), Path("**/*.java"):to_string(), false, true)):next(),
-			"No Java file found in the current directory."
+			"No Java file found in the directory." .. dir:to_string()
 		)
 	)
 end
