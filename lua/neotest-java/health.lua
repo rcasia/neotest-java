@@ -1,14 +1,4 @@
 local health = vim.health or require("health")
-local binaries = require("neotest-java.command.binaries")
-
-local function check_bin(name)
-	if vim.fn.executable(name) == 1 then
-		local path = vim.fn.exepath(name)
-		health.ok(string.format("'%s' is installed at %s", name, path))
-	else
-		health.error(string.format("'%s' not found", name))
-	end
-end
 
 local function check_treesitter()
 	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
@@ -62,8 +52,5 @@ return {
 		check_plugin("dap", "mfussenegger/nvim-dap")
 		check_plugin("dapui", "rcarriga/nvim-dap-ui")
 		check_plugin("nvim-dap-virtual-text", "theHamsta/nvim-dap-virtual-text")
-
-		health.start("Required binaries")
-		check_bin(binaries.java())
 	end,
 }
