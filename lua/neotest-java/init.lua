@@ -45,44 +45,42 @@ local file_checker_dependencies = {
 	end,
 }
 
----@class neotest.Adapter
-local NeotestJavaAdapter = {
-	name = "neotest-java",
-	filter_dir = dir_filter.filter_dir,
-	is_test_file = FileChecker(file_checker_dependencies).is_test_file,
-	discover_positions = position_discoverer.discover_positions,
-	results = result_builder.build_results,
-	root = function(dir)
-		local root = root_finder.find_root(dir)
-		if root then
-			ch.set_root(root)
-		end
-		return root
-	end,
-	build_spec = function(args)
-		check_junit_jar(ch.config().junit_jar)
+--- @return neotest.Adapter
+local function NeotestJavaAdapter(opts)
+	opts = opts or {}
 
-		return spec_builder.build_spec(args, ch.config())
-	end,
-}
+	ch.set_opts(opts)
 
--- on init
-(function()
 	log.info("neotest-java adapter initialized")
 
 	-- create data directory if it doesn't exist
 	local data_dir = vim.fn.stdpath("data") .. "/neotest-java"
 	vim.uv.fs_mkdir(data_dir, 493)
-end)()
 
-setmetatable(NeotestJavaAdapter, {
-	__call = function(_, opts)
-		opts = opts or {}
+	return setmetatable({
 
-		ch.set_opts(opts)
+		name = "neotest-java",
+		filter_dir = dir_filter.filter_dir,
+		is_test_file = FileChecker(file_checker_dependencies).is_test_file,
+		discover_positions = position_discoverer.discover_positions,
+		results = result_builder.build_results,
+		root = function(dir)
+			local root = root_finder.find_root(dir)
+			if root then
+				ch.set_root(root)
+			end
+			return root
+		end,
+		build_spec = function(args)
+			check_junit_jar(ch.config().junit_jar)
 
-		return NeotestJavaAdapter
-	end,
-})
+			return spec_builder.build_spec(args, ch.config())
+		end,
+	}, {
+		__call = function(_, _opts)
+			return NeotestJavaAdapter(_opts)
+		end,
+	})
+end
 
-return NeotestJavaAdapter
+return NeotestJavaAdapter()
