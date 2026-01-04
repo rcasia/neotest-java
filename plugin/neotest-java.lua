@@ -3,14 +3,12 @@ local job = require("plenary.job")
 local logger = require("neotest-java.logger")
 local lib = require("neotest.lib")
 local ch = require("neotest-java.context_holder")
-local junit_version = ch.config().default_version
+local config = ch.config()
 
 local options = {
 	setup = function()
-		local filepath = ("%s/neotest-java/junit-platform-console-standalone-%s.jar"):format(
-			vim.fn.stdpath("data"),
-			junit_version
-		)
+		local filepath = config.junit_jar:to_string()
+
 		if exists(filepath) then
 			lib.notify("Already setup!")
 			return
@@ -25,8 +23,8 @@ local options = {
 					"--output",
 					filepath,
 					("https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar"):format(
-						junit_version,
-						junit_version
+						config.default_version,
+						config.default_version
 					),
 					"--create-dirs",
 				},
