@@ -34,18 +34,6 @@ local chdir = function(dir)
 	nio.fn.chdir(dir:to_string())
 end
 
-local root_getter = function()
-	local root = ch.get_context().root
-	if root then
-		return Path(root)
-	end
-	root = root_finder.find_root(vim.fn.getcwd())
-	if root then
-		return Path(root)
-	end
-	error("Could not find project root")
-end
-
 --- @param config neotest-java.ConfigOpts
 --- @return neotest.Adapter
 local function NeotestJavaAdapter(config)
@@ -58,6 +46,10 @@ local function NeotestJavaAdapter(config)
 	-- create data directory if it doesn't exist
 	mkdir(Path(vim.fn.stdpath("data")):append("neotest-java"))
 
+	local root = Path(root_finder.find_root(vim.fn.getcwd()))
+	local root_getter = function()
+		return root
+	end
 	local file_checker = FileChecker({
 		root_getter = root_getter,
 		patterns = config.test_classname_patterns,
