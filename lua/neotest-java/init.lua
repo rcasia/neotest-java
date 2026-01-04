@@ -56,6 +56,7 @@ local function NeotestJavaAdapter(config)
 	})
 	return setmetatable({
 
+		config = config,
 		name = "neotest-java",
 		filter_dir = dir_filter.filter_dir,
 		is_test_file = file_checker.is_test_file,
