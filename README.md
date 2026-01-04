@@ -79,13 +79,12 @@
 
 ## :gear: Configuration
 
-```lua
-{
-  junit_jar = nil, -- default: stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar
-  jvm_args = {}, -- Additional jvm args to pass when running tests
-  incremental_build = true
-}
-```
+| Option              | Type        | Default                                                                                         | Description                                             |
+|---------------------|-------------|-------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| `junit_jar`         | `string?`   | `stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar`        | Path to the JUnit Platform Console standalone JAR.      |
+| `jvm_args`          | `string[]`  | `{}`                                                                                            | Additional JVM arguments passed when running tests.     |
+| `incremental_build` | `boolean`   | `true`                                                                                          | Enable incremental compilation before running tests.   |
+| `test_classname_patterns` | `string[]`  | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}` | Regular expressions used to include only classes whose names match these patterns. Classes not matching any pattern will be ignored. |
 
 ## :octocat: Contributing
 
