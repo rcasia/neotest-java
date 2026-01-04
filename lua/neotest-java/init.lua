@@ -11,11 +11,10 @@ local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.model.path")
 local nio = require("nio")
 
-local junit_version = ch.config().default_version
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
 --- @param filepath neotest-java.Path
-local check_junit_jar = function(filepath)
+local check_junit_jar = function(filepath, default_version)
 	local exists, _ = File.exists(filepath:to_string())
 	assert(
 		exists,
@@ -23,7 +22,7 @@ local check_junit_jar = function(filepath)
     Junit Platform Console Standalone jar not found at %s
     Please run the following command to download it: NeotestJava setup
     Or alternatively, download it from https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar
-  ]]):format(filepath, junit_version, junit_version)
+  ]]):format(filepath, default_version, default_version)
 	)
 end
 
@@ -79,7 +78,7 @@ local function NeotestJavaAdapter(config)
 			return root
 		end,
 		build_spec = function(args)
-			check_junit_jar(config.junit_jar)
+			check_junit_jar(config.junit_jar, config.default_version)
 
 			return spec_builder.build_spec(args, config, {
 				root_getter = root_getter,
