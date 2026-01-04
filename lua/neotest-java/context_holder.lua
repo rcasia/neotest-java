@@ -31,6 +31,7 @@ return {
 ---@field jvm_args string[]
 ---@field incremental_build boolean
 ---@field default_version string
+---@field test_classname_patterns string[] | nil
 
 ---@class neotest-java.Context
 ---@field config neotest-java.ConfigOpts

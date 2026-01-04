@@ -9,6 +9,11 @@ local default_config = {
 	jvm_args = {},
 	incremental_build = true,
 	default_version = DEFAULT_VERSION,
+	test_classname_patterns = {
+		"^.*Tests?$",
+		"^.*IT$",
+		"^.*Spec$",
+	},
 }
 
 return default_config

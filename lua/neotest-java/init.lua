@@ -26,26 +26,19 @@ local check_junit_jar = function(filepath)
 	)
 end
 
---- @type neotest-java.FileCheckerDependencies
-local file_checker_dependencies = {
-	patterns = {
-		"^.*Tests?$",
-		"^.*IT$",
-		"^.*Spec$",
-	},
-	root_getter = function()
-		local root = ch.get_context().root
-		if root then
-			return Path(root)
-		end
-		root = root_finder.find_root(vim.fn.getcwd())
-		if root then
-			return Path(root)
-		end
-		error("Could not find project root")
-	end,
-}
+local root_getter = function()
+	local root = ch.get_context().root
+	if root then
+		return Path(root)
+	end
+	root = root_finder.find_root(vim.fn.getcwd())
+	if root then
+		return Path(root)
+	end
+	error("Could not find project root")
+end
 
+--- @param opts neotest-java.ConfigOpts
 --- @return neotest.Adapter
 local function NeotestJavaAdapter(opts)
 	opts = opts or {}
@@ -58,11 +51,15 @@ local function NeotestJavaAdapter(opts)
 	local data_dir = vim.fn.stdpath("data") .. "/neotest-java"
 	vim.uv.fs_mkdir(data_dir, 493)
 
+	local file_checker = FileChecker({
+		root_getter = root_getter,
+		patterns = opts.test_classname_patterns,
+	})
 	return setmetatable({
 
 		name = "neotest-java",
 		filter_dir = dir_filter.filter_dir,
-		is_test_file = FileChecker(file_checker_dependencies).is_test_file,
+		is_test_file = file_checker.is_test_file,
 		discover_positions = position_discoverer.discover_positions,
 		results = result_builder.build_results,
 		root = function(dir)
@@ -79,7 +76,8 @@ local function NeotestJavaAdapter(opts)
 		end,
 	}, {
 		__call = function(_, _opts)
-			return NeotestJavaAdapter(_opts)
+			local user_opts = vim.tbl_extend("force", opts, _opts or {})
+			return NeotestJavaAdapter(user_opts)
 		end,
 	})
 end
