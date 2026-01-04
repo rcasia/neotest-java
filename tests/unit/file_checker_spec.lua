@@ -3,7 +3,13 @@ local Path = require("neotest-java.model.path")
 
 describe("file_checker", function()
 	local base_path = Path("/home/user/repo/")
+	local patterns = {
+		"^.*Tests?$",
+		"^.*IT$",
+		"^.*Spec$",
+	}
 	local file_checker_undertest = FileChecker({
+		patterns = patterns,
 		root_getter = function()
 			return base_path
 		end,
@@ -67,6 +73,7 @@ describe("file_checker", function()
 		}
 		for _, file_path in ipairs(non_test_files) do
 			assert.is_true(FileChecker({
+				patterns = patterns,
 				root_getter = function()
 					return Path("C:\\absolute_path\\main\\src")
 				end,

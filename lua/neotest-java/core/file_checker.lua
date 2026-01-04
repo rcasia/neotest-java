@@ -1,4 +1,3 @@
-local JAVA_TEST_FILE_REGEXES = require("neotest-java.model.patterns").JAVA_TEST_FILE_REGEXES
 local Path = require("neotest-java.model.path")
 
 --- @class neotest-java.FileChecker
@@ -6,6 +5,7 @@ local Path = require("neotest-java.model.path")
 
 --- @class neotest-java.FileCheckerDependencies
 --- @field root_getter fun(): neotest-java.Path
+--- @field patterns string[]
 
 --- @param dependencies neotest-java.FileCheckerDependencies
 --- @return neotest-java.FileChecker
@@ -21,7 +21,7 @@ local FileChecker = function(dependencies)
 				return false
 			end
 
-			for _, re in ipairs(JAVA_TEST_FILE_REGEXES) do
+			for _, re in ipairs(dependencies.patterns) do
 				local name_without_extension = my_path:name():gsub("%.java$", "")
 				if name_without_extension:match(re) then
 					return true

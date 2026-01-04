@@ -27,6 +27,11 @@ end
 
 --- @type neotest-java.FileCheckerDependencies
 local file_checker_dependencies = {
+	patterns = {
+		"^.*Tests?$",
+		"^.*IT$",
+		"^.*Spec$",
+	},
 	root_getter = function()
 		local root = ch.get_context().root
 		if root then
