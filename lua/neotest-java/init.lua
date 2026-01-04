@@ -11,6 +11,7 @@ local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.model.path")
 
 local junit_version = ch.config().default_version
+local DEFAULT_CONFIG = require("neotest-java.default_config")
 
 --- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath)
@@ -83,4 +84,4 @@ local function NeotestJavaAdapter(opts)
 	})
 end
 
-return NeotestJavaAdapter()
+return NeotestJavaAdapter(DEFAULT_CONFIG)
