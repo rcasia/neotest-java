@@ -23,13 +23,6 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 }
 
---- @param re string
---- @return	vim.regex
-local regex_for = function(re)
-	return vim.regex("\\v" .. re)
-end
-local regexes = vim.iter(JAVA_TEST_FILE_REGEXES):map(regex_for):totable()
-
 ---@async
 ---@param file_path string
 ---@param dependencies? neotest-java.FileCheckerDependencies
@@ -46,9 +39,9 @@ function FileChecker.is_test_file(file_path, dependencies)
 		return false
 	end
 
-	for _, r in ipairs(regexes) do
-		local name_without_extension = my_path:name():gsub(".java", "")
-		if r:match_str(name_without_extension) then
+	for _, re in ipairs(JAVA_TEST_FILE_REGEXES) do
+		local name_without_extension = my_path:name():gsub("%.java$", "")
+		if name_without_extension:match(re) then
 			return true
 		end
 	end
