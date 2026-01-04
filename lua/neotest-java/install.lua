@@ -15,7 +15,7 @@ local install = function(config)
 		{
 			"curl",
 			"--output",
-			filepath,
+			config.default_junit_jar_filepath:to_string(),
 			("https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar"):format(
 				config.default_version,
 				config.default_version
