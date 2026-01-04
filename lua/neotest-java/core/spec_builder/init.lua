@@ -1,13 +1,11 @@
 ---@module "neotest"
 
-local root_finder = require("neotest-java.core.root_finder")
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local Project = require("neotest-java.model.project")
-local ch = require("neotest-java.context_holder")
 local compilers = require("neotest-java.core.spec_builder.compiler")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.model.path")
@@ -32,24 +30,16 @@ local SpecBuilder = {}
 
 --- @type neotest-java.BuildSpecDependencies
 local DEFAULT_DEPENDENCIES = {
-	mkdir = function(dir)
-		vim.uv.fs_mkdir(dir:to_string(), 493)
+	mkdir = function()
+		error("should not reach here")
 	end,
 
-	chdir = function(dir)
-		nio.fn.chdir(dir:to_string())
+	chdir = function()
+		error("should not reach here")
 	end,
 
 	root_getter = function()
-		local root = ch.get_context().root
-		if root then
-			return Path(root)
-		end
-		root = root_finder.find_root(vim.fn.getcwd())
-		if root then
-			return Path(root)
-		end
-		error("Could not find project root")
+		error("should not reach here")
 	end,
 
 	scan = scan,
@@ -146,7 +136,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	end
 
 	-- COMPILATION STEP
-	local compile_mode = ch.config().incremental_build and "incremental" or "full"
+	local compile_mode = config.incremental_build and "incremental" or "full"
 	deps.compile(module.base_dir, compile_mode)
 
 	local classpath_file_arg = deps.classpath_provider.get_classpath(
