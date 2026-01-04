@@ -69,6 +69,7 @@ function NewPath.new(raw_path, opts)
 	)
 end
 
+--- @return string
 function NewPath:name()
 	local slugs = self:slugs()
 	return slugs[#slugs]
