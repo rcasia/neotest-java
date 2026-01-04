@@ -36,14 +36,10 @@ describe("file_checker", function()
 
 	it("should return false for every class inside main folder", function()
 		local non_test_files = {
-			"/home/user/repo/src/main/java/neotest/NeotestTest.java",
+			"src/main/java/neotest/NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(plugin.is_test_file(file_path, {
-				root_getter = function()
-					return Path("/home/user/repo/")
-				end,
-			}))
+			assert.is_false(plugin.is_test_file(file_path))
 		end
 	end)
 
