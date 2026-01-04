@@ -25,7 +25,9 @@ local install = function(config)
 		nil,
 		function(out)
 			if out.code == 0 then
-				lib.notify("Downloaded Junit Standalone successfully!")
+				lib.notify(
+					"Downloaded Junit Standalone successfully at: \n" .. config.default_junit_jar_filepath:to_string()
+				)
 			else
 				lib.notify(string.format("Error while downloading: \n %s", out.stderr), "error")
 				logger.error(out.stderr)
