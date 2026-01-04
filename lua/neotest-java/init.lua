@@ -1,6 +1,6 @@
 local File = require("neotest.lib.file")
 
-local file_checker = require("neotest-java.core.file_checker")
+local FileChecker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
 local dir_filter = require("neotest-java.core.dir_filter")
 local position_discoverer = require("neotest-java.core.positions_discoverer")
@@ -8,6 +8,7 @@ local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
+local Path = require("neotest-java.model.path")
 
 local junit_version = ch.config().default_version
 
@@ -24,11 +25,26 @@ local check_junit_jar = function(filepath)
 	)
 end
 
+--- @type neotest-java.FileCheckerDependencies
+local file_checker_dependencies = {
+	root_getter = function()
+		local root = ch.get_context().root
+		if root then
+			return Path(root)
+		end
+		root = root_finder.find_root(vim.fn.getcwd())
+		if root then
+			return Path(root)
+		end
+		error("Could not find project root")
+	end,
+}
+
 ---@class neotest.Adapter
 local NeotestJavaAdapter = {
 	name = "neotest-java",
 	filter_dir = dir_filter.filter_dir,
-	is_test_file = file_checker.is_test_file,
+	is_test_file = FileChecker(file_checker_dependencies).is_test_file,
 	discover_positions = position_discoverer.discover_positions,
 	results = result_builder.build_results,
 	root = function(dir)

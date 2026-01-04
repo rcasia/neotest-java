@@ -1,15 +1,15 @@
-local plugin = require("neotest-java")
 local FileChecker = require("neotest-java.core.file_checker")
 local Path = require("neotest-java.model.path")
 
 describe("file_checker", function()
+	local base_path = Path("/home/user/repo/")
+	local file_checker_undertest = FileChecker({
+		root_getter = function()
+			return base_path
+		end,
+	})
+
 	it("should return true for test files", function()
-		local base_path = Path("/home/user/repo/")
-		local test_dependencies = {
-			root_getter = function()
-				return base_path
-			end,
-		}
 		local test_files = {
 			base_path:append("src/test/java/neotest/NeotestTest.java"):to_string(),
 			base_path:append("src/test/java/neotest/RepositoryTests.java"):to_string(),
@@ -19,7 +19,7 @@ describe("file_checker", function()
 		}
 
 		for _, file_path in ipairs(test_files) do
-			assert.is_true(FileChecker.is_test_file(file_path, test_dependencies), file_path)
+			assert.is_true(file_checker_undertest.is_test_file(file_path), file_path)
 		end
 	end)
 
@@ -30,7 +30,7 @@ describe("file_checker", function()
 			"src/test/java/neotest/Neotest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(plugin.is_test_file(file_path))
+			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
 		end
 	end)
 
@@ -39,55 +39,38 @@ describe("file_checker", function()
 			"/home/user/repo/src/main/java/neotest/NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(plugin.is_test_file(file_path, {
-				root_getter = function()
-					return Path("/home/user/repo/")
-				end,
-			}))
+			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
 		end
 	end)
 
 	it("should return true if theres a /main/ outside the root path", function()
-		local base_path = Path("/absolute_path/main/src")
-		local test_dependencies = {
-			root_getter = function()
-				return base_path
-			end,
-		}
 		local non_test_files = {
 			"/absolute_path/main/src/java/neotest/NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_true(FileChecker.is_test_file(file_path, test_dependencies))
+			assert.is_true(file_checker_undertest.is_test_file(file_path))
 		end
 	end)
 
 	it("should return false if theres a /main/ inside the root path in a windows env", function()
-		local base_path = Path("C:\\absolute_path\\src")
-		local test_dependencies = {
-			root_getter = function()
-				return base_path
-			end,
-		}
 		local non_test_files = {
 			"C:\\absolute_path\\src\\main\\java\\neotest\\NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(FileChecker.is_test_file(file_path, test_dependencies))
+			assert.is_false(file_checker_undertest.is_test_file(file_path))
 		end
 	end)
 
 	it("should return true if theres a /main/ outside the root path in a windows env", function()
-		local test_dependencies = {
-			root_getter = function()
-				return Path("C:\\absolute_path\\main\\src")
-			end,
-		}
 		local non_test_files = {
 			"C:\\absolute_path\\main\\src\\java\\neotest\\NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_true(FileChecker.is_test_file(file_path, test_dependencies))
+			assert.is_true(FileChecker({
+				root_getter = function()
+					return Path("C:\\absolute_path\\main\\src")
+				end,
+			}).is_test_file(file_path))
 		end
 	end)
 end)
