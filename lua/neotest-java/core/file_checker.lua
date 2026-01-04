@@ -1,4 +1,4 @@
-local JAVA_TEST_FILE_PATTERNS = require("neotest-java.model.patterns").JAVA_TEST_FILE_PATTERNS
+local JAVA_TEST_FILE_REGEXES = require("neotest-java.model.patterns").JAVA_TEST_FILE_REGEXES
 local root_finder = require("neotest-java.core.root_finder")
 local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.model.path")
@@ -23,12 +23,21 @@ local DEFAULT_DEPENDENCIES = {
 	end,
 }
 
+--- @param re string
+--- @return	vim.regex
+local regex_for = function(re)
+	return vim.regex("\\v" .. re)
+end
+local regexes = vim.iter(JAVA_TEST_FILE_REGEXES):map(regex_for):totable()
+
 ---@async
 ---@param file_path string
 ---@param dependencies? neotest-java.FileCheckerDependencies
 ---@return boolean
 function FileChecker.is_test_file(file_path, dependencies)
 	local deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, dependencies or {})
+
+	--- @type neotest-java.Path
 	local my_path = Path(file_path)
 	local base_dir = deps.root_getter()
 
@@ -36,8 +45,10 @@ function FileChecker.is_test_file(file_path, dependencies)
 	if relative_path:contains("main") then
 		return false
 	end
-	for _, pattern in ipairs(JAVA_TEST_FILE_PATTERNS) do
-		if string.find(relative_path:to_string(), pattern) then
+
+	for _, r in ipairs(regexes) do
+		local name_without_extension = my_path:name():gsub(".java", "")
+		if r:match_str(name_without_extension) then
 			return true
 		end
 	end
