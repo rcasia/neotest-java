@@ -9,6 +9,7 @@ local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.model.path")
+local nio = require("nio")
 
 local junit_version = ch.config().default_version
 local DEFAULT_CONFIG = require("neotest-java.default_config")
@@ -26,6 +27,14 @@ local check_junit_jar = function(filepath)
 	)
 end
 
+local mkdir = function(dir)
+	vim.uv.fs_mkdir(dir:to_string(), 493)
+end
+
+local chdir = function(dir)
+	nio.fn.chdir(dir:to_string())
+end
+
 local root_getter = function()
 	local root = ch.get_context().root
 	if root then
@@ -38,12 +47,12 @@ local root_getter = function()
 	error("Could not find project root")
 end
 
---- @param opts neotest-java.ConfigOpts
+--- @param config neotest-java.ConfigOpts
 --- @return neotest.Adapter
-local function NeotestJavaAdapter(opts)
-	opts = opts or {}
+local function NeotestJavaAdapter(config)
+	config = config or {}
 
-	ch.set_opts(opts)
+	ch.set_opts(config)
 
 	log.info("neotest-java adapter initialized")
 
@@ -53,7 +62,7 @@ local function NeotestJavaAdapter(opts)
 
 	local file_checker = FileChecker({
 		root_getter = root_getter,
-		patterns = opts.test_classname_patterns,
+		patterns = config.test_classname_patterns,
 	})
 	return setmetatable({
 
@@ -70,13 +79,17 @@ local function NeotestJavaAdapter(opts)
 			return root
 		end,
 		build_spec = function(args)
-			check_junit_jar(ch.config().junit_jar)
+			check_junit_jar(config.junit_jar)
 
-			return spec_builder.build_spec(args, ch.config())
+			return spec_builder.build_spec(args, config, {
+				root_getter = root_getter,
+				mkdir = mkdir,
+				chdir = chdir,
+			})
 		end,
 	}, {
 		__call = function(_, _opts)
-			local user_opts = vim.tbl_extend("force", opts, _opts or {})
+			local user_opts = vim.tbl_extend("force", config, _opts or {})
 			return NeotestJavaAdapter(user_opts)
 		end,
 	})
