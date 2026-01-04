@@ -56,8 +56,7 @@ local function NeotestJavaAdapter(config)
 	log.info("neotest-java adapter initialized")
 
 	-- create data directory if it doesn't exist
-	local data_dir = vim.fn.stdpath("data") .. "/neotest-java"
-	vim.uv.fs_mkdir(data_dir, 493)
+	mkdir(Path(vim.fn.stdpath("data")):append("neotest-java"))
 
 	local file_checker = FileChecker({
 		root_getter = root_getter,
