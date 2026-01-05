@@ -79,8 +79,7 @@ function JunitResult:classname()
 end
 
 ---@return neotest.ResultStatus
----@return string | nil failure_message a short output
----@return string | nil failure_output a more detailed output
+---@return table an array-like table containing tables of the form {failure_message: string, failure_output: string}
 function JunitResult:status()
 	local failed = self.testcase.failure or self.testcase.error
 	-- This is not parsed correctly by the library
@@ -88,10 +87,21 @@ function JunitResult:status()
 	-- it breaks in the first '>'
 	-- so it does not detect message attribute sometimes
 	if failed and not failed._attr then
-		return FAILED, failed[1], failed[2]
+		local failures = {}
+		for i, fail in ipairs(failed) do
+			failures[i] = {
+				failure_message = fail._attr.message or fail._attr.type or "<unknown failure>",
+				failure_output = fail[1],
+			}
+		end
+		return FAILED, failures
 	end
 	if failed and failed._attr then
-		return FAILED, failed._attr.message, failed[1]
+		local fail = {
+			failure_message = failed._attr.message or failed._attr.type or "<unknown failure>",
+			failure_output = failed[1],
+		}
+		return FAILED, { fail }
 	end
 	return PASSED
 end
@@ -100,24 +110,32 @@ end
 ---@return neotest.Error[] | nil
 function JunitResult:errors(with_name_prefix)
 	with_name_prefix = with_name_prefix or false
-	local status, failure_message, failure_output = self:status()
-	local filename = string.match(self:classname(), "[%.]?([%a%$_][%a%d%$_]+)$") .. ".java"
-	local line_searchpattern = string.gsub(filename, "%.", "%%.") .. ":(%d+)%)"
-
-	local line
-	if failure_output then
-		line = string.match(failure_output, line_searchpattern)
-		-- NOTE: errors array is expecting lines properties to be 0 index based
-		line = line and line - 1 or nil
-	end
-
+	local status, failures = self:status()
 	if status == PASSED then
 		return nil
 	end
-	if with_name_prefix then
-		failure_message = self:name() .. " -> " .. failure_message
+
+	local filename = string.match(self:classname(), "[%.]?([%a%$_][%a%d%$_]+)$") .. ".java"
+	local line_searchpattern = string.gsub(filename, "%.", "%%.") .. ":(%d+)%)"
+	local errors = {}
+
+	for i, failure in ipairs(failures) do
+		local line
+		if failure.failure_output then
+			line = string.match(failure.failure_output, line_searchpattern)
+			-- NOTE: errors array is expecting lines properties to be 0 index based
+			line = line and line - 1 or nil
+		end
+
+		local failure_message = failure.failure_message
+		if with_name_prefix then
+			failure_message = self:name() .. " -> " .. failure_message
+		end
+
+		errors[i] = { message = failure_message, line = line }
 	end
-	return { { message = failure_message, line = line } }
+
+	return errors
 end
 
 ---@return string[]
@@ -127,9 +145,12 @@ function JunitResult:output()
 		system_out = { system_out }
 	end
 
-	local status, _, failure_output = self:status()
+	local status, failures = self:status()
 	if status == FAILED then
-		system_out[#system_out + 1] = failure_output
+		for _, failure in ipairs(failures) do
+			system_out[#system_out + 1] = failure.failure_output
+			system_out[#system_out + 1] = NEW_LINE
+		end
 	else -- PASSED
 		system_out[#system_out + 1] = "Test passed" .. NEW_LINE
 	end
@@ -141,7 +162,25 @@ end
 --- Each time this function is called, it will create a temporary file with the output content
 ---@return neotest.Result
 function JunitResult:result()
-	local status, failure_message = self:status()
+	local status, failures = self:status()
+
+	if status == PASSED then
+		return {
+			status = status,
+			output = create_file_with_content(self:output()),
+		}
+	end
+
+	local failure_message = ""
+	if failures then
+		for i, failure in ipairs(failures) do
+			failure_message = failure_message .. failure.failure_message
+			if i < #failures then
+				failure_message = failure_message .. NEW_LINE
+			end
+		end
+	end
+
 	return {
 		status = status,
 		short = failure_message,
@@ -187,7 +226,18 @@ function JunitResult.merge_results(results)
 			return result:errors(), result:name()
 		end)
 		:map(function(error, name)
-			return name .. " -> " .. error[1].message
+			if #error == 1 then
+				return name .. " -> " .. error[1].message
+			end
+
+			local errs = name .. " -> {" .. NEW_LINE
+			for i, err in ipairs(error) do
+				errs = errs .. err.message
+				if i < #error then
+					errs = errs .. NEW_LINE
+				end
+			end
+			return errs .. NEW_LINE .. "}"
 		end)
 		:fold(nil, function(a, b)
 			if not a then

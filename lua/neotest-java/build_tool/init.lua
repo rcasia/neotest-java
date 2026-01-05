@@ -5,6 +5,8 @@ local nio = require("nio")
 local Job = require("plenary.job")
 local lib = require("neotest.lib")
 
+local _, repl = pcall(require, "dap.repl")
+
 ---@class neotest-java.BuildTool
 ---@field get_build_dirname fun(): neotest-java.Path
 ---@field get_project_filename fun(): string
@@ -25,8 +27,9 @@ end
 
 ---@param command string
 ---@param args string[]
+---@param cwd neotest-java.Path
 ---@return nio.control.Event
-build_tools.launch_debug_test = function(command, args)
+build_tools.launch_debug_test = function(command, args, cwd)
 	lib.notify("Running debug test", vim.log.levels.INFO)
 	log.trace("run_debug_test function")
 
@@ -36,13 +39,30 @@ build_tools.launch_debug_test = function(command, args)
 	local stderr = {}
 	local job = Job:new({
 		command = command,
+		cwd = cwd:to_string(),
 		args = args,
 		on_stderr = function(_, data)
+			if data == nil then
+				return
+			end
 			stderr[#stderr + 1] = data
+			if repl then
+				vim.schedule(function()
+					repl.append(data)
+				end)
+			end
 		end,
 		on_stdout = function(_, data)
+			if data == nil then
+				return
+			end
 			if string.find(data, "Listening") then
 				test_command_started_listening.set()
+			end
+			if repl then
+				vim.schedule(function()
+					repl.append(data)
+				end)
 			end
 		end,
 		on_exit = function(_, code)
@@ -56,6 +76,9 @@ build_tools.launch_debug_test = function(command, args)
 		end,
 	})
 	log.debug("starting job with command: ", command, " ", table.concat(args, " "))
+	if repl then
+		repl.clear()
+	end
 	job:start()
 	test_command_started_listening.wait()
 

@@ -21,7 +21,7 @@ local Binaries = require("neotest-java.command.binaries")
 --- @field scan fun(base_dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
 --- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
---- @field report_folder_name_gen fun(build_dir: neotest-java.Path): neotest-java.Path
+--- @field report_folder_name_gen fun(module_dir: neotest-java.Path, build_dir: neotest-java.Path): neotest-java.Path
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
 --- @field binaries neotest-java.LspBinaries
@@ -51,8 +51,9 @@ local DEFAULT_DEPENDENCIES = {
 		})
 	end,
 	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
-	report_folder_name_gen = function(build_dir)
-		return build_dir:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
+	report_folder_name_gen = function(module_dir, build_dir)
+		local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
+		return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
 	end,
 	build_tool_getter = function(project_type)
 		return build_tools.get(project_type)
@@ -117,6 +118,10 @@ function SpecBuilder.build_spec(args, config, deps)
 
 	command:basedir(module.base_dir)
 
+	-- JUNIT REPORT DIRECTORY
+	local reports_dir = deps.report_folder_name_gen(module.base_dir, build_dir)
+	command:reports_dir(reports_dir)
+
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(project:get_module_dirs()))
 
 	-- TEST SELECTORS
@@ -147,7 +152,7 @@ function SpecBuilder.build_spec(args, config, deps)
 		-- PREPARE DEBUG TEST COMMAND
 		local junit = command:build_junit(port)
 		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
-		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args)
+		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args, module.base_dir)
 
 		local project_name = vim.fn.fnamemodify(root:to_string(), ":t")
 		return {
@@ -159,7 +164,7 @@ function SpecBuilder.build_spec(args, config, deps)
 				port = port,
 				projectName = project_name,
 			},
-			cwd = root:to_string(),
+			cwd = module.base_dir:to_string(),
 			symbol = position.type == "test" and position.name or nil,
 			context = {
 				strategy = args.strategy,
@@ -173,7 +178,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	logger.info("junit command: ", command:build_to_string())
 	return {
 		command = command:build_to_string(),
-		cwd = root:to_string(),
+		cwd = module.base_dir:to_string(),
 		symbol = position.name,
 		context = { reports_dir = reports_dir },
 	}

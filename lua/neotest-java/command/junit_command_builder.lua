@@ -80,9 +80,10 @@ CommandBuilder.build_junit = function(self, port)
 	for _, v in ipairs(self._test_references) do
 		if v.type == "test" then
 			local class_name = v.qualified_name:match("^(.-)#") or v.qualified_name
-			table.insert(selectors, "--select-class='" .. class_name .. "'")
 			if v.method_name then
 				table.insert(selectors, "--select-method='" .. v.method_name .. "'")
+			else
+				table.insert(selectors, "--select-class='" .. class_name .. "'")
 			end
 		end
 	end
@@ -101,6 +102,10 @@ CommandBuilder.build_junit = function(self, port)
 		unpack(self._jvm_args),
 	}
 
+	if self._basedir then
+		table.insert(jvm_args, 1, "-Duser.dir=" .. self._basedir:to_string())
+	end
+
 	local junit_command = {
 		command = self._java_bin:to_string(),
 		args = vim.iter({
@@ -114,6 +119,7 @@ CommandBuilder.build_junit = function(self, port)
 			"--disable-banner",
 			"--details=testfeed",
 			"--config=junit.platform.output.capture.stdout=true",
+			"--config=junit.platform.output.capture.stderr=true",
 		})
 			:flatten()
 			:totable(),
