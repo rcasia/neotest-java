@@ -451,7 +451,6 @@ describe("ResultBuilder", function()
 		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
-		print(vim.inspect({ results = results, expected = expected }))
 		assert.are.same(expected, results)
 	end)
 
@@ -510,6 +509,82 @@ describe("ResultBuilder", function()
 			},
 			["com.example.NestedTest#plainTest"] = {
 				status = "passed",
+				output = TEMPNAME,
+			},
+		}
+
+		--when
+		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+
+		--then
+		assert.are.same(expected, results)
+	end)
+
+	async.it("should build results with multiple failures", function()
+		local file_content = [[
+			package com.example;
+
+			import org.junit.jupiter.Test;
+
+			import static org.junit.jupiter.api.Assertions.assertFalse;
+
+			public class TwoTests {
+
+				@Test
+				void test1() {
+					assertFalse(true);
+				}
+
+				@Test
+				void test2() {
+					assertFalse(true);
+				}
+			}
+		]]
+
+		local report_file = [[
+				<testsuite>
+					<testcase name="test1()" classname="com.example.TwoTests" time="0.003">
+						<failure message="expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+					<testcase name="test2()" classname="com.example.TwoTests" time="0.003">
+						<failure message="expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">
+							FAILURE OUTPUT
+						</failure>
+						<failure type="java.lang.StackOverflowError">
+							FAILURE OUTPUT
+						</failure>
+					</testcase>
+				</testsuite>
+			]]
+
+		local file_path = create_tempfile_with_test(file_content)
+
+		local tree = plugin.discover_positions(file_path:to_string())
+		local scan_dir = function(dir)
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
+
+		local expected = {
+			["com.example.TwoTests#test1"] = {
+				errors = { { message = "test1() -> expected: <false> but was: <true>" } },
+				short = "test1() -> expected: <false> but was: <true>",
+				status = "failed",
+				output = TEMPNAME,
+			},
+			["com.example.TwoTests#test2"] = {
+				errors = {
+					{ message = "test2() -> expected: <false> but was: <true>" },
+					{ message = "test2() -> java.lang.StackOverflowError" },
+				},
+				short = "test2() -> expected: <false> but was: <true>\njava.lang.StackOverflowError",
+				status = "failed",
 				output = TEMPNAME,
 			},
 		}
