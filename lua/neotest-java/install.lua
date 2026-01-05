@@ -46,7 +46,11 @@ local install = function(config)
 			Checksum verification failed!
 			Expected: %s
 			Got:      %s
-		]]):format(expected_sha, sha)
+
+			Removed the file at %s.
+		]]):format(expected_sha, sha, default_junit_jar_filepath)
+
+		vim.fn.delete(default_junit_jar_filepath)
 
 		lib.notify(message, "error")
 		logger.error(message)
