@@ -101,7 +101,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
-				"--select-method=com.example.ExampleTest#shouldNotFail()",
+				"--select-method='com.example.ExampleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
@@ -178,7 +178,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
-				"--select-method=com.example.ExampleTest#shouldNotFail()",
+				"--select-method='com.example.ExampleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),
@@ -263,7 +263,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
-				"--select-method=com.example.ExampleInSecondModuleTest#shouldNotFail()",
+				"--select-method='com.example.ExampleInSecondModuleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),

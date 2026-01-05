@@ -81,9 +81,9 @@ CommandBuilder.build_junit = function(self, port)
 		if v.type == "test" then
 			local class_name = v.qualified_name:match("^(.-)#") or v.qualified_name
 			if v.method_name then
-				table.insert(selectors, "--select-method=" .. v.method_name)
+				table.insert(selectors, "--select-method='" .. v.method_name .. "'")
 			else
-				table.insert(selectors, "--select-class=" .. class_name)
+				table.insert(selectors, "--select-class='" .. class_name .. "'")
 			end
 		end
 	end
