@@ -28,29 +28,28 @@ local Binaries = require("neotest-java.command.binaries")
 
 local SpecBuilder = {}
 
+local should_not_reach_here = function()
+	error("should not reach here")
+end
+
 --- @type neotest-java.BuildSpecDependencies
 local DEFAULT_DEPENDENCIES = {
-	mkdir = function()
-		error("should not reach here")
-	end,
+	binaries = Binaries({
+		client_provider = should_not_reach_here,
+	}),
+	mkdir = should_not_reach_here,
+	chdir = should_not_reach_here,
+	root_getter = should_not_reach_here,
+	classpath_provider = ClasspathProvider({ client_provider = should_not_reach_here }),
 
-	chdir = function()
-		error("should not reach here")
-	end,
-
-	root_getter = function()
-		error("should not reach here")
-	end,
-
+	-- TODO: pending to remove dependencies from this scope
 	scan = scan,
-
 	compile = function(cwd, compile_mode)
 		compilers.lsp.compile({
 			base_dir = cwd,
 			compile_mode = compile_mode,
 		})
 	end,
-	classpath_provider = ClasspathProvider({ client_provider = client_provider }),
 	report_folder_name_gen = function(module_dir, build_dir)
 		local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
 		return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
@@ -61,7 +60,6 @@ local DEFAULT_DEPENDENCIES = {
 	detect_project_type = function(base_dir)
 		return detect_project_type(base_dir)
 	end,
-	binaries = Binaries({ client_provider = client_provider }),
 }
 
 ---@param args neotest.RunArgs

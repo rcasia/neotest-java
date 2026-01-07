@@ -1,4 +1,5 @@
 local File = require("neotest.lib.file")
+local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 
 local FileChecker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
@@ -12,6 +13,8 @@ local Path = require("neotest-java.model.path")
 local nio = require("nio")
 local logger = require("neotest-java.logger")
 local install = require("neotest-java.install")
+local Binaries = require("neotest-java.command.binaries")
+local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
@@ -96,6 +99,10 @@ local function NeotestJavaAdapter(config, deps)
 			check_junit_jar(config.junit_jar, config.default_version)
 
 			return spec_builder.build_spec(args, config, {
+				classpath_provider = ClasspathProvider({ client_provider = client_provider }),
+				binaries = Binaries({
+					client_provider = client_provider,
+				}),
 				root_getter = root_getter,
 				mkdir = mkdir,
 				chdir = chdir,
