@@ -1,41 +1,16 @@
 name: CI
 
 on:
-  schedule:
-    - cron: "00 00 * * 4" # every friday at 00:00
   push:
-    branches: ["main"]
-  pull_request:
     branches: ["main"]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        nvim-version: [stable, nightly]
-    steps:
-      - name: checkout
-        uses: actions/checkout@v6
-
-      - uses: rhysd/action-setup-vim@v1
-        with:
-          neovim: true
-          version: ${{ matrix.nvim-version }}
-
-      - name: Make install
-        run: make install
-        timeout-minutes: 2
-
-      - name: Run tests
-        run: make test
-        timeout-minutes: 1
+  test:
+    uses: ./.github/workflows/test.yml
 
   release:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: test
     name: release
     permissions:
       contents: write
