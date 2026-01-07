@@ -72,7 +72,7 @@ end
 --- @return string
 function NewPath:name()
 	local slugs = self:slugs()
-	return slugs[#slugs]
+	return slugs[#slugs] or ""
 end
 
 function NewPath:parent()

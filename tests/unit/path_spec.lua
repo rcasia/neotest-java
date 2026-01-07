@@ -3,6 +3,11 @@ local Path = require("neotest-java.model.path")
 local eq = assert.are.same
 
 describe("Path", function()
+	it("returns name", function()
+		eq("", Path(""):name())
+		eq("some", Path("some"):name())
+		eq("file.log", Path("some/file.log"):name())
+	end)
 	it("represents a single relative path as a dot", function()
 		eq(".", Path("."):to_string())
 		eq(".", Path("./"):to_string())
