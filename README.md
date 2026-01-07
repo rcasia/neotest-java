@@ -94,3 +94,7 @@ reports, feature requests, or suggestions.
 You can also submit pull requests for any enhancements, bug fixes, or new features.
 
 Your contributions are greatly appreciated. See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
+
+## :sparkles: Acknowledgements
+
+[![Contributors](https://contrib.rocks/image?repo=rcasia/neotest-java)](https://github.com/rcasia/neotest-java/graphs/contributors)
