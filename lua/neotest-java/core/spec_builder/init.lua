@@ -102,10 +102,6 @@ function SpecBuilder.build_spec(args, config, deps)
 	-- JAVA BIN
 	command:java_bin(deps.binaries.java(filepath:parent()))
 
-	-- JUNIT REPORT DIRECTORY
-	local reports_dir = deps.report_folder_name_gen(build_dir)
-	command:reports_dir(reports_dir)
-
 	local module =
 		--
 		project:is_multimodule()

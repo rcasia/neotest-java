@@ -68,7 +68,10 @@ describe("SpecBuilder", function()
 					return "classpath-file-argument"
 				end,
 			},
-			report_folder_name_gen = function()
+			report_folder_name_gen = function(module_dir, build_dir)
+				eq(Path("."), module_dir)
+				eq(Path("target"), build_dir)
+
 				return Path("report_folder")
 			end,
 			build_tool_getter = function()
