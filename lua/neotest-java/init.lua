@@ -39,11 +39,18 @@ end
 --- @class neotest-java.Adapter : neotest.Adapter
 --- @field config neotest-java.ConfigOpts
 --- @field install fun()
+---
+
+--- @class neotest-java.Dependencies
+--- @field root_finder { find_root: fun(dir: string): string | nil }
 
 --- @param config neotest-java.ConfigOpts
+--- @param deps? neotest-java.Dependencies
 --- @return neotest-java.Adapter
-local function NeotestJavaAdapter(config)
+local function NeotestJavaAdapter(config, deps)
 	config = config or {}
+	deps = deps or {}
+	local _root_finder = deps and deps.root_finder or root_finder
 
 	log.info("neotest-java adapter initialized")
 
@@ -52,8 +59,17 @@ local function NeotestJavaAdapter(config)
 	-- create data directory if it doesn't exist
 	mkdir(Path(vim.fn.stdpath("data")):append("neotest-java"))
 
-	local root = Path(root_finder.find_root(vim.fn.getcwd()))
+	--- @type neotest-java.Path|nil
+	local root
 	local root_getter = function()
+		if root then
+			return root
+		end
+		local _root = _root_finder.find_root(vim.fn.getcwd())
+		if not _root then
+			return nil
+		end
+		root = Path(_root)
 		return root
 	end
 	local file_checker = FileChecker({
@@ -72,7 +88,8 @@ local function NeotestJavaAdapter(config)
 		discover_positions = position_discoverer.discover_positions,
 		results = result_builder.build_results,
 		root = function(dir)
-			return root_finder.find_root(dir)
+			print(vim.inspect(_root_finder))
+			return _root_finder.find_root(dir)
 		end,
 		build_spec = function(args)
 			check_junit_jar(config.junit_jar, config.default_version)
@@ -84,13 +101,13 @@ local function NeotestJavaAdapter(config)
 			})
 		end,
 	}, {
-		__call = function(_, _opts)
+		__call = function(_, _opts, _deps)
 			local user_opts = vim.tbl_extend("force", config, _opts or {})
 
 			if type(user_opts.junit_jar) == "string" then
 				user_opts.junit_jar = Path(user_opts.junit_jar)
 			end
-			ch.adapter = NeotestJavaAdapter(user_opts)
+			ch.adapter = NeotestJavaAdapter(user_opts, _deps)
 			return ch.adapter
 		end,
 	})
