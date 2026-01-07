@@ -18,7 +18,7 @@ local Binaries = require("neotest-java.command.binaries")
 --- @field mkdir fun(dir: neotest-java.Path)
 --- @field chdir fun(dir: neotest-java.Path)
 --- @field root_getter fun(): neotest-java.Path
---- @field scan fun(base_dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
+--- @field scan fun(base_dir: neotest-java.Path, opts?: { search_patterns?: string[] }): neotest-java.Path[]
 --- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field report_folder_name_gen fun(module_dir: neotest-java.Path, build_dir: neotest-java.Path): neotest-java.Path
