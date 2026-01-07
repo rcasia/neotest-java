@@ -9,7 +9,6 @@ jobs:
     uses: ./.github/workflows/test.yml
 
   release:
-    if: github.ref == 'refs/heads/main'
     needs: test
     name: release
     permissions:
