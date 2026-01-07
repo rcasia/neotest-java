@@ -59,13 +59,15 @@ local function NeotestJavaAdapter(config, deps)
 	-- create data directory if it doesn't exist
 	mkdir(Path(vim.fn.stdpath("data")):append("neotest-java"))
 
+	local cwd = vim.loop.cwd()
+
 	--- @type neotest-java.Path|nil
 	local root
 	local root_getter = function()
 		if root then
 			return root
 		end
-		local _root = _root_finder.find_root(vim.fn.getcwd())
+		local _root = _root_finder.find_root(cwd)
 		if not _root then
 			return nil
 		end
