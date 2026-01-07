@@ -88,7 +88,6 @@ local function NeotestJavaAdapter(config, deps)
 		discover_positions = position_discoverer.discover_positions,
 		results = result_builder.build_results,
 		root = function(dir)
-			print(vim.inspect(_root_finder))
 			return _root_finder.find_root(dir)
 		end,
 		build_spec = function(args)
