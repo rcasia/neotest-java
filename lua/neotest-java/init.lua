@@ -96,7 +96,7 @@ local function NeotestJavaAdapter(config, deps)
 			return _root_finder.find_root(dir)
 		end,
 		build_spec = function(args)
-			check_junit_jar(config.junit_jar, config.default_version)
+			check_junit_jar(config.junit_jar, config.default_junit_jar_version.version)
 
 			return spec_builder.build_spec(args, config, {
 				classpath_provider = ClasspathProvider({ client_provider = client_provider }),
