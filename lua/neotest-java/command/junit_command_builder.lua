@@ -5,7 +5,7 @@ local binaries = require("neotest-java.command.binaries")
 --- @field method_name string?
 --- @field type "test" | "file" | "dir"
 
---- @class CommandBuilder
+--- @class neotest-java.CommandBuilder
 --- @field _java_bin neotest-java.Path
 --- @field _junit_jar neotest-java.Path
 --- @field _jvm_args string[]
@@ -19,7 +19,7 @@ CommandBuilder.__index = CommandBuilder
 
 --- @param junit_jar neotest-java.Path
 --- @param jvm_args? string[]
---- @return CommandBuilder
+--- @return neotest-java.CommandBuilder
 function CommandBuilder.new(junit_jar, jvm_args)
 	local fields = {
 		_jvm_args = jvm_args or {},
@@ -43,7 +43,21 @@ function CommandBuilder:add_test_method(qualified_name)
 	return self
 end
 
---- @param self CommandBuilder
+--- @param tree neotest.Tree
+--- @return neotest-java.CommandBuilder
+function CommandBuilder:add_test_references_from_tree(tree)
+	-- if position.type == "test" then
+	-- 	command:add_test_method(position.id)
+	-- else
+	for _, child in tree:iter() do
+		if child.type == "test" then
+			self:add_test_method(child.id)
+		end
+	end
+	-- end
+	return self
+end
+
 --- @param reports_dir neotest-java.Path
 function CommandBuilder:reports_dir(reports_dir)
 	self._reports_dir = reports_dir

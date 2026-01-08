@@ -6,17 +6,6 @@ local Tree = require("neotest.types").Tree
 local assertions = require("tests.assertions")
 local eq = assertions.eq
 
-local function mock_args_tree(data)
-	return {
-		tree = {
-			data = function()
-				return data
-			end,
-		},
-		extra_args = {},
-	}
-end
-
 describe("SpecBuilder", function()
 	it("builds a spec for two test methods", function()
 		local path = Path("/user/home/root/src/test/java/com/example/Test.java")
@@ -151,12 +140,14 @@ describe("SpecBuilder", function()
 	end)
 
 	it("builds spec for one method", function()
-		local args = mock_args_tree({
+		local tree = Tree.from_list({
 			id = "com.example.ExampleTest#shouldNotFail()",
 			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
 			name = "shouldNotFail",
 			type = "test",
-		})
+		}, function(x)
+			return x
+		end)
 		local config = {
 			junit_jar = Path("my-junit-jar.jar"),
 		}
@@ -167,7 +158,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec(args, config, {
+		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "integration" }, config, {
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -248,12 +239,17 @@ describe("SpecBuilder", function()
 	end)
 
 	it("builds spec for one method with extra args", function()
-		local args = mock_args_tree({
+		local tree = Tree.from_list({
 			id = "com.example.ExampleTest#shouldNotFail()",
 			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
 			name = "shouldNotFail",
 			type = "test",
-		})
+		}, function(x)
+			return x
+		end)
+
+		local args = { strategy = "integration", tree = tree }
+
 		local config = {
 			junit_jar = Path("my-junit-jar.jar"),
 			jvm_args = { "-myExtraJvmArg" },
@@ -325,12 +321,17 @@ describe("SpecBuilder", function()
 	end)
 
 	it("builds spec for one method in a multi-module project", function()
-		local args = mock_args_tree({
+		local tree = Tree.from_list({
 			id = "com.example.ExampleInSecondModuleTest#shouldNotFail()",
 			path = "/user/home/root/module-2/src/test/java/com/example/ExampleInSecondModuleTest.java",
 			name = "shouldNotFail",
 			type = "test",
-		})
+		}, function(x)
+			return x
+		end)
+
+		local args = { strategy = "integration", tree = tree }
+
 		local config = {
 			junit_jar = Path("my-junit-jar.jar"),
 		}

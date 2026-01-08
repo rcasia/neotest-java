@@ -118,15 +118,7 @@ function SpecBuilder.build_spec(args, config, deps)
 	command:spring_property_filepaths(build_tool.get_spring_property_filepaths(project:get_module_dirs()))
 
 	-- TEST SELECTORS
-	if position.type == "test" then
-		command:add_test_method(position.id)
-	else
-		for _, child in tree:iter() do
-			if child.type == "test" then
-				command:add_test_method(child.id)
-			end
-		end
-	end
+	command:add_test_references_from_tree(tree)
 
 	-- COMPILATION STEP
 	local compile_mode = config.incremental_build and "incremental" or "full"
