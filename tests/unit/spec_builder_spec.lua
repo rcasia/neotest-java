@@ -128,8 +128,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
-				"--select-method='com.example.ExampleTest#firstTestMethod()'",
-				"--select-method='com.example.ExampleTest#secondTestMethod()'",
+				"--select-class='com.example.ExampleTest'",
 			}):join(" "),
 			context = {
 				reports_dir = Path("report_folder"),

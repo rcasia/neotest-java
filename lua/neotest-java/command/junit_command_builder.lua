@@ -1,16 +1,13 @@
-local binaries = require("neotest-java.command.binaries")
-
 --- @class neotest-java.TestReference
 --- @field qualified_name string
---- @field method_name string?
---- @field type "test" | "file" | "dir"
+--- @field type "method" | "class"
 
 --- @class neotest-java.CommandBuilder
 --- @field _java_bin neotest-java.Path
 --- @field _junit_jar neotest-java.Path
 --- @field _jvm_args string[]
 --- @field _reports_dir neotest-java.Path
---- @field _test_references neotest-java.TestReference
+--- @field _test_references neotest-java.TestReference[]
 --- @field _basedir neotest-java.Path
 --- @field _classpath_file_arg string
 --- @field _spring_property_filepaths neotest-java.Path[]
@@ -37,8 +34,15 @@ end
 function CommandBuilder:add_test_method(qualified_name)
 	self._test_references[#self._test_references + 1] = {
 		qualified_name = qualified_name,
-		method_name = qualified_name,
-		type = "test",
+		type = "method",
+	}
+	return self
+end
+
+function CommandBuilder:add_test_class(qualified_name)
+	self._test_references[#self._test_references + 1] = {
+		qualified_name = qualified_name,
+		type = "class",
 	}
 	return self
 end
@@ -46,15 +50,21 @@ end
 --- @param tree neotest.Tree
 --- @return neotest-java.CommandBuilder
 function CommandBuilder:add_test_references_from_tree(tree)
-	-- if position.type == "test" then
-	-- 	command:add_test_method(position.id)
-	-- else
-	for _, child in tree:iter() do
-		if child.type == "test" then
-			self:add_test_method(child.id)
+	local position = tree:data()
+	if position.type == "file" or position.type == "dir" then
+		for _, child in tree:iter() do
+			if child.type == "namespace" then
+				self:add_test_class(child.id)
+			end
+		end
+	else
+		for _, child in tree:iter() do
+			if child.type == "test" then
+				self:add_test_method(child.id)
+			end
 		end
 	end
-	-- end
+
 	return self
 end
 
@@ -80,7 +90,6 @@ function CommandBuilder:spring_property_filepaths(property_filepaths)
 	return self
 end
 
---- @param self CommandBuilder
 --- @param port? number
 --- @return { command: string, args: string[] }
 CommandBuilder.build_junit = function(self, port)
@@ -92,13 +101,10 @@ CommandBuilder.build_junit = function(self, port)
 
 	local selectors = {}
 	for _, v in ipairs(self._test_references) do
-		if v.type == "test" then
-			local class_name = v.qualified_name:match("^(.-)#") or v.qualified_name
-			if v.method_name then
-				table.insert(selectors, "--select-method='" .. v.method_name .. "'")
-			else
-				table.insert(selectors, "--select-class='" .. class_name .. "'")
-			end
+		if v.type == "method" then
+			table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
+		else
+			table.insert(selectors, "--select-class='" .. v.qualified_name .. "'")
 		end
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
