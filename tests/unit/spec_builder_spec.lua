@@ -2,55 +2,17 @@ local SpecBuilder = require("neotest-java.core.spec_builder")
 local Path = require("neotest-java.model.path")
 local FakeBuildTool = require("tests.fake_build_tool")
 local Tree = require("neotest.types").Tree
+local TREES = require("tests.trees")
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
 
 describe("SpecBuilder", function()
+	local config = {
+		junit_jar = Path("my-junit-jar.jar"),
+	}
 	it("builds a spec for two test methods", function()
 		local path = Path("/user/home/root/src/test/java/com/example/Test.java")
-		local tree = Tree.from_list({
-			{
-				id = path:to_string(),
-				name = path:to_string(),
-				path = path:to_string(),
-				range = { 0, 0, 13, 2 },
-				type = "file",
-			},
-			{
-				{
-					id = "com.example.ExampleTest",
-					name = "ExampleTest",
-					path = path:to_string(),
-					range = { 0, 0, 12, 1 },
-					type = "namespace",
-				},
-				{
-					{
-						id = "com.example.ExampleTest#firstTestMethod()",
-						name = "firstTestMethod",
-						path = path:to_string(),
-						range = { 2, 2, 5, 3 },
-						type = "test",
-					},
-				},
-				{
-					{
-						id = "com.example.ExampleTest#secondTestMethod()",
-						name = "secondTestMethod",
-						path = path:to_string(),
-						range = { 7, 2, 10, 3 },
-						type = "test",
-					},
-				},
-			},
-		}, function(x)
-			return x
-		end)
-
-		local config = {
-			junit_jar = Path("my-junit-jar.jar"),
-		}
 		local project_paths = {
 			Path("."),
 			Path("./src/test/java/com/example/ExampleTest.java"),
@@ -58,59 +20,63 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "integration" }, config, {
-			mkdir = function() end,
-			chdir = function() end,
-			root_getter = function()
-				return Path(".")
-			end,
-			scan = function(base_dir, opts)
-				if base_dir ~= Path(".") then
-					error("unexpected base_dir in scan: " .. base_dir:to_string())
-				end
-
-				opts = opts or {}
-				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
-					return { Path("additional1"), Path("additional2") }
-				end
-
-				return project_paths
-			end,
-			compile = function(base_dir)
-				local expected_base_dir = Path(".")
-				assert(
-					base_dir == Path("."),
-					"should compile with the project root as base_dir: "
-						.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
-				)
-			end,
-			classpath_provider = {
-				get_classpath = function(base_dir, additional_classpaths)
-					eq(Path("."), base_dir)
-					eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
-
-					return "classpath-file-argument"
+		local actual = SpecBuilder.build_spec(
+			{ tree = TREES.TWO_TESTS_IN_FILE(path), strategy = "integration" },
+			config,
+			{
+				mkdir = function() end,
+				chdir = function() end,
+				root_getter = function()
+					return Path(".")
 				end,
-			},
-			report_folder_name_gen = function(module_dir, build_dir)
-				eq(Path("."), module_dir)
-				eq(Path("target"), build_dir)
+				scan = function(base_dir, opts)
+					if base_dir ~= Path(".") then
+						error("unexpected base_dir in scan: " .. base_dir:to_string())
+					end
 
-				return Path("report_folder")
-			end,
-			build_tool_getter = function()
-				--- @type neotest-java.BuildTool
-				return FakeBuildTool
-			end,
-			detect_project_type = function()
-				return "maven"
-			end,
-			binaries = {
-				java = function()
-					return Path("java")
+					opts = opts or {}
+					if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
+						return { Path("additional1"), Path("additional2") }
+					end
+
+					return project_paths
 				end,
-			},
-		})
+				compile = function(base_dir)
+					local expected_base_dir = Path(".")
+					assert(
+						base_dir == Path("."),
+						"should compile with the project root as base_dir: "
+							.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
+					)
+				end,
+				classpath_provider = {
+					get_classpath = function(base_dir, additional_classpaths)
+						eq(Path("."), base_dir)
+						eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
+
+						return "classpath-file-argument"
+					end,
+				},
+				report_folder_name_gen = function(module_dir, build_dir)
+					eq(Path("."), module_dir)
+					eq(Path("target"), build_dir)
+
+					return Path("report_folder")
+				end,
+				build_tool_getter = function()
+					--- @type neotest-java.BuildTool
+					return FakeBuildTool
+				end,
+				detect_project_type = function()
+					return "maven"
+				end,
+				binaries = {
+					java = function()
+						return Path("java")
+					end,
+				},
+			}
+		)
 
 		-- then
 		eq({
