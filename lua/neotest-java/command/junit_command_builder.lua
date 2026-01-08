@@ -51,16 +51,12 @@ end
 --- @return neotest-java.CommandBuilder
 function CommandBuilder:add_test_references_from_tree(tree)
 	local position = tree:data()
-	if position.type == "file" or position.type == "dir" then
+	if position.type == "test" then
+		self:add_test_method(position.id)
+	else
 		for _, child in tree:iter() do
 			if child.type == "namespace" then
 				self:add_test_class(child.id)
-			end
-		end
-	else
-		for _, child in tree:iter() do
-			if child.type == "test" then
-				self:add_test_method(child.id)
 			end
 		end
 	end
