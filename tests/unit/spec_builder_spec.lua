@@ -1,6 +1,7 @@
 local SpecBuilder = require("neotest-java.core.spec_builder")
 local Path = require("neotest-java.model.path")
 local FakeBuildTool = require("tests.fake_build_tool")
+local Tree = require("neotest.types").Tree
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
@@ -17,6 +18,138 @@ local function mock_args_tree(data)
 end
 
 describe("SpecBuilder", function()
+	it("builds a spec for two test methods", function()
+		local path = Path("/user/home/root/src/test/java/com/example/Test.java")
+		local tree = Tree.from_list({
+			{
+				id = path:to_string(),
+				name = path:to_string(),
+				path = path:to_string(),
+				range = { 0, 0, 13, 2 },
+				type = "file",
+			},
+			{
+				{
+					id = "com.example.ExampleTest",
+					name = "ExampleTest",
+					path = path:to_string(),
+					range = { 0, 0, 12, 1 },
+					type = "namespace",
+				},
+				{
+					{
+						id = "com.example.ExampleTest#firstTestMethod()",
+						name = "firstTestMethod",
+						path = path:to_string(),
+						range = { 2, 2, 5, 3 },
+						type = "test",
+					},
+				},
+				{
+					{
+						id = "com.example.ExampleTest#secondTestMethod()",
+						name = "secondTestMethod",
+						path = path:to_string(),
+						range = { 7, 2, 10, 3 },
+						type = "test",
+					},
+				},
+			},
+		}, function(x)
+			return x
+		end)
+
+		local config = {
+			junit_jar = Path("my-junit-jar.jar"),
+		}
+		local project_paths = {
+			Path("."),
+			Path("./src/test/java/com/example/ExampleTest.java"),
+			Path("./pom.xml"),
+		}
+
+		-- when
+		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "integration" }, config, {
+			mkdir = function() end,
+			chdir = function() end,
+			root_getter = function()
+				return Path(".")
+			end,
+			scan = function(base_dir, opts)
+				if base_dir ~= Path(".") then
+					error("unexpected base_dir in scan: " .. base_dir:to_string())
+				end
+
+				opts = opts or {}
+				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
+					return { Path("additional1"), Path("additional2") }
+				end
+
+				return project_paths
+			end,
+			compile = function(base_dir)
+				local expected_base_dir = Path(".")
+				assert(
+					base_dir == Path("."),
+					"should compile with the project root as base_dir: "
+						.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
+				)
+			end,
+			classpath_provider = {
+				get_classpath = function(base_dir, additional_classpaths)
+					eq(Path("."), base_dir)
+					eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
+
+					return "classpath-file-argument"
+				end,
+			},
+			report_folder_name_gen = function(module_dir, build_dir)
+				eq(Path("."), module_dir)
+				eq(Path("target"), build_dir)
+
+				return Path("report_folder")
+			end,
+			build_tool_getter = function()
+				--- @type neotest-java.BuildTool
+				return FakeBuildTool
+			end,
+			detect_project_type = function()
+				return "maven"
+			end,
+			binaries = {
+				java = function()
+					return Path("java")
+				end,
+			},
+		})
+
+		-- then
+		eq({
+			command = vim.iter({
+				"java",
+				"-Duser.dir=" .. Path("."):to_string(),
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
+				"-jar",
+				"my-junit-jar.jar",
+				"execute",
+				"--classpath=classpath-file-argument",
+				"--reports-dir=report_folder",
+				"--fail-if-no-tests",
+				"--disable-banner",
+				"--details=testfeed",
+				"--config=junit.platform.output.capture.stdout=true",
+				"--config=junit.platform.output.capture.stderr=true",
+				"--select-method='com.example.ExampleTest#firstTestMethod()'",
+				"--select-method='com.example.ExampleTest#secondTestMethod()'",
+			}):join(" "),
+			context = {
+				reports_dir = Path("report_folder"),
+			},
+			cwd = Path("."):to_string(),
+			symbol = path:to_string(),
+		}, actual)
+	end)
+
 	it("builds spec for one method", function()
 		local args = mock_args_tree({
 			id = "com.example.ExampleTest#shouldNotFail()",
