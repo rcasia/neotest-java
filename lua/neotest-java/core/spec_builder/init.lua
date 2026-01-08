@@ -11,7 +11,6 @@ local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.model.path")
 local scan = require("neotest-java.util.dir_scan")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
-local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 local Binaries = require("neotest-java.command.binaries")
 
 --- @class neotest-java.BuildSpecDependencies
