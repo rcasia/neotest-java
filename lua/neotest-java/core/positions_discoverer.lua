@@ -1,9 +1,9 @@
 local lib = require("neotest.lib")
 local resolve_package_name = require("neotest-java.util.resolve_package_name")
 local Path = require("neotest-java.model.path")
-local namespace_id = require("neotest-java.core.namespace_id")
-local test_method_id = require("neotest-java.core.test_method_id")
-local parameterized_test_method_id = require("neotest-java.core.parameterized_test_method_id")
+local namespace_id = require("neotest-java.core.position_ids.namespace_id")
+local test_method_id = require("neotest-java.core.position_ids.test_method_id")
+local parameterized_test_method_id = require("neotest-java.core.position_ids.parameterized_test_method_id")
 
 local PositionsDiscoverer = {}
 
