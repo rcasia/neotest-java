@@ -2,6 +2,7 @@ local lib = require("neotest.lib")
 local resolve_package_name = require("neotest-java.util.resolve_package_name")
 local Path = require("neotest-java.model.path")
 local namespace_id = require("neotest-java.core.namespace_id")
+local test_method_id = require("neotest-java.core.test_method_id")
 
 local PositionsDiscoverer = {}
 
@@ -359,21 +360,22 @@ function PositionsDiscoverer.discover_positions(file_path)
 					table.insert(normalized, normalize_type_for_junit(p, package_name))
 				end
 				test_name = string.format("%s(%s)", test_name, table.concat(normalized, ", "))
+
+				local namespace_string = vim
+					.iter(parents)
+					--- @param pos neotest.Position
+					:filter(function(pos)
+						return pos.type == "namespace"
+					end)
+					:map(function(pos)
+						return pos.name
+					end)
+					:join("$")
+				return package_name ~= "" and (package_name .. "." .. namespace_string .. "#" .. test_name)
+					or (namespace_string .. "#" .. test_name)
 			end
 
-			local namespace_string = vim
-				.iter(parents)
-				--- @param pos neotest.Position
-				:filter(function(pos)
-					return pos.type == "namespace"
-				end)
-				:map(function(pos)
-					return pos.name
-				end)
-				:join("$")
-
-			return package_name ~= "" and (package_name .. "." .. namespace_string .. "#" .. test_name)
-				or (namespace_string .. "#" .. test_name)
+			return test_method_id(position, parents, package_name)
 		end,
 	})
 end
