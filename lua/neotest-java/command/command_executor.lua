@@ -1,5 +1,8 @@
 local nio = require("nio")
 
+--- @class neotest-java.CommandExecutor
+--- @field execute_command fun(command: string, args: string[]): { stdout: string, stderr: string, exit_code: number }
+
 local CommandExecutor = function()
 	--- @type neotest-java.CommandExecutor
 	return {
