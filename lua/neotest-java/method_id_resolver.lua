@@ -1,7 +1,5 @@
-local Path = require("neotest-java.model.path")
-
 --- @class MethodIdResolver
---- @field public resolve_complete_method_id fun(classname: string, method_id: string): string
+--- @field public resolve_complete_method_id fun(classname: string, method_id: string, module_dir: neotest-java.Path): string
 
 --- @class MethodIdResolver.Dependencies
 --- @field classpath_provider neotest-java.ClasspathProvider
@@ -11,12 +9,10 @@ local Path = require("neotest-java.model.path")
 --- @param deps MethodIdResolver.Dependencies
 --- @return MethodIdResolver
 local MethodIdResolver = function(deps)
-	-- TODO: Should take module dir as parameter
-	local module_dir = Path("my_module_dir")
-	local javap_path = deps.binaries.javap(module_dir)
 	--- @type MethodIdResolver
 	return {
-		resolve_complete_method_id = function(classname, method_id)
+		resolve_complete_method_id = function(classname, method_id, module_dir)
+			local javap_path = deps.binaries.javap(module_dir)
 			local classpath = deps.classpath_provider.get_classpath(module_dir)
 
 			local result = deps.command_executor.execute_command(

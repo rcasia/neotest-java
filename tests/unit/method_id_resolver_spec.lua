@@ -6,10 +6,11 @@ local Path = require("neotest-java.model.path")
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 
 describe("Method Id Resolver", function()
+	local module_dir = Path("my_module_dir")
 	--- @type neotest-java.ClasspathProvider
 	local fake_classpath_provider = {
 		get_classpath = function(base_dir)
-			eq(Path("my_module_dir"), base_dir, "base_dir should be passed correctly")
+			eq(module_dir, base_dir, "base_dir should be passed correctly")
 			return "my_classpath"
 		end,
 	}
@@ -64,7 +65,7 @@ describe("Method Id Resolver", function()
 			}),
 		})
 
-		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv")
+		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
 
 		eq(1, #fake_command_executor_invocations, "command_executor should be invoked once")
 		eq({
@@ -98,14 +99,23 @@ describe("Method Id Resolver", function()
 
 		eq(
 			"someMonths_scv(int, java.lang.String, java.lang.Integer, com.example.application.model.TestArgs$Role)",
-			resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv")
+			resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
 		)
-		eq("testSomething()", resolver.resolve_complete_method_id("com.example.ExampleTest", "testSomething"))
-		eq("testSomething1()", resolver.resolve_complete_method_id("com.example.ExampleTest", "testSomething1"))
+		eq(
+			"testSomething()",
+			resolver.resolve_complete_method_id("com.example.ExampleTest", "testSomething", module_dir)
+		)
+		eq(
+			"testSomething1()",
+			resolver.resolve_complete_method_id("com.example.ExampleTest", "testSomething1", module_dir)
+		)
 		eq(
 			"testPersonAge(com.example.model.Person)",
-			resolver.resolve_complete_method_id("com.example.ExampleTest", "testPersonAge")
+			resolver.resolve_complete_method_id("com.example.ExampleTest", "testPersonAge", module_dir)
 		)
-		eq("personProvider()", resolver.resolve_complete_method_id("com.example.ExampleTest", "personProvider"))
+		eq(
+			"personProvider()",
+			resolver.resolve_complete_method_id("com.example.ExampleTest", "personProvider", module_dir)
+		)
 	end)
 end)
