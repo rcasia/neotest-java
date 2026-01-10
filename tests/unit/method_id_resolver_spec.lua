@@ -12,20 +12,23 @@ local Path = require("neotest-java.model.path")
 --- @class MethodIdResolver.Dependencies
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field command_executor neotest-java.CommandExecutor
+--- @field binaries neotest-java.LspBinaries
 
 --- @param deps MethodIdResolver.Dependencies
 --- @return MethodIdResolver
 local MethodIdResolver = function(deps)
+	-- TODO: Should take module dir as parameter
+	local module_dir = Path("my_module_dir")
+	local javap_path = deps.binaries.javap(module_dir)
 	--- @type MethodIdResolver
 	return {
 		resolve_complete_method_id = function(classname, method_id)
-			-- TODO: Should take module dir as parameter
-			local module_dir = Path("my_module_dir")
 			local classpath = deps.classpath_provider.get_classpath(module_dir)
 
-			-- TODO: take javap from the jdtls binary path
-			local result =
-				deps.command_executor.execute_command("bash", { "-c", "javap", "-cp=" .. classpath, classname })
+			local result = deps.command_executor.execute_command(
+				"bash",
+				{ "-c", javap_path:to_string(), "-cp=" .. classpath, classname }
+			)
 
 			local pattern = "%s*([%w%.$<>_]+)%s+([%w_]+)%s*%(([^)]*)%)"
 			local filtered_result = vim.iter(result.stdout:gmatch(pattern))
@@ -63,6 +66,16 @@ describe("Method Id Resolver", function()
 			end,
 		}
 	end
+	--- @type neotest-java.LspBinaries
+	local fake_binaries = {
+		javap = function(cwd)
+			return Path("/fake/javap")
+		end,
+
+		java = function(cwd)
+			return Path("/fake/java")
+		end,
+	}
 
 	before_each(function()
 		fake_command_executor_invocations = {}
@@ -70,6 +83,7 @@ describe("Method Id Resolver", function()
 
 	it("runs javap command correctly", function()
 		local resolver = MethodIdResolver({ --
+			binaries = fake_binaries,
 			classpath_provider = fake_classpath_provider,
 			command_executor = fake_command_executor({
 				stdout = [[
@@ -93,14 +107,15 @@ describe("Method Id Resolver", function()
 		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv")
 
 		eq(1, #fake_command_executor_invocations, "command_executor should be invoked once")
-		eq(
-			{ command = "bash", args = { "-c", "javap", "-cp=my_classpath", "com.example.ExampleTest" } },
-			fake_command_executor_invocations[1]
-		)
+		eq({
+			command = "bash",
+			args = { "-c", Path("/fake/javap"):to_string(), "-cp=my_classpath", "com.example.ExampleTest" },
+		}, fake_command_executor_invocations[1])
 	end)
 
 	it("resolves the complete method ids", function()
 		local resolver = MethodIdResolver({ --
+			binaries = fake_binaries,
 			classpath_provider = fake_classpath_provider,
 			command_executor = fake_command_executor({
 				stdout = [[
