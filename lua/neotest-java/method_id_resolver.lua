@@ -17,7 +17,7 @@ local MethodIdResolver = function(deps)
 
 			local result = deps.command_executor.execute_command(
 				"bash",
-				{ "-c", javap_path:to_string(), "-cp=" .. classpath, classname }
+				{ "-c", javap_path:to_string() .. " -cp " .. classpath .. " " .. classname }
 			)
 
 			local pattern = "%s*([%w%.$<>_]+)%s+([%w_]+)%s*%(([^)]*)%)"
