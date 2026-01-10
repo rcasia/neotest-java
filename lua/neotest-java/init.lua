@@ -4,7 +4,7 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 local FileChecker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
 local dir_filter = require("neotest-java.core.dir_filter")
-local position_discoverer = require("neotest-java.core.positions_discoverer")
+local PositionDiscoverer = require("neotest-java.core.positions_discoverer")
 local spec_builder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
@@ -17,6 +17,12 @@ local Binaries = require("neotest-java.command.binaries")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
+
+local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
+local MethodIdResolver = require("neotest-java.method_id_resolver")
+local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
+local CommandExecutor = require("neotest-java.command.command_executor")
+local LspBinaries = require("neotest-java.command.binaries")
 
 --- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath, default_version)
@@ -81,6 +87,12 @@ local function NeotestJavaAdapter(config, deps)
 		root_getter = root_getter,
 		patterns = config.test_classname_patterns,
 	})
+	local classpath_provider = ClasspathProvider({
+		client_provider = client_provider,
+	})
+	local binaries = Binaries({
+		client_provider = client_provider,
+	})
 	return setmetatable({
 
 		install = function()
@@ -90,7 +102,13 @@ local function NeotestJavaAdapter(config, deps)
 		name = "neotest-java",
 		filter_dir = dir_filter.filter_dir,
 		is_test_file = file_checker.is_test_file,
-		discover_positions = position_discoverer.discover_positions,
+		discover_positions = PositionDiscoverer({
+			method_id_resolver = MethodIdResolver({
+				classpath_provider = classpath_provider,
+				command_executor = CommandExecutor(),
+				binaries = binaries,
+			}),
+		}).discover_positions,
 		results = result_builder.build_results,
 		root = function(dir)
 			return _root_finder.find_root(dir)
@@ -99,10 +117,8 @@ local function NeotestJavaAdapter(config, deps)
 			check_junit_jar(config.junit_jar, config.default_junit_jar_version.version)
 
 			return spec_builder.build_spec(args, config, {
-				classpath_provider = ClasspathProvider({ client_provider = client_provider }),
-				binaries = Binaries({
-					client_provider = client_provider,
-				}),
+				classpath_provider = classpath_provider,
+				binaries = binaries,
 				root_getter = root_getter,
 				mkdir = mkdir,
 				chdir = chdir,
