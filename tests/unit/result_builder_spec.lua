@@ -201,7 +201,7 @@ describe("ResultBuilder", function()
 
 		local file_path = Path("MyTest.java")
 
-		local tree = TREES.PARAMETERIZED_TEST
+		local tree = TREES.PARAMETERIZED_TEST2
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
 			return { file_path }
@@ -245,12 +245,12 @@ describe("ResultBuilder", function()
 		--given
 		local report_file = [[
 				<testsuite>
-					<testcase name="parameterizedMethodShouldFail(Integer)[1]" classname="com.example.ExampleTest" time="0.003">
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[1]" classname="com.example.ExampleTest" time="0.003">
 						<failure message="expected: &lt;false&gt; but was: &lt;true&gt;" type="org.opentest4j.AssertionFailedError">
 							FAILURE OUTPUT
 						</failure>
 					</testcase>
-					<testcase name="parameterizedMethodShouldFail(Integer)[2]" classname="com.example.ExampleTest" time="0.001"/>
+					<testcase name="parameterizedMethodShouldFail(Integer, Integer)[2]" classname="com.example.ExampleTest" time="0.001"/>
 				</testsuite>
 			]]
 
@@ -266,14 +266,14 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			["com.example.ExampleTest#parameterizedMethodShouldFail(java.lang.Integer)"] = {
+			["com.example.ExampleTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
 				errors = {
 					{
 						-- line = 22,
-						message = "parameterizedMethodShouldFail(Integer)[1] -> expected: <false> but was: <true>",
+						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <false> but was: <true>",
 					},
 				},
-				short = "parameterizedMethodShouldFail(Integer)[1] -> expected: <false> but was: <true>",
+				short = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <false> but was: <true>",
 				status = "failed",
 				output = TEMPNAME,
 			},

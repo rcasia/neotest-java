@@ -47,11 +47,34 @@ local TREES = {
 	end,
 
 	PARAMETERIZED_TEST = Tree.from_list({
-		id = "com.example.ExampleTest#parameterizedMethodShouldFail(Integer, Integer)",
+		id = "com.example.ExampleTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)",
 		name = "parameterizedMethodShouldFail",
 		path = path:to_string(),
 		range = { 2, 2, 5, 3 },
 		type = "test",
+	}, key_fn),
+	PARAMETERIZED_TEST2 = Tree.from_list({
+		{
+			id = "com.example.ParameterizedMethodTest",
+			name = "ParameterizedMethodTest",
+			path = path:to_string(),
+			range = { 0, 0, 50, 0 },
+			type = "file",
+		},
+		{
+			id = "com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)",
+			name = "parameterizedMethodShouldFail",
+			path = path:to_string(),
+			range = { 2, 2, 5, 3 },
+			type = "test",
+		},
+		{
+			id = "com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(java.lang.Integer, java.lang.Integer, java.lang.Integer)",
+			name = "parameterizedMethodShouldNotFail",
+			path = path:to_string(),
+			range = { 10, 2, 15, 3 },
+			type = "test",
+		},
 	}, key_fn),
 
 	NESTED_TESTS = Tree.from_list({

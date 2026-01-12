@@ -7,16 +7,8 @@ local dir_scan = require("neotest-java.util.dir_scan")
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 
-local add_java_lang = function(id)
-	local classes = {
-		Integer = "java.lang.Integer",
-	}
-	for k, v in pairs(classes) do
-		if id:find(k, 1, true) then
-			return id:gsub(k, v)
-		end
-	end
-	return id
+local clean_id = function(str)
+	return str:gsub("%(.*", "")
 end
 
 -- -----------------------------------------------------------------------------
@@ -56,6 +48,7 @@ local function load_all_testcases(paths, read_file)
 	end, paths)
 end
 
+--- @return table <string, neotest-java.JunitResult[]>
 local function group_by_method_base(testcases)
 	local groups = {}
 	for _, tc in ipairs(testcases) do
@@ -98,17 +91,27 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 	local results = {}
 
 	for id, items in pairs(groups) do
-		--- remove iterative test suffix for result mapping
-		--- from: testMethod()[1]
-		--- to:   testMethod()
-		local _id = add_java_lang(id:gsub("%[%d+%]", ""))
-
 		if #items == 1 then
 			--- @type neotest-java.JunitResult
 			local jres = items[1]
-			results[_id] = jres:result()
+
+			results[id] = jres:result()
 		else
-			results[_id] = JunitResult.merge_results(items)
+			local _id = vim
+				.iter(tree:iter())
+				--- @param pos neotest.Position
+				:map(function(_, pos)
+					return pos.id
+				end)
+				:find(function(pos_id)
+					return clean_id(pos_id) == clean_id(items[1]:id())
+				end)
+
+			if _id then
+				results[_id] = JunitResult.merge_results(items)
+			else
+				log.error("Could not find matching test node for results with id: " .. items[1]:id())
+			end
 		end
 	end
 
