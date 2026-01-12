@@ -6,6 +6,7 @@ local it = nio.tests.it
 local CommandExecutor = require("neotest-java.command.command_executor")
 
 describe("Command Executor (Integration Test)", function()
+	--- @type neotest-java.CommandExecutor
 	local executor
 	-- Use the currently running Neovim executable as our test binary
 	local nvim_bin = vim.v.progpath
@@ -20,7 +21,7 @@ describe("Command Executor (Integration Test)", function()
 
 		eq(0, result.exit_code)
 		-- Verify it outputted something resembling a version string
-		assert(result.stdout:match("NVIM"), "Stdout should contain NVIM")
+		assert(result.stdout:match("NVIM"), "Stdout should contain NVIM: " .. result.stdout)
 		eq("", result.stderr)
 	end)
 
