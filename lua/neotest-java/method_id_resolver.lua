@@ -1,15 +1,15 @@
---- @class MethodIdResolver
+--- @class neotest-java.MethodIdResolver
 --- @field public resolve_complete_method_id fun(classname: string, method_id: string, module_dir: neotest-java.Path): string
 
---- @class MethodIdResolver.Dependencies
+--- @class neotest-java.MethodIdResolver.Dependencies
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field command_executor neotest-java.CommandExecutor
 --- @field binaries neotest-java.LspBinaries
 
---- @param deps MethodIdResolver.Dependencies
---- @return MethodIdResolver
+--- @param deps neotest-java.MethodIdResolver.Dependencies
+--- @return neotest-java.MethodIdResolver
 local MethodIdResolver = function(deps)
-	--- @type MethodIdResolver
+	--- @type neotest-java.MethodIdResolver
 	return {
 		resolve_complete_method_id = function(classname, method_id, module_dir)
 			local javap_path = deps.binaries.javap(module_dir)
