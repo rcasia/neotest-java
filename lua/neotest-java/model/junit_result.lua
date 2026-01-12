@@ -65,7 +65,10 @@ function JunitResult:new(testcase)
 end
 
 function JunitResult:id()
-	return self:name()
+	local id = self:classname() .. "#" .. self:name()
+
+	-- exclude iterations from parameterized tests
+	return id:gsub("%s*%[%d+%]$", "")
 end
 
 ---@return string

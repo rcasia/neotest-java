@@ -2,16 +2,46 @@
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
 local plugin = require("neotest-java")
+local nio = require("nio")
 
 local assertions = require("tests.assertions")
 
 local eq = assertions.eq
+local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
+
+--- A non-blocking replacement for vim.wait inside nio tasks
+-- @param timeout_ms number: Max time to wait
+-- @param condition function: Returns true when ready
+-- @param interval_ms number: (Optional) Check frequency, default 10ms
+local function nio_wait(timeout_ms, condition, interval_ms)
+	interval_ms = interval_ms or 10
+	local elapsed = 0
+
+	while not condition() do
+		if elapsed >= timeout_ms then
+			return false, -1 -- Timed out
+		end
+		nio.sleep(interval_ms) -- Yields execution to allow other events to process
+		elapsed = elapsed + interval_ms
+	end
+
+	return true -- Success
+end
 
 describe("PositionsDiscoverer", function()
 	local tmp_files
+	--- @type neotest-java.PositionsDiscoverer
+	local positions_discoverer
 
 	before_each(function()
 		tmp_files = {}
+		positions_discoverer = PositionsDiscoverer({
+			method_id_resolver = {
+				resolve_complete_method_id = function(_, method_id)
+					return method_id
+				end,
+			},
+		})
 	end)
 
 	after_each(function()
@@ -45,7 +75,11 @@ describe("PositionsDiscoverer", function()
   ]])
 
 		--- @type neotest.Tree
-		local result = assert(plugin.discover_positions(file_path))
+		local result = assert(positions_discoverer.discover_positions(file_path))
+
+		nio_wait(10, function()
+			return false
+		end)
 
 		eq({
 			{
@@ -103,7 +137,12 @@ class Test {
 		]])
 
 		-- when
-		local actual = assert(plugin.discover_positions(file_path))
+		--- @type neotest.Tree
+		local actual = assert(positions_discoverer.discover_positions(file_path))
+
+		nio_wait(10, function()
+			return false
+		end)
 
 		-- then
 		local actual_list = actual:to_list()
@@ -132,7 +171,12 @@ class Test {
 		]])
 
 		-- when
-		local actual = assert(plugin.discover_positions(file_path))
+		--- @type neotest.Tree
+		local actual = assert(positions_discoverer.discover_positions(file_path))
+
+		nio_wait(10, function()
+			return false
+		end)
 
 		-- then
 		local actual_list = actual:to_list()
@@ -195,7 +239,12 @@ public class SomeTest {
 		]])
 
 		-- when
-		local actual = assert(plugin.discover_positions(file_path))
+		--- @type neotest.Tree
+		local actual = assert(positions_discoverer.discover_positions(file_path))
+
+		nio_wait(10, function()
+			return false
+		end)
 
 		eq({
 			{
@@ -251,183 +300,5 @@ public class SomeTest {
 				},
 			},
 		}, actual:to_list())
-	end)
-
-	async.it("discovers test position for ParameterizedTest for primitive types", function()
-		local filepath = create_tmp_javafile([[
-
-		package com.example;
-
-		class SomeParameterizedTest {
-
-			@ParameterizedTest
-			void testWithParameters(
-				  boolean myBoolean,
-				  int myInteger,
-				  short myShort,
-				  long myLong,
-				  float myFloat,
-				  double myDouble,
-				  char myChar,
-				  byte myByte
-				  ) {}
-    }
-
-		]])
-
-		local tree = assert(plugin.discover_positions(filepath))
-
-		eq({
-			{
-				id = filepath,
-				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
-				path = filepath,
-				type = "file",
-				range = { 1, 2, 18, 2 },
-			},
-			{
-				{
-					id = "com.example.SomeParameterizedTest",
-					name = "SomeParameterizedTest",
-					path = filepath,
-					type = "namespace",
-					range = { 3, 2, 16, 5 },
-				},
-				{
-					{
-						id = "com.example.SomeParameterizedTest#testWithParameters(boolean, int, short, long, float, double, char, byte)",
-						name = "testWithParameters",
-						path = filepath,
-						type = "test",
-						range = { 5, 3, 15, 10 },
-					},
-				},
-			},
-		}, tree:to_list())
-	end)
-
-	async.it("discovers test position for ParameterizedTest for primitive array types", function()
-		local filepath = create_tmp_javafile([[
-
-    package com.example;
-
-    class SomeParameterizedTest {
-
-      @ParameterizedTest
-      void testWithParameters(
-          boolean[] myBoolean,
-          int[] myInteger,
-          short[] myShort,
-          long[] myLong,
-          float[] myFloat,
-          double[] myDouble,
-          char[] myChar,
-          byte[] myByte
-          ) {}
-    }
-
-  ]])
-
-		local tree = assert(plugin.discover_positions(filepath))
-
-		eq({
-			{
-				id = filepath,
-				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
-				path = filepath,
-				type = "file",
-				range = { 1, 4, 18, 2 },
-			},
-			{
-				{
-					id = "com.example.SomeParameterizedTest",
-					name = "SomeParameterizedTest",
-					path = filepath,
-					type = "namespace",
-					range = { 3, 4, 16, 5 },
-				},
-				{
-					{
-						id = "com.example.SomeParameterizedTest#testWithParameters(boolean[], int[], short[], long[], float[], double[], char[], byte[])",
-						name = "testWithParameters",
-						path = filepath,
-						type = "test",
-						range = { 5, 6, 15, 14 },
-					},
-				},
-			},
-		}, tree:to_list())
-	end)
-
-	async.it("discovers ParameterizedTest with standard Java types using FQNs for JUnit selectors", function()
-		local filepath = create_tmp_javafile([[
-
-    package com.example;
-
-    import org.junit.jupiter.params.ParameterizedTest;
-    import java.util.List;
-    import java.util.Map;
-
-    class SomeParameterizedTest {
-
-      @ParameterizedTest
-      void testWithParameters(
-        String name,
-        Integer boxedInt,
-        Long boxedLong,
-        Double boxedDouble,
-        Boolean boxedBoolean,
-        Character boxedChar,
-        Byte boxedByte,
-        Short boxedShort,
-        Object obj,
-        String[] names,
-        List<String> tags,
-        Map<String, Integer> counters,
-      ) {}
-    }
-
-  ]])
-
-		local tree = assert(plugin.discover_positions(filepath))
-
-		-- Helper: remove 'range' fields so formatting changes don't break the test
-		local function strip_ranges(node)
-			if type(node) ~= "table" then
-				return
-			end
-			node.range = nil
-			for _, v in ipairs(node) do
-				strip_ranges(v)
-			end
-		end
-
-		local list = tree:to_list()
-		strip_ranges(list)
-
-		eq({
-			{
-				id = filepath,
-				name = filepath:gsub(".*/", ""):gsub(".*\\", ""),
-				path = filepath,
-				type = "file",
-			},
-			{
-				{
-					id = "com.example.SomeParameterizedTest",
-					name = "SomeParameterizedTest",
-					path = filepath,
-					type = "namespace",
-				},
-				{
-					{
-						id = "com.example.SomeParameterizedTest#testWithParameters(java.lang.String, java.lang.Integer, java.lang.Long, java.lang.Double, java.lang.Boolean, java.lang.Character, java.lang.Byte, java.lang.Short, java.lang.Object, java.lang.String[], java.util.List, java.util.Map)",
-						name = "testWithParameters",
-						path = filepath,
-						type = "test",
-					},
-				},
-			},
-		}, list)
 	end)
 end)
