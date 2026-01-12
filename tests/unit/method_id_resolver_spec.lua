@@ -98,7 +98,7 @@ describe("Method Id Resolver", function()
 		})
 
 		eq(
-			"someMonths_scv(int, String, Integer, com.example.application.model.TestArgs$Role)",
+			"someMonths_scv(int, java.lang.String, java.lang.Integer, com.example.application.model.TestArgs$Role)",
 			resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
 		)
 		eq(

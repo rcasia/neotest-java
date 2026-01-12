@@ -7,6 +7,18 @@ local dir_scan = require("neotest-java.util.dir_scan")
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 
+local add_java_lang = function(id)
+	local classes = {
+		Integer = "java.lang.Integer",
+	}
+	for k, v in pairs(classes) do
+		if id:find(k, 1, true) then
+			return id:gsub(k, v)
+		end
+	end
+	return id
+end
+
 -- -----------------------------------------------------------------------------
 -- XML loading
 -- -----------------------------------------------------------------------------
@@ -89,7 +101,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 		--- remove iterative test suffix for result mapping
 		--- from: testMethod()[1]
 		--- to:   testMethod()
-		local _id = id:gsub("%[%d+%]", "")
+		local _id = add_java_lang(id:gsub("%[%d+%]", ""))
 
 		if #items == 1 then
 			--- @type neotest-java.JunitResult
@@ -97,7 +109,6 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 			results[_id] = jres:result()
 		else
 			results[_id] = JunitResult.merge_results(items)
-			print(vim.inspect({ pos_id = tree:data().id, id = _id, results = results }))
 		end
 	end
 

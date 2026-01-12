@@ -211,7 +211,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(Integer, Integer)"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
 				errors = {
 					{
 						-- line = 27,
@@ -229,7 +229,7 @@ describe("ResultBuilder", function()
 				status = "failed",
 				output = TEMPNAME,
 			},
-			["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(Integer, Integer, Integer)"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(java.lang.Integer, java.lang.Integer, java.lang.Integer)"] = {
 				status = "passed",
 				output = TEMPNAME,
 			},
@@ -266,7 +266,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			["com.example.ExampleTest#parameterizedMethodShouldFail(Integer)"] = {
+			["com.example.ExampleTest#parameterizedMethodShouldFail(java.lang.Integer)"] = {
 				errors = {
 					{
 						-- line = 22,

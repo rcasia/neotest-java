@@ -29,10 +29,8 @@ local MethodIdResolver = function(deps)
 					return entry.name == method_id
 				end)
 				:totable()
-			-- remove "java.lang." from the params
-			local _params = filtered_result[1].params:gsub("java%.lang%.", "")
 
-			return ("%s(%s)"):format(filtered_result[1].name, _params)
+			return ("%s(%s)"):format(filtered_result[1].name, filtered_result[1].params)
 		end,
 	}
 end
