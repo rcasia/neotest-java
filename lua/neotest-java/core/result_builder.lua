@@ -96,7 +96,8 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 			local jres = items[1]
 			results[_id] = jres:result()
 		else
-			results[id] = JunitResult.merge_results(items)
+			results[_id] = JunitResult.merge_results(items)
+			print(vim.inspect({ pos_id = tree:data().id, id = _id, results = results }))
 		end
 	end
 
