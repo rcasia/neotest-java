@@ -211,7 +211,7 @@ describe("ResultBuilder", function()
 		end
 
 		local expected = {
-			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(Integer, Integer)"] = {
 				errors = {
 					{
 						-- line = 27,
@@ -222,14 +222,17 @@ describe("ResultBuilder", function()
 						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
 					},
 				},
-				short = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>\nparameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
+				short = vim.iter({
+					"parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>",
+					"parameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
+				}):join("\n"),
 				status = "failed",
 				output = TEMPNAME,
 			},
-			-- ["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(java.lang.Integer, java.lang.Integer, java.lang.Integer)"] = {
-			-- 	status = "passed",
-			-- 	output = TEMPNAME,
-			-- },
+			["com.example.ParameterizedMethodTest#parameterizedMethodShouldNotFail(Integer, Integer, Integer)"] = {
+				status = "passed",
+				output = TEMPNAME,
+			},
 		}
 		--when
 		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
