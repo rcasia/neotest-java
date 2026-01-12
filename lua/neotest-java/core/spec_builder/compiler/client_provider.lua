@@ -32,6 +32,22 @@ local function preload_file_for_lsp(path)
 	return buf
 end
 
+local function wait(timeout_ms, condition, interval_ms)
+	local start_time = vim.uv.hrtime() / 1e6
+	while true do
+		if condition() then
+			return true
+		end
+
+		local current_time = vim.uv.hrtime() / 1e6
+		if (current_time - start_time) > timeout_ms then
+			return false
+		end
+
+		nio.sleep(interval_ms)
+	end
+end
+
 --- @param cwd neotest-java.Path
 --- @return vim.lsp.Client
 local client_provider = function(cwd)
@@ -42,7 +58,7 @@ local client_provider = function(cwd)
 		local bufnr = preload_file_for_lsp(any_java_file)
 
 		assert(
-			vim.wait(10000, function()
+			wait(10000, function()
 				client = get_client(bufnr)
 				return not not client and not not client.initialized
 			end, 1000),
