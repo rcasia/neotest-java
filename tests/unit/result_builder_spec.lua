@@ -380,4 +380,61 @@ describe("ResultBuilder", function()
 		--then
 		eq(expected, results)
 	end)
+
+	async.it("should remove report files after processing", function()
+		--given
+		local report_content = [[
+			<testsuite>
+				<testcase name="firstTestMethod()" classname="com.example.ExampleTest" time="0.001">
+					<failure message="expected: &lt;true&gt; but was: &lt;false&gt;" type="org.opentest4j.AssertionFailedError">
+						OUTPUT TEXT
+					</failure>
+				</testcase>
+				<testcase name="secondTestMethod()" classname="com.example.ExampleTest" time="0"/>
+			</testsuite>
+		]]
+
+		local report_file = Path("/tmp/TEST-ExampleTest.xml")
+
+		local removed_files = {}
+		local remove_file = function(filepath)
+			table.insert(removed_files, filepath)
+			return true
+		end
+
+		local file_path = Path("MyTest.java")
+		local tree = TREES.TWO_TESTS_IN_FILE(file_path)
+
+		local scan_dir = function(dir)
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
+			return { report_file }
+		end
+
+		local read_file = function(path)
+			return report_content
+		end
+
+		local expected = {
+			["com.example.ExampleTest#firstTestMethod()"] = {
+				errors = { { message = "expected: <true> but was: <false>" } },
+				short = "expected: <true> but was: <false>",
+				status = "failed",
+				output = TEMPNAME,
+			},
+			["com.example.ExampleTest#secondTestMethod()"] = {
+				status = "passed",
+				output = TEMPNAME,
+			},
+		}
+
+		--when
+		local results =
+			result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file, remove_file)
+
+		--then
+		eq(expected, results)
+
+		-- Verify remove_file was called with the correct file path
+		assert.are.same({ report_file:to_string() }, removed_files)
+	end)
 end)
