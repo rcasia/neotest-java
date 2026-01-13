@@ -10,12 +10,16 @@ jobs:
   luacheck:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
       - name: Luacheck
         uses: lunarmodules/luacheck@v1.2.0
 
   stylua:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
       - name: Stylua
         uses: JohnnyMorganz/stylua-action@v4
         with:
