@@ -1,6 +1,5 @@
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
-local plugin = require("neotest-java")
 local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
 local Path = require("neotest-java.model.path")
@@ -24,17 +23,6 @@ local DEFAULT_SPEC = {
 }
 
 local tempfiles = {}
-
----@param content string
----@return neotest-java.Path filepath
-local function create_tempfile_with_test(content)
-	local path = vim.fn.tempname() .. ".java"
-	table.insert(tempfiles, path)
-	local file = assert(io.open(path, "w"))
-	file:write(content)
-	file:close()
-	return Path(path)
-end
 
 describe("ResultBuilder", function()
 	async.before_each(function()
@@ -410,7 +398,7 @@ describe("ResultBuilder", function()
 			return { report_file }
 		end
 
-		local read_file = function(path)
+		local read_file = function(_path)
 			return report_content
 		end
 

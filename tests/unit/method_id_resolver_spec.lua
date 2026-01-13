@@ -29,11 +29,11 @@ describe("Method Id Resolver", function()
 	end
 	--- @type neotest-java.LspBinaries
 	local fake_binaries = {
-		javap = function(cwd)
+		javap = function(_cwd)
 			return Path("/fake/javap")
 		end,
 
-		java = function(cwd)
+		java = function(_cwd)
 			return Path("/fake/java")
 		end,
 	}
