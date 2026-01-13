@@ -143,22 +143,47 @@ end
 
 ---@return string[]
 function JunitResult:output()
-	local system_out = self.testcase["system-out"] or {}
-	if type(system_out) == "string" then
-		system_out = { system_out }
+	local output_lines = {}
+
+	local system_out = self.testcase["system-out"]
+	if system_out then
+		if type(system_out) == "string" then
+			output_lines[#output_lines + 1] = system_out
+		else
+			for _, out in ipairs(system_out) do
+				output_lines[#output_lines + 1] = out
+			end
+		end
+	end
+
+	local system_err = self.testcase["system-err"]
+	if system_err then
+		if #output_lines > 0 then
+			output_lines[#output_lines + 1] = NEW_LINE
+		end
+		output_lines[#output_lines + 1] = "---- SYSTEM ERROR ----\n"
+
+		if type(system_err) == "string" then
+			output_lines[#output_lines + 1] = system_err
+		else
+			for _, err in ipairs(system_err) do
+				output_lines[#output_lines + 1] = err
+			end
+		end
+		output_lines[#output_lines + 1] = NEW_LINE
 	end
 
 	local status, failures = self:status()
 	if status == FAILED then
 		for _, failure in ipairs(failures) do
-			system_out[#system_out + 1] = failure.failure_output
-			system_out[#system_out + 1] = NEW_LINE
+			output_lines[#output_lines + 1] = failure.failure_output
+			output_lines[#output_lines + 1] = NEW_LINE
 		end
 	else -- PASSED
-		system_out[#system_out + 1] = "Test passed" .. NEW_LINE
+		output_lines[#output_lines + 1] = "Test passed" .. NEW_LINE
 	end
 
-	return system_out
+	return output_lines
 end
 
 --- Convert neotest-java.JunitResult to neotest.Result
