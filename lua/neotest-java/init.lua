@@ -1,5 +1,4 @@
 local File = require("neotest.lib.file")
-local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 
 local FileChecker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
@@ -14,7 +13,6 @@ local nio = require("nio")
 local logger = require("neotest-java.logger")
 local install = require("neotest-java.install")
 local Binaries = require("neotest-java.command.binaries")
-local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
@@ -22,7 +20,6 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 local CommandExecutor = require("neotest-java.command.command_executor")
-local LspBinaries = require("neotest-java.command.binaries")
 
 --- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath, default_version)
@@ -125,13 +122,13 @@ local function NeotestJavaAdapter(config, deps)
 			})
 		end,
 	}, {
-		__call = function(_, _opts, _deps)
-			local user_opts = vim.tbl_extend("force", config, _opts or {})
+		__call = function(_, opts, user_deps)
+			local user_opts = vim.tbl_extend("force", config, opts or {})
 
 			if type(user_opts.junit_jar) == "string" then
 				user_opts.junit_jar = Path(user_opts.junit_jar)
 			end
-			ch.adapter = NeotestJavaAdapter(user_opts, _deps)
+			ch.adapter = NeotestJavaAdapter(user_opts, user_deps)
 			return ch.adapter
 		end,
 	})
