@@ -67,11 +67,20 @@ end
 local ResultBuilder = {}
 
 --- @param read_file fun(path: neotest-java.Path): string
+--- @param remove_file? fun(filepath: string): boolean, string? Function to remove a file, returns success, error
 --- @param tree neotest.Tree
 --- @param scan fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): string[]
-function ResultBuilder.build_results(spec, result, tree, scan, read_file)
+function ResultBuilder.build_results(spec, result, tree, scan, read_file, remove_file)
 	scan = scan or dir_scan
 	read_file = read_file or require("neotest-java.util.read_file")
+	remove_file = remove_file
+		or function(filepath)
+			local ok, err = pcall(os.remove, filepath)
+			if not ok then
+				return false, tostring(err)
+			end
+			return true
+		end
 
 	if result.code ~= 0 and result.code ~= 1 then
 		local node = tree:data()
@@ -82,10 +91,8 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 		spec.context.terminated_command_event.wait()
 	end
 
-	local testcases = load_all_testcases(
-		scan(spec.context.reports_dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } }),
-		read_file
-	)
+	local report_files = scan(spec.context.reports_dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } })
+	local testcases = load_all_testcases(report_files, read_file)
 	local groups = group_by_method_base(testcases)
 
 	local results = {}
@@ -112,6 +119,15 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file)
 			else
 				log.error("Could not find matching test node for results with id: " .. items[1]:id())
 			end
+		end
+	end
+
+	-- Clean up report files after processing
+	for _, report_file in ipairs(report_files) do
+		local filepath = tostring(report_file)
+		local ok, err = remove_file(filepath)
+		if not ok then
+			log.debug("Could not remove report file: " .. filepath .. " - " .. tostring(err or "unknown error"))
 		end
 	end
 

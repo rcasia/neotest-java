@@ -6,13 +6,13 @@ local key_fn = function(x)
 	return x
 end
 local TREES = {
-	--- @param path neotest-java.Path
-	TWO_TESTS_IN_FILE = function(path)
+	--- @param file_path neotest-java.Path
+	TWO_TESTS_IN_FILE = function(file_path)
 		return Tree.from_list({
 			{
-				id = path:to_string(),
-				name = path:to_string(),
-				path = path:to_string(),
+				id = file_path:to_string(),
+				name = file_path:to_string(),
+				path = file_path:to_string(),
 				range = { 0, 0, 13, 2 },
 				type = "file",
 			},
@@ -20,7 +20,7 @@ local TREES = {
 				{
 					id = "com.example.ExampleTest",
 					name = "ExampleTest",
-					path = path:to_string(),
+					path = file_path:to_string(),
 					range = { 0, 0, 12, 1 },
 					type = "namespace",
 				},
@@ -28,7 +28,7 @@ local TREES = {
 					{
 						id = "com.example.ExampleTest#firstTestMethod()",
 						name = "firstTestMethod",
-						path = path:to_string(),
+						path = file_path:to_string(),
 						range = { 2, 2, 5, 3 },
 						type = "test",
 					},
@@ -37,7 +37,7 @@ local TREES = {
 					{
 						id = "com.example.ExampleTest#secondTestMethod()",
 						name = "secondTestMethod",
-						path = path:to_string(),
+						path = file_path:to_string(),
 						range = { 7, 2, 10, 3 },
 						type = "test",
 					},

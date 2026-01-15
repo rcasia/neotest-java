@@ -113,7 +113,7 @@ describe("SpecBuilder", function()
 		}, function(x)
 			return x
 		end)
-		local config = {
+		local test_config = {
 			junit_jar = Path("my-junit-jar.jar"),
 		}
 		local project_paths = {
@@ -123,7 +123,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "integration" }, config, {
+		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "integration" }, test_config, {
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -215,7 +215,7 @@ describe("SpecBuilder", function()
 
 		local args = { strategy = "integration", tree = tree }
 
-		local config = {
+		local test_config = {
 			junit_jar = Path("my-junit-jar.jar"),
 			jvm_args = { "-myExtraJvmArg" },
 		}
@@ -226,7 +226,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec(args, config, {
+		local actual = SpecBuilder.build_spec(args, test_config, {
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -297,7 +297,7 @@ describe("SpecBuilder", function()
 
 		local args = { strategy = "integration", tree = tree }
 
-		local config = {
+		local test_config = {
 			junit_jar = Path("my-junit-jar.jar"),
 		}
 		local project_paths = {
@@ -311,7 +311,7 @@ describe("SpecBuilder", function()
 		local expected_base_dir = Path("/user/home/root/module-2")
 
 		-- when
-		local actual = SpecBuilder.build_spec(args, config, {
+		local actual = SpecBuilder.build_spec(args, test_config, {
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()

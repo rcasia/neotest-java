@@ -9,8 +9,8 @@ describe("Classpath Provider", function()
 	it("works", function()
 		local base_dir = Path("some")
 		local classpath_provider = ClasspathProvider({
-			client_provider = function(_base_dir)
-				eq(base_dir, _base_dir)
+			client_provider = function(base_dir_arg)
+				eq(base_dir, base_dir_arg)
 
 				return {
 					request_sync = function(_, method, params)

@@ -8,7 +8,6 @@ local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compile
 --- Interface for Java compilers
 ---@class NeotestJavaCompiler
 ---@field compile fun(opts: NeotestJavaCompiler.Opts): string classpath_file_arg
-local NeotestJavaCompiler = {}
 
 ---@type table<string, NeotestJavaCompiler>
 local compilers = {

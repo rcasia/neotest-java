@@ -1,7 +1,6 @@
 ---@module "luassert"
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
-local plugin = require("neotest-java")
 local nio = require("nio")
 
 local assertions = require("tests.assertions")
