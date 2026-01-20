@@ -3,6 +3,7 @@ local resolve_package_name = require("neotest-java.util.resolve_package_name")
 local Path = require("neotest-java.model.path")
 local namespace_id = require("neotest-java.core.position_ids.namespace_id")
 local nio = require("nio")
+local test_method_id = require("neotest-java.core.position_ids.test_method_id")
 
 --- @class neotest-java.PositionsDiscoverer
 --- @field discover_positions fun(file_path: string): neotest.Tree?
@@ -68,7 +69,7 @@ local PositionsDiscoverer = function(deps)
 						return namespace_id(position, parents, package_name)
 					end
 
-					return position.name
+					return test_method_id(position, parents, package_name)
 				end,
 			})
 
@@ -78,24 +79,30 @@ local PositionsDiscoverer = function(deps)
 					return node
 				end)
 				--- @param node neotest.Position
-				:filter(function(node)
-					return node.type == "test"
-				end)
-				--- @param node neotest.Position
 				:each(function(node)
 					vim.schedule(function()
-						nio.run(function()
+						local id
+						tree:get_key(node.id):data().ref = function()
+							if node.type ~= "test" then
+								return node.id
+							end
 							local parent_id = tree:get_key(node.id):parent():data().id
 
-							local test_method_id = deps.method_id_resolver.resolve_complete_method_id(
-								parent_id,
-								node.name,
-								Path(node.path):parent()
-							)
-							local new_id = parent_id .. "#" .. test_method_id
-							tree._nodes[new_id] = tree:get_key(node.id)
-							tree:get_key(node.id):data().id = new_id
-						end)
+							if not id then
+								if vim.in_fast_event() then
+									nio.scheduler()
+								end
+
+								id = nio.run(function()
+									return deps.method_id_resolver.resolve_complete_method_id(
+										parent_id,
+										node.name,
+										Path(node.path):parent()
+									)
+								end):wait()
+							end
+							return parent_id .. "#" .. id
+						end
 					end)
 				end)
 

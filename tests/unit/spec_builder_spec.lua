@@ -111,6 +111,30 @@ describe("SpecBuilder", function()
 		}, function(x)
 			return x
 		end)
+		-- Add ref method to the tree node
+		local position = tree:data()
+		local node = tree:get_key(position.id)
+		if node then
+			local node_data = node:data()
+			node_data.ref = function()
+				return position.id
+			end
+		else
+			-- If node is not found, add ref directly to position via metatable
+			local mt = getmetatable(position) or {}
+			local original_index = mt.__index
+			mt.__index = function(t, k)
+				if k == "ref" then
+					return function()
+						return position.id
+					end
+				end
+				if original_index then
+					return original_index(t, k)
+				end
+			end
+			setmetatable(position, mt)
+		end
 		local test_config = {
 			junit_jar = Path("my-junit-jar.jar"),
 		}
@@ -211,6 +235,30 @@ describe("SpecBuilder", function()
 		}, function(x)
 			return x
 		end)
+		-- Add ref method to the tree node
+		local position = tree:data()
+		local node = tree:get_key(position.id)
+		if node then
+			local node_data = node:data()
+			node_data.ref = function()
+				return position.id
+			end
+		else
+			-- If node is not found, add ref directly to position via metatable
+			local mt = getmetatable(position) or {}
+			local original_index = mt.__index
+			mt.__index = function(t, k)
+				if k == "ref" then
+					return function()
+						return position.id
+					end
+				end
+				if original_index then
+					return original_index(t, k)
+				end
+			end
+			setmetatable(position, mt)
+		end
 
 		local args = { strategy = "integration", tree = tree }
 
@@ -294,6 +342,30 @@ describe("SpecBuilder", function()
 		}, function(x)
 			return x
 		end)
+		-- Add ref method to the tree node
+		local position = tree:data()
+		local node = tree:get_key(position.id)
+		if node then
+			local node_data = node:data()
+			node_data.ref = function()
+				return position.id
+			end
+		else
+			-- If node is not found, add ref directly to position via metatable
+			local mt = getmetatable(position) or {}
+			local original_index = mt.__index
+			mt.__index = function(t, k)
+				if k == "ref" then
+					return function()
+						return position.id
+					end
+				end
+				if original_index then
+					return original_index(t, k)
+				end
+			end
+			setmetatable(position, mt)
+		end
 
 		local args = { strategy = "integration", tree = tree }
 
@@ -388,6 +460,30 @@ describe("SpecBuilder", function()
 		}, function(x)
 			return x
 		end)
+		-- Add ref method to the tree node
+		local position = tree:data()
+		local node = tree:get_key(position.id)
+		if node then
+			local node_data = node:data()
+			node_data.ref = function()
+				return position.id
+			end
+		else
+			-- If node is not found, add ref directly to position via metatable
+			local mt = getmetatable(position) or {}
+			local original_index = mt.__index
+			mt.__index = function(t, k)
+				if k == "ref" then
+					return function()
+						return position.id
+					end
+				end
+				if original_index then
+					return original_index(t, k)
+				end
+			end
+			setmetatable(position, mt)
+		end
 
 		local test_config = {
 			junit_jar = Path("my-junit-jar.jar"),

@@ -8,6 +8,24 @@ local assertions = require("tests.assertions")
 local eq = assertions.eq
 local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
 
+-- Helper function to remove 'ref' field from tree structure for comparison
+local function remove_ref_field(tbl)
+	if type(tbl) ~= "table" then
+		return tbl
+	end
+	local result = {}
+	for k, v in pairs(tbl) do
+		if k ~= "ref" then
+			if type(v) == "table" then
+				result[k] = remove_ref_field(v)
+			else
+				result[k] = v
+			end
+		end
+	end
+	return result
+end
+
 --- A non-blocking replacement for vim.wait inside nio tasks
 -- @param timeout_ms number: Max time to wait
 -- @param condition function: Returns true when ready
@@ -106,7 +124,7 @@ describe("PositionsDiscoverer", function()
 					},
 					{
 						{
-							id = "com.example.Outer$Inner#simpleTestMethod",
+							id = "com.example.Outer$Inner#simpleTestMethod()",
 							name = "simpleTestMethod",
 							path = file_path,
 							range = { 4, 8, 5, 34 },
@@ -115,7 +133,7 @@ describe("PositionsDiscoverer", function()
 					},
 				},
 			},
-		}, result:to_list())
+		}, remove_ref_field(result:to_list()))
 	end)
 
 	async.it("should discover simple test method", function()
@@ -198,7 +216,7 @@ class Test {
 				},
 				{
 					{
-						id = "Test#firstTestMethod",
+						id = "Test#firstTestMethod()",
 						name = "firstTestMethod",
 						path = file_path,
 						range = { 2, 2, 5, 3 },
@@ -207,7 +225,7 @@ class Test {
 				},
 				{
 					{
-						id = "Test#secondTestMethod",
+						id = "Test#secondTestMethod()",
 						name = "secondTestMethod",
 						path = file_path,
 						range = { 7, 2, 10, 3 },
@@ -215,7 +233,7 @@ class Test {
 					},
 				},
 			},
-		}, actual_list)
+		}, remove_ref_field(actual_list))
 	end)
 
 	async.it("should discover nested tests", function()
@@ -279,7 +297,7 @@ public class SomeTest {
 						},
 						{
 							{
-								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest",
+								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest()",
 								name = "someTest",
 								path = file_path,
 								range = { 3, 12, 6, 13 },
@@ -289,7 +307,7 @@ public class SomeTest {
 					},
 					{
 						{
-							id = "SomeTest$SomeNestedTest#oneMoreOuterTest",
+							id = "SomeTest$SomeNestedTest#oneMoreOuterTest()",
 							name = "oneMoreOuterTest",
 							path = file_path,
 							range = { 9, 8, 12, 9 },
@@ -298,6 +316,6 @@ public class SomeTest {
 					},
 				},
 			},
-		}, actual:to_list())
+		}, remove_ref_field(actual:to_list()))
 	end)
 end)

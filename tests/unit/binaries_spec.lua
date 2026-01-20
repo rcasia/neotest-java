@@ -10,13 +10,15 @@ describe("Binaries", function()
 	local test_client_provider = function(cwd)
 		eq(expected_cwd, cwd)
 		return {
-			request_sync = function(_, method, params)
+			request = function(_, method, params, callback)
 				eq(method, "workspace/executeCommand")
 				eq(params.command, "java.project.getSettings")
 				eq(params.arguments[1], "file://some")
 				eq(params.arguments[2], { "org.eclipse.jdt.ls.core.vm.location" })
 
-				return { result = { ["org.eclipse.jdt.ls.core.vm.location"] = "my_java_home" } }
+				if callback then
+					callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = "my_java_home" })
+				end
 			end,
 		}
 	end

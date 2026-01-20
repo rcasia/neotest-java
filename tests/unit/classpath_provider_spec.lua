@@ -2,6 +2,7 @@ local Path = require("neotest-java.model.path")
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
+local it = require("nio").tests.it
 
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 
@@ -13,7 +14,8 @@ describe("Classpath Provider", function()
 				eq(base_dir, base_dir_arg)
 
 				return {
-					request_sync = function(_, method, params)
+					attached_buffers = { [1234] = true },
+					request = function(_, method, params, callback)
 						eq(method, "workspace/executeCommand")
 						eq(params.command, "java.project.getClasspaths")
 						eq(params.arguments[1], "file://some")
@@ -21,14 +23,12 @@ describe("Classpath Provider", function()
 						local options = vim.json.decode(params.arguments[2])
 
 						if options.scope == "runtime" then
-							return { result = { classpaths = { "source_classpath" } } }
+							callback(nil, { classpaths = { "source_classpath" } })
+						elseif options.scope == "test" then
+							callback(nil, { classpaths = { "test_classpath" } })
+						else
+							error("Unexpected scope: " .. tostring(options.scope))
 						end
-
-						if options.scope == "test" then
-							return { result = { classpaths = { "test_classpath" } } }
-						end
-
-						error("Unexpected scope: " .. tostring(options.scope))
 					end,
 				}
 			end,

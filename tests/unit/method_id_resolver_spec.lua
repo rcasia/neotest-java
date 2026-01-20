@@ -70,7 +70,7 @@ describe("Method Id Resolver", function()
 		eq(1, #fake_command_executor_invocations, "command_executor should be invoked once")
 		eq({
 			command = "bash",
-			args = { "-c", Path("/fake/javap"):to_string() .. " -cp my_classpath com.example.ExampleTest" },
+			args = { "-c", Path("/fake/javap"):to_string() .. " -cp 'my_classpath' 'com.example.ExampleTest'" },
 		}, fake_command_executor_invocations[1])
 	end)
 

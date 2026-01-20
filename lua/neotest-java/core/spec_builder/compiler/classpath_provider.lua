@@ -1,5 +1,7 @@
+local nio = require("nio")
+
 --- @class neotest-java.ClasspathProvider
---- @field get_classpath fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by ":"
+--- @field get_classpath async fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by ":"
 
 --- @class GetClasspathResponse
 --- @field classpaths string[]
@@ -16,15 +18,32 @@ local function ClasspathProvider(deps)
 			local base_dir_uri = vim.uri_from_fname(base_dir:to_string())
 			local client = deps.client_provider(base_dir)
 
-			local response_for_runtime = client:request_sync("workspace/executeCommand", {
-				command = "java.project.getClasspaths",
-				arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
-			})
+			local bufnr = vim.tbl_keys(client.attached_buffers)[1]
+			local runtime = nio.control.future()
+			local test = nio.control.future()
+			vim.schedule(function()
+				client:request("workspace/executeCommand", {
+					command = "java.project.getClasspaths",
+					arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
+				}, function(err, result)
+					if err then
+						runtime.set_error(err)
+					else
+						runtime.set(result.classpaths)
+					end
+				end, bufnr)
 
-			local response_for_test = client:request_sync("workspace/executeCommand", {
-				command = "java.project.getClasspaths",
-				arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
-			})
+				client:request("workspace/executeCommand", {
+					command = "java.project.getClasspaths",
+					arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
+				}, function(err, result)
+					if err then
+						test.set_error(err)
+					else
+						test.set(result.classpaths)
+					end
+				end, bufnr)
+			end)
 
 			local additional_classpath_entries_strings = vim
 				--
@@ -36,8 +55,8 @@ local function ClasspathProvider(deps)
 				:totable()
 
 			return vim.iter({
-				assert(response_for_runtime).result.classpaths,
-				assert(response_for_test).result.classpaths,
+				runtime.wait(),
+				test.wait(),
 				additional_classpath_entries_strings,
 			})
 				:flatten()

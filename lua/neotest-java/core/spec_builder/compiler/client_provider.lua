@@ -48,10 +48,14 @@ local function wait(timeout_ms, condition, interval_ms)
 	end
 end
 
+local client
 --- @param cwd neotest-java.Path
 --- @return vim.lsp.Client
 local client_provider = function(cwd)
-	local client = get_client()
+	if client and client.initialized then
+		return client
+	end
+	client = get_client()
 
 	if not client then
 		local any_java_file = find_any_java_file(cwd)

@@ -1,6 +1,7 @@
 local Path = require("neotest-java.model.path")
 
 local logger = require("neotest-java.logger")
+local nio = require("nio")
 
 --- @class neotest-java.LspBinaries
 --- @field java fun(cwd: neotest-java.Path): neotest-java.Path
@@ -19,11 +20,16 @@ local Binaries = function(deps)
 			command = "java.project.getSettings",
 			arguments = { vim.uri_from_fname(cwd:to_string()), { "org.eclipse.jdt.ls.core.vm.location" } },
 		}
-		local res = client:request_sync("workspace/executeCommand", cmd)
-		assert(res, "No response from lsp server when getting Java home.")
-		assert(not res.err, "Error while getting Java home from lsp server: " .. vim.inspect(res.err))
+		local result_future = nio.control.future()
+		client:request("workspace/executeCommand", cmd, function(err, res)
+			assert(not err, "Error while getting Java home from lsp server: " .. vim.inspect(err))
 
-		return res.result["org.eclipse.jdt.ls.core.vm.location"]
+			assert(not res.err, "Error while getting Java home from lsp server: " .. vim.inspect(res.err))
+			result_future.set(res)
+		end)
+		local res = result_future.wait()
+
+		return res["org.eclipse.jdt.ls.core.vm.location"]
 	end
 
 	return {

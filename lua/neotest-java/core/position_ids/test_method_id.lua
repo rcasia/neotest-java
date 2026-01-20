@@ -33,7 +33,7 @@ local test_method_id = function(position, parents, package_name)
 
 	return vim
 		--
-		.iter({ package_name, namespace_string .. "#" .. test_name })
+		.iter({ package_name, namespace_string .. "#" .. test_name .. "()" })
 		:filter(not_empty)
 		:join(".")
 end
