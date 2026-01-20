@@ -374,4 +374,133 @@ describe("SpecBuilder", function()
 			symbol = "shouldNotFail",
 		}, actual)
 	end)
+
+	it("builds spec for debug test (dap strategy)", function()
+		-- Mock dap module to avoid error
+		package.loaded["dap"] = {}
+
+		local tree = Tree.from_list({
+			id = "com.example.ExampleTest#shouldNotFail()",
+			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
+			name = "shouldNotFail",
+			type = "test",
+		}, function(x)
+			return x
+		end)
+
+		local test_config = {
+			junit_jar = Path("my-junit-jar.jar"),
+		}
+		local project_paths = {
+			Path("."),
+			Path("./src/test/java/com/example/ExampleTest.java"),
+			Path("./pom.xml"),
+		}
+
+		-- Mock launch_debug_test
+		local mock_terminated_event = { mock = "event" }
+		local launch_debug_test_called = false
+		local launch_debug_test_args = {}
+		local captured_port = nil
+
+		local launch_debug_test = function(command, args, cwd)
+			launch_debug_test_called = true
+			launch_debug_test_args = { command = command, args = args, cwd = cwd }
+			-- Extract port from debug agent arguments
+			for _, arg in ipairs(args) do
+				local port_match = string.match(arg, "address=0%.0%.0%.0:(%d+)")
+				if port_match then
+					captured_port = tonumber(port_match)
+				end
+			end
+			return mock_terminated_event
+		end
+
+		-- when
+		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "dap" }, test_config, {
+			mkdir = function() end,
+			chdir = function() end,
+			root_getter = function()
+				return Path(".")
+			end,
+			scan = function(base_dir, opts)
+				if base_dir ~= Path(".") then
+					error("unexpected base_dir in scan: " .. base_dir:to_string())
+				end
+
+				opts = opts or {}
+				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
+					return { Path("additional1"), Path("additional2") }
+				end
+
+				return project_paths
+			end,
+			compile = function(base_dir)
+				assert(
+					base_dir == Path("."),
+					"should compile with the project root as base_dir: "
+						.. vim.inspect({ actual = base_dir:to_string(), expected = Path("."):to_string() })
+				)
+			end,
+			classpath_provider = {
+				get_classpath = function(base_dir, additional_classpaths)
+					eq(Path("."), base_dir)
+					eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
+
+					return "classpath-file-argument"
+				end,
+			},
+			report_folder_name_gen = function(module_dir, build_dir)
+				eq(Path("."), module_dir)
+				eq(Path("target"), build_dir)
+
+				return Path("report_folder")
+			end,
+			build_tool_getter = function()
+				--- @type neotest-java.BuildTool
+				return FakeBuildTool
+			end,
+			detect_project_type = function()
+				return "maven"
+			end,
+			binaries = {
+				java = function()
+					return Path("java")
+				end,
+			},
+			launch_debug_test = launch_debug_test,
+		})
+
+		-- then
+		assert(launch_debug_test_called, "launch_debug_test should be called")
+		eq("java", launch_debug_test_args.command)
+		eq(Path("."), launch_debug_test_args.cwd)
+		assert(captured_port ~= nil, "port should be captured from debug agent arguments")
+		assert(
+			vim.iter(launch_debug_test_args.args):any(function(arg)
+				return string.find(arg, "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0%.0%.0%.0:")
+					~= nil
+			end),
+			"launch_debug_test should be called with debug agent arguments"
+		)
+		assert(
+			vim.iter(launch_debug_test_args.args):any(function(arg)
+				return arg == "-Xdebug"
+			end),
+			"launch_debug_test should be called with -Xdebug argument"
+		)
+
+		assert(actual.strategy ~= nil, "result should have strategy field")
+		eq("java", actual.strategy.type)
+		eq("attach", actual.strategy.request)
+		eq("localhost", actual.strategy.host)
+		eq(captured_port, actual.strategy.port)
+		eq(("neotest-java (on port %s)"):format(captured_port), actual.strategy.name)
+		eq(Path("."):name(), actual.strategy.projectName)
+		eq(Path("."):to_string(), actual.cwd)
+		eq("shouldNotFail", actual.symbol)
+		eq("dap", actual.context.strategy)
+		eq(Path("report_folder"), actual.context.reports_dir)
+		eq(mock_terminated_event, actual.context.terminated_command_event)
+	end)
 end)

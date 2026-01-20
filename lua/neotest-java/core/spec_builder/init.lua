@@ -100,7 +100,7 @@ function SpecBuilder.build_spec(args, config, deps)
 		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 		local terminated_command_event = deps.launch_debug_test(junit.command, junit.args, module.base_dir)
 
-		local project_name = vim.fn.fnamemodify(root:to_string(), ":t")
+		local project_name = root:name()
 		return {
 			strategy = {
 				type = "java",
