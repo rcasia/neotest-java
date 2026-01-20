@@ -19,6 +19,12 @@ local SUPPORTED_VERSIONS = {
 }
 local LATEST_PINNED_VERSION = SUPPORTED_VERSIONS[1]
 
+--- Get supported JUnit versions
+--- @return table[]
+local function get_supported_versions()
+	return SUPPORTED_VERSIONS
+end
+
 --- @class neotest-java.JunitVersion
 --- @field version string
 --- @field sha256 string
@@ -30,6 +36,7 @@ local LATEST_PINNED_VERSION = SUPPORTED_VERSIONS[1]
 ---@field incremental_build boolean
 ---@field default_junit_jar_version neotest-java.JunitVersion
 ---@field test_classname_patterns string[] | nil
+---@field disable_update_notifications boolean | nil
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
@@ -38,11 +45,15 @@ local default_config = {
 	default_junit_jar_version = LATEST_PINNED_VERSION,
 	jvm_args = {},
 	incremental_build = true,
+	disable_update_notifications = false,
 	test_classname_patterns = {
 		"^.*Tests?$",
 		"^.*IT$",
 		"^.*Spec$",
 	},
 }
+
+-- Export getter function for supported versions
+default_config.get_supported_versions = get_supported_versions
 
 return default_config
