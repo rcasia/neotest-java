@@ -1,6 +1,19 @@
 local logger = require("neotest-java.logger")
 local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
-local version_detector = JunitVersionDetector()
+local exists = require("neotest.lib.file").exists
+local version_detector = JunitVersionDetector({
+	exists = function(path)
+		return exists(path:to_string())
+	end,
+	checksum = function(path)
+		local f = assert(io.open(path:to_string(), "rb"))
+		local data = f:read("*a")
+		f:close()
+		return vim.fn.sha256(data)
+	end,
+	scan = require("neotest-java.util.dir_scan"),
+	stdpath_data = vim.fn.stdpath,
+})
 
 ---@class neotest-java.InstallDeps
 ---@field exists fun(filepath: string): boolean
