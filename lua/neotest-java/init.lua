@@ -4,7 +4,7 @@ local FileChecker = require("neotest-java.core.file_checker")
 local root_finder = require("neotest-java.core.root_finder")
 local dir_filter = require("neotest-java.core.dir_filter")
 local PositionDiscoverer = require("neotest-java.core.positions_discoverer")
-local spec_builder = require("neotest-java.core.spec_builder")
+local SpecBuilder = require("neotest-java.core.spec_builder")
 local result_builder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
@@ -94,6 +94,27 @@ local function NeotestJavaAdapter(config, deps)
 	local binaries = Binaries({
 		client_provider = client_provider,
 	})
+	local spec_builder_instance = SpecBuilder({
+		classpath_provider = classpath_provider,
+		binaries = binaries,
+		root_getter = root_getter,
+		mkdir = mkdir,
+		chdir = chdir,
+		scan = scan,
+		compile = function(base_dir, compile_mode)
+			compilers.lsp.compile({
+				base_dir = base_dir,
+				compile_mode = compile_mode,
+			})
+		end,
+		report_folder_name_gen = function(module_dir, build_dir)
+			local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
+			return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
+		end,
+		build_tool_getter = build_tools.get,
+		detect_project_type = detect_project_type,
+		launch_debug_test = build_tools.launch_debug_test,
+	})
 	return setmetatable({
 
 		install = function()
@@ -116,28 +137,7 @@ local function NeotestJavaAdapter(config, deps)
 		end,
 		build_spec = function(args)
 			check_junit_jar(config.junit_jar, config.default_junit_jar_version.version)
-
-			return spec_builder.build_spec(args, config, {
-				classpath_provider = classpath_provider,
-				binaries = binaries,
-				root_getter = root_getter,
-				mkdir = mkdir,
-				chdir = chdir,
-				scan = scan,
-				compile = function(base_dir, compile_mode)
-					compilers.lsp.compile({
-						base_dir = base_dir,
-						compile_mode = compile_mode,
-					})
-				end,
-				report_folder_name_gen = function(module_dir, build_dir)
-					local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
-					return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
-				end,
-				build_tool_getter = build_tools.get,
-				detect_project_type = detect_project_type,
-				launch_debug_test = build_tools.launch_debug_test,
-			})
+			return spec_builder_instance.build_spec(args, config)
 		end,
 	}, {
 		__call = function(_, opts, user_deps)

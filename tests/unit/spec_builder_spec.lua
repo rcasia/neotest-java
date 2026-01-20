@@ -20,110 +20,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec(
-			{ tree = TREES.TWO_TESTS_IN_FILE(path), strategy = "integration" },
-			config,
-			{
-				mkdir = function() end,
-				chdir = function() end,
-				root_getter = function()
-					return Path(".")
-				end,
-				scan = function(base_dir, opts)
-					if base_dir ~= Path(".") then
-						error("unexpected base_dir in scan: " .. base_dir:to_string())
-					end
-
-					opts = opts or {}
-					if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
-						return { Path("additional1"), Path("additional2") }
-					end
-
-					return project_paths
-				end,
-				compile = function(base_dir)
-					local expected_base_dir = Path(".")
-					assert(
-						base_dir == Path("."),
-						"should compile with the project root as base_dir: "
-							.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
-					)
-				end,
-				classpath_provider = {
-					get_classpath = function(base_dir, additional_classpaths)
-						eq(Path("."), base_dir)
-						eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
-
-						return "classpath-file-argument"
-					end,
-				},
-				report_folder_name_gen = function(module_dir, build_dir)
-					eq(Path("."), module_dir)
-					eq(Path("target"), build_dir)
-
-					return Path("report_folder")
-				end,
-				build_tool_getter = function()
-					--- @type neotest-java.BuildTool
-					return FakeBuildTool
-				end,
-				detect_project_type = function()
-					return "maven"
-				end,
-				binaries = {
-					java = function()
-						return Path("java")
-					end,
-				},
-			}
-		)
-
-		-- then
-		eq({
-			command = vim.iter({
-				"java",
-				"-Duser.dir=" .. Path("."):to_string(),
-				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
-				"-jar",
-				"my-junit-jar.jar",
-				"execute",
-				"--classpath=classpath-file-argument",
-				"--reports-dir=report_folder",
-				"--fail-if-no-tests",
-				"--disable-banner",
-				"--details=testfeed",
-				"--config=junit.platform.output.capture.stdout=true",
-				"--config=junit.platform.output.capture.stderr=true",
-				"--select-class='com.example.ExampleTest'",
-			}):join(" "),
-			context = {
-				reports_dir = Path("report_folder"),
-			},
-			cwd = Path("."):to_string(),
-			symbol = path:to_string(),
-		}, actual)
-	end)
-
-	it("builds spec for one method", function()
-		local tree = Tree.from_list({
-			id = "com.example.ExampleTest#shouldNotFail()",
-			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
-			name = "shouldNotFail",
-			type = "test",
-		}, function(x)
-			return x
-		end)
-		local test_config = {
-			junit_jar = Path("my-junit-jar.jar"),
-		}
-		local project_paths = {
-			Path("."),
-			Path("./src/test/java/com/example/ExampleTest.java"),
-			Path("./pom.xml"),
-		}
-
-		-- when
-		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "integration" }, test_config, {
+		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -176,6 +73,108 @@ describe("SpecBuilder", function()
 				end,
 			},
 		})
+		local actual =
+			spec_builder_instance.build_spec({ tree = TREES.TWO_TESTS_IN_FILE(path), strategy = "integration" }, config)
+
+		-- then
+		eq({
+			command = vim.iter({
+				"java",
+				"-Duser.dir=" .. Path("."):to_string(),
+				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
+				"-jar",
+				"my-junit-jar.jar",
+				"execute",
+				"--classpath=classpath-file-argument",
+				"--reports-dir=report_folder",
+				"--fail-if-no-tests",
+				"--disable-banner",
+				"--details=testfeed",
+				"--config=junit.platform.output.capture.stdout=true",
+				"--config=junit.platform.output.capture.stderr=true",
+				"--select-class='com.example.ExampleTest'",
+			}):join(" "),
+			context = {
+				reports_dir = Path("report_folder"),
+			},
+			cwd = Path("."):to_string(),
+			symbol = path:to_string(),
+		}, actual)
+	end)
+
+	it("builds spec for one method", function()
+		local tree = Tree.from_list({
+			id = "com.example.ExampleTest#shouldNotFail()",
+			path = "/user/home/root/src/test/java/com/example/ExampleTest.java",
+			name = "shouldNotFail",
+			type = "test",
+		}, function(x)
+			return x
+		end)
+		local test_config = {
+			junit_jar = Path("my-junit-jar.jar"),
+		}
+		local project_paths = {
+			Path("."),
+			Path("./src/test/java/com/example/ExampleTest.java"),
+			Path("./pom.xml"),
+		}
+
+		-- when
+		local spec_builder_instance = SpecBuilder({
+			mkdir = function() end,
+			chdir = function() end,
+			root_getter = function()
+				return Path(".")
+			end,
+			scan = function(base_dir, opts)
+				if base_dir ~= Path(".") then
+					error("unexpected base_dir in scan: " .. base_dir:to_string())
+				end
+
+				opts = opts or {}
+				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
+					return { Path("additional1"), Path("additional2") }
+				end
+
+				return project_paths
+			end,
+			compile = function(base_dir)
+				local expected_base_dir = Path(".")
+				assert(
+					base_dir == Path("."),
+					"should compile with the project root as base_dir: "
+						.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
+				)
+			end,
+			classpath_provider = {
+				get_classpath = function(base_dir, additional_classpaths)
+					eq(Path("."), base_dir)
+					eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
+
+					return "classpath-file-argument"
+				end,
+			},
+			report_folder_name_gen = function(module_dir, build_dir)
+				eq(Path("."), module_dir)
+				eq(Path("target"), build_dir)
+
+				return Path("report_folder")
+			end,
+			build_tool_getter = function()
+				--- @type neotest-java.BuildTool
+				return FakeBuildTool
+			end,
+			detect_project_type = function()
+				return "maven"
+			end,
+			binaries = {
+				java = function()
+					return Path("java")
+				end,
+			},
+		})
+		local actual = spec_builder_instance.build_spec({ tree = tree, strategy = "integration" }, test_config)
 
 		-- then
 		eq({
@@ -226,7 +225,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
-		local actual = SpecBuilder.build_spec(args, test_config, {
+		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -257,6 +256,7 @@ describe("SpecBuilder", function()
 				end,
 			},
 		})
+		local actual = spec_builder_instance.build_spec(args, test_config)
 
 		-- then
 		eq({
@@ -311,7 +311,7 @@ describe("SpecBuilder", function()
 		local expected_base_dir = Path("/user/home/root/module-2")
 
 		-- when
-		local actual = SpecBuilder.build_spec(args, test_config, {
+		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -348,6 +348,7 @@ describe("SpecBuilder", function()
 				end,
 			},
 		})
+		local actual = spec_builder_instance.build_spec(args, test_config)
 
 		-- then
 		eq({
@@ -417,7 +418,7 @@ describe("SpecBuilder", function()
 		end
 
 		-- when
-		local actual = SpecBuilder.build_spec({ tree = tree, strategy = "dap" }, test_config, {
+		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
 			root_getter = function()
@@ -470,6 +471,7 @@ describe("SpecBuilder", function()
 			},
 			launch_debug_test = launch_debug_test,
 		})
+		local actual = spec_builder_instance.build_spec({ tree = tree, strategy = "dap" }, test_config)
 
 		-- then
 		assert(launch_debug_test_called, "launch_debug_test should be called")
