@@ -31,12 +31,17 @@ end
 ---@field scan? fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
 ---@field stdpath_data? fun(): string
 
---- Detect which version of JUnit jar exists in the data directory
+---@class neotest-java.JunitVersionDetector
+---@field detect_existing_version fun(): neotest-java.JunitVersion | nil, neotest-java.Path | nil
+---@field check_for_update fun(current_version: neotest-java.JunitVersion): boolean, neotest-java.JunitVersion | nil
+---@field get_supported_versions fun(): table[]
+---@field _checksum fun(file_path: neotest-java.Path, file_reader?: fun(path: string): string): string
+
 --- @param deps? neotest-java.JunitVersionDetectorDeps
---- @return neotest-java.JunitVersion | nil, neotest-java.Path | nil
--- Returns: version_info, filepath
-local function detect_existing_version(deps)
+--- @return neotest-java.JunitVersionDetector
+local JunitVersionDetector = function(deps)
 	deps = deps or {}
+
 	-- Create a wrapper for exists that accepts Path instead of string
 	local exists_fn = deps.exists or function(path)
 		return exists(path:to_string())
@@ -47,60 +52,71 @@ local function detect_existing_version(deps)
 	local scan_fn = deps.scan or require("neotest-java.util.dir_scan")
 	local stdpath_data_fn = deps.stdpath_data or vim.fn.stdpath
 
-	local supported_versions = get_supported_versions()
-	local data_dir = Path(stdpath_data_fn("data")):append("neotest-java")
+	return {
+		--- Detect which version of JUnit jar exists in the data directory
+		--- @return neotest-java.JunitVersion | nil, neotest-java.Path | nil
+		-- Returns: version_info, filepath
+		detect_existing_version = function()
+			local supported_versions = get_supported_versions()
+			local data_dir = Path(stdpath_data_fn("data")):append("neotest-java")
 
-	-- First, try to detect by filename
-	for _, version_info in ipairs(supported_versions) do
-		local jar_path = data_dir:append("junit-platform-console-standalone-" .. version_info.version .. ".jar")
-		if exists_fn(jar_path) then
-			-- Verify by checksum to be sure
-			local file_sha = checksum_fn(jar_path)
-			if file_sha == version_info.sha256 then
-				return version_info, jar_path
-			end
-		end
-	end
-
-	-- If not found by filename, try to detect by checksum
-	-- This handles cases where the file might have a different name
-	local ok, jar_files = pcall(function()
-		return scan_fn(data_dir, { search_patterns = { "junit-platform-console-standalone-.*%.jar" } })
-	end)
-
-	if ok and jar_files then
-		for _, jar_file in ipairs(jar_files) do
-			-- jar_file is a Path object
-			local file_sha = checksum_fn(jar_file)
+			-- First, try to detect by filename
 			for _, version_info in ipairs(supported_versions) do
-				if file_sha == version_info.sha256 then
-					return version_info, jar_file
+				local jar_path = data_dir:append("junit-platform-console-standalone-" .. version_info.version .. ".jar")
+				if exists_fn(jar_path) then
+					-- Verify by checksum to be sure
+					local file_sha = checksum_fn(jar_path)
+					if file_sha == version_info.sha256 then
+						return version_info, jar_path
+					end
 				end
 			end
-		end
-	end
 
-	return nil, nil
+			-- If not found by filename, try to detect by checksum
+			-- This handles cases where the file might have a different name
+			local ok, jar_files = pcall(function()
+				return scan_fn(data_dir, { search_patterns = { "junit-platform-console-standalone-.*%.jar" } })
+			end)
+
+			if ok and jar_files then
+				for _, jar_file in ipairs(jar_files) do
+					-- jar_file is a Path object
+					local file_sha = checksum_fn(jar_file)
+					for _, version_info in ipairs(supported_versions) do
+						if file_sha == version_info.sha256 then
+							return version_info, jar_file
+						end
+					end
+				end
+			end
+
+			return nil, nil
+		end,
+
+		--- Check if there's a newer version available than the one currently installed
+		--- @param current_version neotest-java.JunitVersion
+		--- @return boolean, neotest-java.JunitVersion | nil
+		-- Returns: has_update, latest_version
+		check_for_update = function(current_version)
+			local supported_versions = get_supported_versions()
+			local latest_version = supported_versions[1] -- First is always latest
+
+			if current_version.version ~= latest_version.version then
+				return true, latest_version
+			end
+
+			return false, nil
+		end,
+
+		--- Get supported versions from default_config
+		--- @return table[]
+		get_supported_versions = get_supported_versions,
+
+		--- @param file_path neotest-java.Path
+		--- @param file_reader? fun(path: string): string
+		--- @return string hash
+		_checksum = checksum, -- Exposed for testing
+	}
 end
 
---- Check if there's a newer version available than the one currently installed
---- @param current_version neotest-java.JunitVersion
---- @return boolean, neotest-java.JunitVersion | nil
--- Returns: has_update, latest_version
-local function check_for_update(current_version)
-	local supported_versions = get_supported_versions()
-	local latest_version = supported_versions[1] -- First is always latest
-
-	if current_version.version ~= latest_version.version then
-		return true, latest_version
-	end
-
-	return false, nil
-end
-
-return {
-	detect_existing_version = detect_existing_version,
-	check_for_update = check_for_update,
-	get_supported_versions = get_supported_versions,
-	_checksum = checksum, -- Exposed for testing
-}
+return JunitVersionDetector
