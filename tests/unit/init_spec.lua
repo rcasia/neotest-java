@@ -25,4 +25,31 @@ describe("NeotestJava plugin", function()
 		})
 		eq(nil, adapter.root("some_dir"))
 	end)
+
+	it("should respect disable_update_notifications config option", function()
+		-- Test that the config option is properly merged
+		local adapter_with_notifications = require("neotest-java")({
+			disable_update_notifications = false,
+		}, {
+			root_finder = {
+				find_root = function()
+					return nil
+				end,
+			},
+		})
+
+		local adapter_without_notifications = require("neotest-java")({
+			disable_update_notifications = true,
+		}, {
+			root_finder = {
+				find_root = function()
+					return nil
+				end,
+			},
+		})
+
+		-- Both should have the config set correctly
+		eq(false, adapter_with_notifications.config.disable_update_notifications)
+		eq(true, adapter_without_notifications.config.disable_update_notifications)
+	end)
 end)
