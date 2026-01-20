@@ -1,6 +1,5 @@
 local logger = require("neotest-java.logger")
 local version_detector = require("neotest-java.util.junit_version_detector")
-local Path = require("neotest-java.model.path")
 
 ---@class neotest-java.InstallDeps
 ---@field exists fun(filepath: string): boolean
@@ -28,7 +27,7 @@ local Installer = function(deps)
 
 	--- Download JUnit jar for a specific version
 	--- @param version_info neotest-java.JunitVersion
-	--- @param target_filepath string
+	--- @param target_filepath neotest-java.Path
 	--- @return boolean success
 	local function download_junit_jar(version_info, target_filepath)
 		local url = ("https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar"):format(
@@ -36,7 +35,8 @@ local Installer = function(deps)
 			version_info.version
 		)
 
-		local out = download_fn(url, target_filepath)
+		local target_filepath_str = target_filepath:to_string()
+		local out = download_fn(url, target_filepath_str)
 
 		if out.code ~= 0 then
 			notify_fn(string.format("Error while downloading: \n %s", out.stderr), "error")
@@ -44,7 +44,7 @@ local Installer = function(deps)
 			return false
 		end
 
-		local sha = checksum_fn(Path(target_filepath))
+		local sha = checksum_fn(target_filepath)
 		local expected_sha = version_info.sha256
 		if sha ~= expected_sha then
 			local message = ([[
@@ -53,9 +53,9 @@ local Installer = function(deps)
 				Got:      %s
 
 				Removed the file at %s.
-			]]):format(expected_sha, sha, target_filepath)
+			]]):format(expected_sha, sha, target_filepath_str)
 
-			delete_file_fn(target_filepath)
+			delete_file_fn(target_filepath_str)
 
 			notify_fn(message, "error")
 			logger.error(message)
@@ -68,13 +68,14 @@ local Installer = function(deps)
 	return {
 		--- @param config neotest-java.ConfigOpts
 		install = function(config)
-			local filepath = config.junit_jar:to_string()
-			local default_junit_jar_filepath = config.default_junit_jar_filepath:to_string()
+			local filepath = config.junit_jar
+			local default_junit_jar_filepath = config.default_junit_jar_filepath
+			local filepath_str = filepath:to_string()
 
 			-- Check if already installed with latest version
-			if exists_fn(filepath) then
+			if exists_fn(filepath_str) then
 				-- Verify it's the correct version by checksum
-				local current_sha = checksum_fn(Path(filepath))
+				local current_sha = checksum_fn(filepath)
 				if current_sha == config.default_junit_jar_version.sha256 then
 					notify_fn("JUnit jar is already set up with the latest version!")
 					return
@@ -111,7 +112,7 @@ local Installer = function(deps)
 									"Upgraded JUnit jar from %s to %s successfully at: \n%s",
 									existing_version.version,
 									latest_version.version,
-									default_junit_jar_filepath
+									default_junit_jar_filepath:to_string()
 								)
 							)
 						end
@@ -123,12 +124,15 @@ local Installer = function(deps)
 			end
 
 			-- If no existing version or user wants fresh install, download latest
-			if not existing_version or not exists_fn(filepath) then
+			if not existing_version or not exists_fn(filepath_str) then
 				local message = "JUnit Platform Console Standalone jar is required. Would you like to download it now?"
 				ask_user_consent_fn(message, { "Yes, download", "No, cancel" }, function(choice)
 					if choice == "Yes, download" then
 						if download_junit_jar(config.default_junit_jar_version, default_junit_jar_filepath) then
-							notify_fn("Downloaded JUnit Standalone successfully at: \n" .. default_junit_jar_filepath)
+							notify_fn(
+								"Downloaded JUnit Standalone successfully at: \n"
+									.. default_junit_jar_filepath:to_string()
+							)
 						end
 					else
 						notify_fn("Setup cancelled. You can run :NeotestJava setup later to download the JUnit jar.")

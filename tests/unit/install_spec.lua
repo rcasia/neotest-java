@@ -20,8 +20,10 @@ describe("Installer", function()
 
 	it("should notify when already set up with latest version", function()
 		local notifications = {}
+		local expected_path = Path("/data/junit-6.0.1.jar")
 		local exists_fn = function(filepath)
-			return filepath == "/data/junit-6.0.1.jar"
+			-- Compare paths using Path to handle Windows/Unix differences
+			return Path(filepath) == expected_path
 		end
 
 		local checksum_fn = function(_file_path)
@@ -37,6 +39,15 @@ describe("Installer", function()
 			detect_existing_version = function()
 				return nil, nil
 			end,
+			ask_user_consent = function(_message, _choices, callback)
+				callback("No, cancel")
+			end,
+			download = function(_url, _output)
+				return { code = 0, stderr = "" }
+			end,
+			delete_file = function(_filepath)
+				-- Mock delete
+			end,
 		}
 
 		local installer = Installer(deps)
@@ -51,9 +62,11 @@ describe("Installer", function()
 		local user_choices = {}
 		local downloads = {}
 
+		local expected_old_path = Path("/data/junit-1.10.1.jar")
 		local exists_fn = function(filepath)
 			-- Return true for old version, false for new version (not downloaded yet)
-			return filepath == "/data/junit-1.10.1.jar"
+			-- Compare paths using Path to handle Windows/Unix differences
+			return Path(filepath) == expected_old_path
 		end
 
 		local checksum_fn = function(file_path)
@@ -122,8 +135,10 @@ describe("Installer", function()
 		local notifications = {}
 		local user_choices = {}
 
+		local expected_old_path = Path("/data/junit-1.10.1.jar")
 		local exists_fn = function(filepath)
-			return filepath == "/data/junit-1.10.1.jar"
+			-- Compare paths using Path to handle Windows/Unix differences
+			return Path(filepath) == expected_old_path
 		end
 
 		local checksum_fn = function(_file_path)
@@ -146,6 +161,12 @@ describe("Installer", function()
 				return version_1_10_1, Path("/data/junit-1.10.1.jar")
 			end,
 			ask_user_consent = ask_user_consent_fn,
+			download = function(_url, _output)
+				return { code = 0, stderr = "" }
+			end,
+			delete_file = function(_filepath)
+				-- Mock delete
+			end,
 		}
 
 		local installer = Installer(deps)
@@ -200,6 +221,9 @@ describe("Installer", function()
 			end,
 			ask_user_consent = ask_user_consent_fn,
 			download = download_fn,
+			delete_file = function(_filepath)
+				-- Mock delete
+			end,
 		}
 
 		local installer = Installer(deps)
@@ -249,6 +273,12 @@ describe("Installer", function()
 			end,
 			ask_user_consent = ask_user_consent_fn,
 			download = download_fn,
+			checksum = function(_file_path)
+				return version_6_0_1.sha256
+			end,
+			delete_file = function(_filepath)
+				-- Mock delete
+			end,
 		}
 
 		local installer = Installer(deps)
