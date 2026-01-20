@@ -124,9 +124,9 @@ local function NeotestJavaAdapter(config, deps)
 				mkdir = mkdir,
 				chdir = chdir,
 				scan = scan,
-				compile = function(cwd, compile_mode)
+				compile = function(base_dir, compile_mode)
 					compilers.lsp.compile({
-						base_dir = cwd,
+						base_dir = base_dir,
 						compile_mode = compile_mode,
 					})
 				end,

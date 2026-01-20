@@ -3,7 +3,6 @@
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
-local nio = require("nio")
 local Project = require("neotest-java.model.project")
 local Path = require("neotest-java.model.path")
 
@@ -18,7 +17,7 @@ local Path = require("neotest-java.model.path")
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
 --- @field binaries neotest-java.LspBinaries
---- @field launch_debug_test fun(command: string, args: string[], cwd: neotest-java.Path): nio.control.Event
+--- @field launch_debug_test fun(command: string, args: string[], cwd: neotest-java.Path): any
 
 local SpecBuilder = {}
 
