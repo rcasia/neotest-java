@@ -20,6 +20,10 @@ local client_provider = require("neotest-java.core.spec_builder.compiler.client_
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 local CommandExecutor = require("neotest-java.command.command_executor")
+local scan = require("neotest-java.util.dir_scan")
+local build_tools = require("neotest-java.build_tool")
+local detect_project_type = require("neotest-java.util.detect_project_type")
+local compilers = require("neotest-java.core.spec_builder.compiler")
 
 --- @param filepath neotest-java.Path
 local check_junit_jar = function(filepath, default_version)
@@ -119,6 +123,20 @@ local function NeotestJavaAdapter(config, deps)
 				root_getter = root_getter,
 				mkdir = mkdir,
 				chdir = chdir,
+				scan = scan,
+				compile = function(cwd, compile_mode)
+					compilers.lsp.compile({
+						base_dir = cwd,
+						compile_mode = compile_mode,
+					})
+				end,
+				report_folder_name_gen = function(module_dir, build_dir)
+					local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
+					return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
+				end,
+				build_tool_getter = build_tools.get,
+				detect_project_type = detect_project_type,
+				launch_debug_test = build_tools.launch_debug_test,
 			})
 		end,
 	}, {

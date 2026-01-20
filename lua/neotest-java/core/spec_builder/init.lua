@@ -3,15 +3,9 @@
 local CommandBuilder = require("neotest-java.command.junit_command_builder")
 local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
-local build_tools = require("neotest-java.build_tool")
 local nio = require("nio")
 local Project = require("neotest-java.model.project")
-local compilers = require("neotest-java.core.spec_builder.compiler")
-local detect_project_type = require("neotest-java.util.detect_project_type")
 local Path = require("neotest-java.model.path")
-local scan = require("neotest-java.util.dir_scan")
-local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
-local Binaries = require("neotest-java.command.binaries")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -24,42 +18,9 @@ local Binaries = require("neotest-java.command.binaries")
 --- @field build_tool_getter fun(project_type: string): neotest-java.BuildTool
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
 --- @field binaries neotest-java.LspBinaries
+--- @field launch_debug_test fun(command: string, args: string[], cwd: neotest-java.Path): nio.control.Event
 
 local SpecBuilder = {}
-
-local should_not_reach_here = function()
-	error("should not reach here")
-end
-
---- @type neotest-java.BuildSpecDependencies
-local DEFAULT_DEPENDENCIES = {
-	binaries = Binaries({
-		client_provider = should_not_reach_here,
-	}),
-	mkdir = should_not_reach_here,
-	chdir = should_not_reach_here,
-	root_getter = should_not_reach_here,
-	classpath_provider = ClasspathProvider({ client_provider = should_not_reach_here }),
-
-	-- TODO: pending to remove dependencies from this scope
-	scan = scan,
-	compile = function(cwd, compile_mode)
-		compilers.lsp.compile({
-			base_dir = cwd,
-			compile_mode = compile_mode,
-		})
-	end,
-	report_folder_name_gen = function(module_dir, build_dir)
-		local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
-		return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
-	end,
-	build_tool_getter = function(project_type)
-		return build_tools.get(project_type)
-	end,
-	detect_project_type = function(base_dir)
-		return detect_project_type(base_dir)
-	end,
-}
 
 ---@param args neotest.RunArgs
 ---@param config neotest-java.ConfigOpts
@@ -67,7 +28,7 @@ local DEFAULT_DEPENDENCIES = {
 ---@return nil | neotest.RunSpec | neotest.RunSpec[]
 function SpecBuilder.build_spec(args, config, deps)
 	--- @type neotest-java.BuildSpecDependencies
-	deps = vim.tbl_extend("force", DEFAULT_DEPENDENCIES, deps or {})
+	deps = deps or {}
 
 	if args.strategy == "dap" then
 		local ok_dap, _ = pcall(require, "dap")
@@ -137,7 +98,7 @@ function SpecBuilder.build_spec(args, config, deps)
 		-- PREPARE DEBUG TEST COMMAND
 		local junit = command:build_junit(port)
 		logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
-		local terminated_command_event = build_tools.launch_debug_test(junit.command, junit.args, module.base_dir)
+		local terminated_command_event = deps.launch_debug_test(junit.command, junit.args, module.base_dir)
 
 		local project_name = vim.fn.fnamemodify(root:to_string(), ":t")
 		return {
