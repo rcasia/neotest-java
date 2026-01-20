@@ -1,8 +1,9 @@
-local version_detector = require("neotest-java.util.junit_version_detector")
+local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
 local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 
 describe("JUnit Version Detector", function()
+	local version_detector = JunitVersionDetector()
 	it("should detect existing version by filename", function()
 		local version_6_0_1 = {
 			version = "6.0.1",
@@ -37,15 +38,15 @@ describe("JUnit Version Detector", function()
 			return "unknown"
 		end
 
-		local deps = {
+		local detector = JunitVersionDetector({
 			exists = exists_fn,
 			checksum = checksum_fn,
 			stdpath_data = function()
 				return data_dir_str
 			end,
-		}
+		})
 
-		local detected_version, filepath = version_detector.detect_existing_version(deps)
+		local detected_version, filepath = detector.detect_existing_version()
 
 		assert(detected_version ~= nil, "detected_version should not be nil")
 		eq(version_6_0_1.version, detected_version.version)
@@ -63,15 +64,15 @@ describe("JUnit Version Detector", function()
 			return {}
 		end
 
-		local deps = {
+		local detector = JunitVersionDetector({
 			exists = exists_fn,
 			scan = scan_fn,
 			stdpath_data = function()
 				return "data"
 			end,
-		}
+		})
 
-		local detected_version, filepath = version_detector.detect_existing_version(deps)
+		local detected_version, filepath = detector.detect_existing_version()
 
 		eq(nil, detected_version)
 		eq(nil, filepath)
@@ -105,16 +106,16 @@ describe("JUnit Version Detector", function()
 			return "unknown"
 		end
 
-		local deps = {
+		local detector = JunitVersionDetector({
 			exists = exists_fn,
 			scan = scan_fn,
 			checksum = checksum_fn,
 			stdpath_data = function()
 				return data_dir_str
 			end,
-		}
+		})
 
-		local detected_version, filepath = version_detector.detect_existing_version(deps)
+		local detected_version, filepath = detector.detect_existing_version()
 
 		assert(detected_version ~= nil, "detected_version should not be nil")
 		eq(version_1_10_1.version, detected_version.version)
@@ -124,24 +125,26 @@ describe("JUnit Version Detector", function()
 	end)
 
 	it("should check for update when current version is older", function()
+		local detector = JunitVersionDetector()
 		local current_version = {
 			version = "1.10.1",
 			sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
 		}
 
-		local has_update, latest_version = version_detector.check_for_update(current_version)
+		local has_update, latest_version = detector.check_for_update(current_version)
 
 		eq(true, has_update)
 		eq("6.0.1", latest_version.version)
 	end)
 
 	it("should not find update when current version is latest", function()
+		local detector = JunitVersionDetector()
 		local current_version = {
 			version = "6.0.1",
 			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
 		}
 
-		local has_update, latest_version = version_detector.check_for_update(current_version)
+		local has_update, latest_version = detector.check_for_update(current_version)
 
 		eq(false, has_update)
 		eq(nil, latest_version)

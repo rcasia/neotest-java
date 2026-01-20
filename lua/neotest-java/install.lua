@@ -1,5 +1,6 @@
 local logger = require("neotest-java.logger")
-local version_detector = require("neotest-java.util.junit_version_detector")
+local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
+local version_detector = JunitVersionDetector()
 
 ---@class neotest-java.InstallDeps
 ---@field exists fun(filepath: string): boolean
@@ -8,7 +9,7 @@ local version_detector = require("neotest-java.util.junit_version_detector")
 ---@field delete_file fun(filepath: string): void
 ---@field ask_user_consent fun(message: string, choices: string[], callback: fun(choice: string | nil)): void
 ---@field notify fun(message: string, level?: string): void
----@field detect_existing_version fun(deps?: neotest-java.JunitVersionDetectorDeps): neotest-java.JunitVersion | nil, neotest-java.Path | nil
+---@field detect_existing_version fun(): neotest-java.JunitVersion | nil, neotest-java.Path | nil
 
 ---@class neotest-java.Installer
 ---@field install fun(config: neotest-java.ConfigOpts): void

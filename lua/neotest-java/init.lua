@@ -12,7 +12,8 @@ local Path = require("neotest-java.model.path")
 local nio = require("nio")
 local logger = require("neotest-java.logger")
 local Binaries = require("neotest-java.command.binaries")
-local version_detector = require("neotest-java.util.junit_version_detector")
+local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
+local version_detector = JunitVersionDetector()
 local lib = require("neotest.lib")
 local exists = require("neotest.lib.file").exists
 
