@@ -1,5 +1,4 @@
 local Path = require("neotest-java.model.path")
-local exists = require("neotest.lib.file").exists
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
@@ -26,10 +25,10 @@ local function get_supported_versions()
 end
 
 ---@class neotest-java.JunitVersionDetectorDeps
----@field exists? fun(filepath: neotest-java.Path): boolean
----@field checksum? fun(file_path: neotest-java.Path): string
----@field scan? fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
----@field stdpath_data? fun(): string
+---@field exists fun(filepath: neotest-java.Path): boolean
+---@field checksum fun(file_path: neotest-java.Path): string
+---@field scan fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
+---@field stdpath_data fun(): string
 
 ---@class neotest-java.JunitVersionDetector
 ---@field detect_existing_version fun(): neotest-java.JunitVersion | nil, neotest-java.Path | nil
@@ -37,20 +36,13 @@ end
 ---@field get_supported_versions fun(): table[]
 ---@field _checksum fun(file_path: neotest-java.Path, file_reader?: fun(path: string): string): string
 
---- @param deps? neotest-java.JunitVersionDetectorDeps
+--- @param deps neotest-java.JunitVersionDetectorDeps
 --- @return neotest-java.JunitVersionDetector
 local JunitVersionDetector = function(deps)
-	deps = deps or {}
-
-	-- Create a wrapper for exists that accepts Path instead of string
-	local exists_fn = deps.exists or function(path)
-		return exists(path:to_string())
-	end
-	local checksum_fn = deps.checksum or function(path)
-		return checksum(path)
-	end
-	local scan_fn = deps.scan or require("neotest-java.util.dir_scan")
-	local stdpath_data_fn = deps.stdpath_data or vim.fn.stdpath
+	local exists_fn = deps.exists
+	local checksum_fn = deps.checksum
+	local scan_fn = deps.scan
+	local stdpath_data_fn = deps.stdpath_data
 
 	return {
 		--- Detect which version of JUnit jar exists in the data directory

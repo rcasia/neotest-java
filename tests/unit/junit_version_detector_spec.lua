@@ -3,7 +3,6 @@ local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 
 describe("JUnit Version Detector", function()
-	local version_detector = JunitVersionDetector()
 	it("should detect existing version by filename", function()
 		local version_6_0_1 = {
 			version = "6.0.1",
@@ -125,7 +124,20 @@ describe("JUnit Version Detector", function()
 	end)
 
 	it("should check for update when current version is older", function()
-		local detector = JunitVersionDetector()
+		local detector = JunitVersionDetector({
+			exists = function(_path)
+				return false
+			end,
+			checksum = function(_path)
+				return "dummy"
+			end,
+			scan = function()
+				return {}
+			end,
+			stdpath_data = function()
+				return "data"
+			end,
+		})
 		local current_version = {
 			version = "1.10.1",
 			sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
@@ -138,7 +150,20 @@ describe("JUnit Version Detector", function()
 	end)
 
 	it("should not find update when current version is latest", function()
-		local detector = JunitVersionDetector()
+		local detector = JunitVersionDetector({
+			exists = function(_path)
+				return false
+			end,
+			checksum = function(_path)
+				return "dummy"
+			end,
+			scan = function()
+				return {}
+			end,
+			stdpath_data = function()
+				return "data"
+			end,
+		})
 		local current_version = {
 			version = "6.0.1",
 			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
