@@ -40,18 +40,6 @@ local build_tools = require("neotest-java.build_tool")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local compilers = require("neotest-java.core.spec_builder.compiler")
 
---- @param filepath neotest-java.Path
-local check_junit_jar = function(filepath, default_version)
-	local _exists, _ = File.exists(filepath:to_string())
-	assert(
-		_exists,
-		([[
-    Junit Platform Console Standalone jar not found at %s
-    Please run the following command to download it: NeotestJava setup
-    Or alternatively, download it from https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar
-  ]]):format(filepath, default_version, default_version)
-	)
-end
 
 local mkdir = function(dir)
 	vim.uv.fs_mkdir(dir:to_string(), 493)
@@ -66,8 +54,13 @@ end
 --- @field install fun()
 ---
 
+---@class neotest-java.CheckJunitJarDeps
+---@field file_exists? fun(filepath: string): boolean
+---@field version_detector? neotest-java.JunitVersionDetector
+
 --- @class neotest-java.Dependencies
---- @field root_finder { find_root: fun(dir: string): string | nil }
+---@field root_finder? { find_root: fun(dir: string): string | nil }
+---@field check_junit_jar_deps? neotest-java.CheckJunitJarDeps
 
 --- @param config neotest-java.ConfigOpts
 --- @param deps? neotest-java.Dependencies
@@ -76,6 +69,7 @@ local function NeotestJavaAdapter(config, deps)
 	config = vim.tbl_extend("force", DEFAULT_CONFIG, config or {})
 	deps = deps or {}
 	local _root_finder = deps and deps.root_finder or root_finder
+	local check_junit_jar_deps = deps.check_junit_jar_deps or {}
 
 	log.info("neotest-java adapter initialized")
 
@@ -83,6 +77,46 @@ local function NeotestJavaAdapter(config, deps)
 
 	-- create data directory if it doesn't exist
 	mkdir(Path(vim.fn.stdpath("data")):append("neotest-java"))
+
+	-- Local function to check JUnit jar with dependencies from constructor
+	--- @param filepath neotest-java.Path
+	--- @param default_version string
+	--- @return neotest-java.Path
+	local check_junit_jar = function(filepath, default_version)
+		local file_exists_fn = check_junit_jar_deps.file_exists or File.exists
+		local _exists, _ = file_exists_fn(filepath:to_string())
+		if not _exists then
+			-- Try to detect if any supported version exists
+			local detector = check_junit_jar_deps.version_detector
+				or JunitVersionDetector({
+					exists = function(path)
+						return File.exists(path:to_string())
+					end,
+					checksum = function(path)
+						local f = assert(io.open(path:to_string(), "rb"))
+						local data = f:read("*a")
+						f:close()
+						return vim.fn.sha256(data)
+					end,
+					scan = require("neotest-java.util.dir_scan"),
+					stdpath_data = vim.fn.stdpath,
+				})
+			local detected_version, detected_filepath = detector.detect_existing_version()
+			if detected_version and detected_filepath then
+				-- Found a supported version, use it
+				return detected_filepath
+			end
+		end
+		assert(
+			_exists,
+			([[
+    Junit Platform Console Standalone jar not found at %s
+    Please run the following command to download it: NeotestJava setup
+    Or alternatively, download it from https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/%s/junit-platform-console-standalone-%s.jar
+  ]]):format(filepath, default_version, default_version)
+		)
+		return filepath
+	end
 
 	-- Check for JUnit jar updates (only if user hasn't disabled notifications and not already shown)
 	if not config.disable_update_notifications and not ch.update_notification_shown then
@@ -202,8 +236,11 @@ local function NeotestJavaAdapter(config, deps)
 			return _root_finder.find_root(dir)
 		end,
 		build_spec = function(args)
-			check_junit_jar(config.junit_jar, config.default_junit_jar_version.version)
-			return spec_builder_instance.build_spec(args, config)
+			-- Check if the configured jar exists, if not try to detect any supported version
+			local actual_jar = check_junit_jar(config.junit_jar, config.default_junit_jar_version.version)
+			-- Create a config copy with the actual jar to use
+			local build_config = vim.tbl_extend("force", config, { junit_jar = actual_jar })
+			return spec_builder_instance.build_spec(args, build_config)
 		end,
 	}, {
 		__call = function(_, opts, user_deps)
