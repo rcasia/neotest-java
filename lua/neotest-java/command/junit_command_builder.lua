@@ -97,10 +97,20 @@ CommandBuilder.build_junit = function(self, port)
 
 	local selectors = {}
 	for _, v in ipairs(self._test_references) do
+		-- debug mode is executed through vim.loop.spawn, which is not sensitive to $ and quotes
+		-- passing class/method names with quotes will break name resolution as they won't be stripped
 		if v.type == "method" then
-			table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
+			if port then
+				table.insert(selectors, "--select-method=" .. v.qualified_name)
+			else
+				table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
+			end
 		else
-			table.insert(selectors, "--select-class='" .. v.qualified_name .. "'")
+			if port then
+				table.insert(selectors, "--select-class=" .. v.qualified_name)
+			else
+				table.insert(selectors, "--select-class='" .. v.qualified_name .. "'")
+			end
 		end
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
