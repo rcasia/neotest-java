@@ -95,22 +95,23 @@ CommandBuilder.build_junit = function(self, port)
 	assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
 	assert(self._spring_property_filepaths, "_spring_property_filepaths cannot be nil")
 
+	local function quote_selector(selector_value, is_debug_mode)
+		-- In debug mode, commands are executed via vim.loop.spawn which doesn't
+		-- strip quotes or expand shell variables, so we must not quote the selectors.
+		-- In normal mode, commands are executed through a shell where quotes
+		-- are needed to prevent $ expansion in inner class names
+		if is_debug_mode then
+			return selector_value
+		end
+		return "'" .. selector_value .. "'"
+	end
+
 	local selectors = {}
 	for _, v in ipairs(self._test_references) do
-		-- debug mode is executed through vim.loop.spawn, which is not sensitive to $ and quotes
-		-- passing class/method names with quotes will break name resolution as they won't be stripped
 		if v.type == "method" then
-			if port then
-				table.insert(selectors, "--select-method=" .. v.qualified_name)
-			else
-				table.insert(selectors, "--select-method='" .. v.qualified_name .. "'")
-			end
+			table.insert(selectors, "--select-method=" .. quote_selector(v.qualified_name, port ~= nil))
 		else
-			if port then
-				table.insert(selectors, "--select-class=" .. v.qualified_name)
-			else
-				table.insert(selectors, "--select-class='" .. v.qualified_name .. "'")
-			end
+			table.insert(selectors, "--select-class=" .. quote_selector(v.qualified_name, port ~= nil))
 		end
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
