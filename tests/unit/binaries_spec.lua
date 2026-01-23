@@ -36,8 +36,6 @@ describe("Binaries", function()
 	end)
 
 	it("uses the cached binary after the first first time", function()
-		local some_cwd = Path("some")
-		local another_cwd = Path("another")
 		local invocation_count = 0
 		local bin = Binaries({
 			client_provider = function()
@@ -51,10 +49,10 @@ describe("Binaries", function()
 		})
 
 		for _ = 1, 10 do
-			bin.java(some_cwd)
-			bin.javap(some_cwd)
-			bin.java(another_cwd)
-			bin.javap(another_cwd)
+			bin.java(Path("some"))
+			bin.javap(Path("some"))
+			bin.java(Path("another_path"))
+			bin.javap(Path("another_path"))
 		end
 
 		assert(invocation_count == 2, "Expected two invocations of the LSP request, got " .. invocation_count)
