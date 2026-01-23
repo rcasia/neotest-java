@@ -76,6 +76,8 @@
 > [!NOTE]
 > It will download the JUnit standalone jar from
 > <https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone>
+>
+> **Autoinstall requires Neovim v0.12.0+ (nightly)** - The `vim.fn.sha256()` function used for checksum verification requires this version. For older versions, manually download the JAR file.
 
 ## :gear: Configuration
 

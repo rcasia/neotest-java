@@ -14,6 +14,20 @@ end
 
 --- @param config neotest-java.ConfigOpts
 local install = function(config)
+	-- Require Neovim v0.12.0+ for autoinstall feature (vim.fn.sha256 requires it)
+	if vim.fn.has("nvim-0.12.0") ~= 1 then
+		local message = [[
+			Autoinstall requires Neovim v0.12.0 or greater (currently nightly).
+			The vim.fn.sha256() function used for checksum verification requires this version.
+			Please manually download the JUnit JAR file or upgrade to Neovim nightly .
+
+			Download from: https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/
+		]]
+		lib.notify(message, "error")
+		logger.error(message)
+		return
+	end
+
 	local filepath = config.junit_jar:to_string()
 
 	if exists(filepath) then
