@@ -10,7 +10,11 @@ local nio = require("nio")
 --- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
 --- @return neotest-java.LspBinaries
 local Binaries = function(deps)
+	local cached_java_homes = {}
 	local get_java_home = function(cwd)
+		if cached_java_homes[cwd] then
+			return cached_java_homes[cwd]
+		end
 		local client = deps.client_provider(cwd)
 
 		logger.debug("Resolving Java home via JDTLS for cwd: " .. cwd:to_string())
@@ -29,7 +33,8 @@ local Binaries = function(deps)
 		end)
 		local res = result_future.wait()
 
-		return res["org.eclipse.jdt.ls.core.vm.location"]
+		cached_java_homes[cwd] = res["org.eclipse.jdt.ls.core.vm.location"]
+		return cached_java_homes[cwd]
 	end
 
 	return {

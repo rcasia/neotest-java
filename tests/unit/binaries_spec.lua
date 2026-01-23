@@ -34,4 +34,29 @@ describe("Binaries", function()
 		local result = bin.javap(expected_cwd)
 		eq(Path("my_java_home/bin/javap"), result)
 	end)
+
+	it("uses the cached binary after the first first time", function()
+		local some_cwd = Path("some")
+		local another_cwd = Path("another")
+		local invocation_count = 0
+		local bin = Binaries({
+			client_provider = function()
+				return {
+					request = function(_, _, _, callback)
+						invocation_count = invocation_count + 1
+						callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = "my_java_home" })
+					end,
+				}
+			end,
+		})
+
+		for _ = 1, 10 do
+			bin.java(some_cwd)
+			bin.javap(some_cwd)
+			bin.java(another_cwd)
+			bin.javap(another_cwd)
+		end
+
+		assert(invocation_count == 2, "Expected two invocations of the LSP request, got " .. invocation_count)
+	end)
 end)
