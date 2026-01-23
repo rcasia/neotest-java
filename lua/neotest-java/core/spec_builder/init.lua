@@ -45,7 +45,7 @@ local SpecBuilder = function(deps)
 			local project_type = deps.detect_project_type(root)
 			--- @type neotest-java.BuildTool
 			local build_tool = deps.build_tool_getter(project_type)
-			local command = CommandBuilder.new(config.junit_jar, config.jvm_args)
+			local command = CommandBuilder.new():junit_jar(config.junit_jar):jvm_args(config.jvm_args)
 			local project = assert(
 				Project.from_dirs_and_project_file(deps.scan(root), build_tool.get_project_filename()),
 				"project not detected correctly"
@@ -99,7 +99,8 @@ local SpecBuilder = function(deps)
 				local port = random_port()
 
 				-- PREPARE DEBUG TEST COMMAND
-				local junit = command:build_junit(port)
+				command:port(port)
+				local junit = command:build_to_table()
 				logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 				local terminated_command_event = deps.launch_debug_test(junit.command, junit.args, module.base_dir)
 
@@ -124,9 +125,10 @@ local SpecBuilder = function(deps)
 			end
 
 			-- NORMAL STRATEGY
-			logger.info("junit command: ", command:build_to_string())
+			local command_string = command:build_to_string()
+			logger.info("junit command: ", command_string)
 			return {
-				command = command:build_to_string(),
+				command = command_string,
 				cwd = module.base_dir:to_string(),
 				symbol = position.name,
 				context = { reports_dir = reports_dir },

@@ -6,6 +6,7 @@
 --- @field _java_bin neotest-java.Path
 --- @field _junit_jar neotest-java.Path
 --- @field _jvm_args string[]
+--- @field _port number?
 --- @field _reports_dir neotest-java.Path
 --- @field _test_references neotest-java.TestReference[]
 --- @field _basedir neotest-java.Path
@@ -14,13 +15,10 @@
 local CommandBuilder = {}
 CommandBuilder.__index = CommandBuilder
 
---- @param junit_jar neotest-java.Path
---- @param jvm_args? string[]
 --- @return neotest-java.CommandBuilder
-function CommandBuilder.new(junit_jar, jvm_args)
+function CommandBuilder.new()
 	local fields = {
-		_jvm_args = jvm_args or {},
-		_junit_jar = junit_jar,
+		_jvm_args = {},
 		_test_references = {},
 	}
 	return setmetatable(fields, CommandBuilder)
@@ -28,6 +26,27 @@ end
 
 function CommandBuilder:java_bin(java_bin)
 	self._java_bin = java_bin
+	return self
+end
+
+--- @param junit_jar neotest-java.Path
+--- @return neotest-java.CommandBuilder
+function CommandBuilder:junit_jar(junit_jar)
+	self._junit_jar = junit_jar
+	return self
+end
+
+--- @param jvm_args string[]
+--- @return neotest-java.CommandBuilder
+function CommandBuilder:jvm_args(jvm_args)
+	self._jvm_args = jvm_args or {}
+	return self
+end
+
+--- @param port number
+--- @return neotest-java.CommandBuilder
+function CommandBuilder:port(port)
+	self._port = port
 	return self
 end
 
@@ -86,10 +105,10 @@ function CommandBuilder:spring_property_filepaths(property_filepaths)
 	return self
 end
 
---- @param port? number
 --- @return { command: string, args: string[] }
-CommandBuilder.build_junit = function(self, port)
+CommandBuilder.build_to_table = function(self)
 	assert(self._java_bin, "java_bin cannot be nil")
+	assert(self._junit_jar, "junit_jar cannot be nil")
 	assert(self._test_references, "test_references cannot be nil")
 	assert(self._basedir, "basedir cannot be nil")
 	assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
@@ -106,12 +125,13 @@ CommandBuilder.build_junit = function(self, port)
 		return "'" .. selector_value .. "'"
 	end
 
+	local is_debug_mode = self._port ~= nil
 	local selectors = {}
 	for _, v in ipairs(self._test_references) do
 		if v.type == "method" then
-			table.insert(selectors, "--select-method=" .. quote_selector(v.qualified_name, port ~= nil))
+			table.insert(selectors, "--select-method=" .. quote_selector(v.qualified_name, is_debug_mode))
 		else
-			table.insert(selectors, "--select-class=" .. quote_selector(v.qualified_name, port ~= nil))
+			table.insert(selectors, "--select-class=" .. quote_selector(v.qualified_name, is_debug_mode))
 		end
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
@@ -157,23 +177,22 @@ CommandBuilder.build_junit = function(self, port)
 	end
 
 	-- add debug arguments if debug port is specified
-	if port then
+	if self._port then
 		table.insert(junit_command.args, 1, "-Xdebug")
 		table.insert(
 			junit_command.args,
 			1,
-			"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:" .. port
+			"-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=0.0.0.0:" .. self._port
 		)
 	end
 
 	return junit_command
 end
 
---- @param port? number
 --- @return string
-CommandBuilder.build_to_string = function(self, port)
-	local c = self:build_junit(port)
-	return c.command .. " " .. table.concat(c.args, " ")
+CommandBuilder.build_to_string = function(self)
+	local junit_command = self:build_to_table()
+	return junit_command.command .. " " .. table.concat(junit_command.args, " ")
 end
 
 return CommandBuilder
