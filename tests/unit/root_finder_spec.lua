@@ -32,4 +32,23 @@ describe("RootFinder", function()
 		-- then
 		assert.is_nil(actualRoot)
 	end)
+
+	it("should find build.gradle before .git for single-module Gradle projects", function()
+		local patterns_checked = {}
+		local matcher = function(pattern)
+			table.insert(patterns_checked, pattern)
+			return function(_)
+				if pattern == "build.gradle" then
+					return "/path/to/project"
+				end
+				return nil
+			end
+		end
+
+		local root = root_finder.find_root("/some/dir", matcher)
+
+		assert.are.same("/path/to/project", root)
+		assert.is_true(patterns_checked[#patterns_checked] == "build.gradle")
+		assert.is_true(patterns_checked[#patterns_checked - 1] ~= ".git")
+	end)
 end)
