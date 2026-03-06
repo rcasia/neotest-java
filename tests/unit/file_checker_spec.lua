@@ -80,4 +80,15 @@ describe("file_checker", function()
 			}).is_test_file(file_path))
 		end
 	end)
+
+	it("should return false when root_getter returns nil", function()
+		local file_checker = FileChecker({
+			patterns = patterns,
+			root_getter = function()
+				return nil
+			end,
+		})
+
+		assert.is_false(file_checker.is_test_file("/any/path/Test.java"))
+	end)
 end)
