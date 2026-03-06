@@ -14,6 +14,10 @@ function gradle.get_project_filename()
 	return PROJECT_FILENAME
 end
 
+function gradle.get_artifact_id(base_dir)
+	return base_dir:name()
+end
+
 --- @param roots neotest-java.Path[]
 function gradle.get_spring_property_filepaths(roots)
 	local base_dirs = vim

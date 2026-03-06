@@ -27,4 +27,8 @@ return {
 			"/user/home/target/test-classes",
 		}
 	end,
+
+	get_artifact_id = function(base_dir)
+		return base_dir:name()
+	end,
 }

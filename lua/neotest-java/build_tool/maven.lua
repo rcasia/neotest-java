@@ -1,5 +1,6 @@
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 local Path = require("neotest-java.model.path")
+local read_xml_tag = require("neotest-java.util.read_xml_tag")
 
 local PROJECT_FILE = "pom.xml"
 
@@ -13,6 +14,11 @@ end
 
 function maven.get_project_filename()
 	return PROJECT_FILE
+end
+
+function maven.get_artifact_id(base_dir)
+	local pom_path = base_dir:append("pom.xml"):to_string()
+	return read_xml_tag(pom_path, "project.artifactId") or base_dir:name()
 end
 
 --- @param roots neotest-java.Path[]

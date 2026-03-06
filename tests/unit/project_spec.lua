@@ -4,6 +4,18 @@ local Path = require("neotest-java.model.path")
 local eq = assert.are.same
 
 describe("project", function()
+	local fake_build_tool_with_artifact_id = {
+		get_artifact_id = function(base_dir)
+			return "artifact-" .. base_dir:name()
+		end,
+	}
+
+	local fake_build_tool_dir_name = {
+		get_artifact_id = function(base_dir)
+			return base_dir:name()
+		end,
+	}
+
 	local testscases = {
 		{
 			input = {
@@ -64,7 +76,11 @@ describe("project", function()
 	}
 	for _, testcase in ipairs(testscases) do
 		it("should get modules: " .. testcase.input.root_dir:to_string(), function()
-			local project = Project.from_dirs_and_project_file(testcase.input.dirs, testcase.input.project_filename)
+			local project = Project.from_dirs_and_project_file(
+				testcase.input.dirs,
+				testcase.input.project_filename,
+				fake_build_tool_dir_name
+			)
 
 			local results = {}
 			for _, mod in ipairs(project:get_modules()) do
@@ -74,13 +90,23 @@ describe("project", function()
 		end)
 	end
 
+	it("should use artifactId from build tool instead of directory name", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/pom.xml"),
+		}, "pom.xml", fake_build_tool_with_artifact_id)
+
+		local modules = project:get_modules()
+		assert(#modules == 1)
+		eq("artifact-my_project", modules[1].name)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 
 			Path("./tests/fixtures/multi-module-demo/pom.xml"),
 			Path("./tests/fixtures/multi-module-demo/module-a/pom.xml"),
 			Path("./tests/fixtures/multi-module-demo/module-b/pom.xml"),
-		}, "pom.xml")
+		}, "pom.xml", fake_build_tool_dir_name)
 
 		local not_found_module = project:find_module_by_filepath(Path("./tests/fixtures/some-other-project"))
 		eq(nil, not_found_module)
