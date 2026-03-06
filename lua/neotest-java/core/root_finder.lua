@@ -16,6 +16,8 @@ function RootFinder.find_root(dir, matcher)
 		"pom.xml",
 		"settings.gradle",
 		"settings.gradle.kts",
+		"build.gradle",
+		"build.gradle.kts",
 		".git",
 	}
 

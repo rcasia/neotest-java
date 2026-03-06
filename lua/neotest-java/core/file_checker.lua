@@ -16,6 +16,10 @@ local FileChecker = function(dependencies)
 			local my_path = Path(file_path)
 			local base_dir = dependencies.root_getter()
 
+			if not base_dir then
+				return false
+			end
+
 			local relative_path = my_path:make_relative(base_dir)
 			if relative_path:contains("main") then
 				return false
