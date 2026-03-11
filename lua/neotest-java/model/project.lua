@@ -3,15 +3,16 @@ local Module = require("neotest-java.model.module")
 ---@class neotest-java.Project
 ---@field project_filename string
 ---@field private _modules neotest-java.Module[]
+---@field private _build_tool neotest-java.BuildTool
 local Project = {}
 Project.__index = Project
 
-local modules_from_dirs_and_project_file = function(dirs, project_filename)
+local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, path in ipairs(dirs) do
 		if path:to_string():find(project_filename) then
-			modules[#modules + 1] = Module.new(path:parent())
+			modules[#modules + 1] = Module.new(path:parent(), build_tool)
 		end
 	end
 	return modules
@@ -19,11 +20,13 @@ end
 
 ---@param dirs neotest-java.Path[]
 ---@param project_filename string
+---@param build_tool neotest-java.BuildTool
 ---@return neotest-java.Project
-function Project.from_dirs_and_project_file(dirs, project_filename)
+function Project.from_dirs_and_project_file(dirs, project_filename, build_tool)
 	local self = setmetatable({}, Project)
 	self.project_filename = project_filename
-	self._modules = modules_from_dirs_and_project_file(dirs, project_filename)
+	self._build_tool = build_tool
+	self._modules = modules_from_dirs_and_project_file(dirs, project_filename, build_tool)
 	return self
 end
 

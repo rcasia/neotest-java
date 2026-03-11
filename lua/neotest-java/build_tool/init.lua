@@ -12,6 +12,7 @@ local _, repl = pcall(require, "dap.repl")
 ---@field get_project_filename fun(): string
 ---@field get_module_dependencies fun(root: string): table
 ---@field get_spring_property_filepaths fun(roots: neotest-java.Path[]): neotest-java.Path[]
+---@field get_artifact_id fun(base_dir: neotest-java.Path): string
 
 ---@type table<string, neotest-java.BuildTool>
 local build_tools = { gradle = gradle, maven = maven }

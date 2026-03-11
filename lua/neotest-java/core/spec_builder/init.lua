@@ -47,7 +47,7 @@ local SpecBuilder = function(deps)
 			local build_tool = deps.build_tool_getter(project_type)
 			local command = CommandBuilder.new():junit_jar(config.junit_jar):jvm_args(config.jvm_args)
 			local project = assert(
-				Project.from_dirs_and_project_file(deps.scan(root), build_tool.get_project_filename()),
+				Project.from_dirs_and_project_file(deps.scan(root), build_tool.get_project_filename(), build_tool),
 				"project not detected correctly"
 			)
 
@@ -104,7 +104,7 @@ local SpecBuilder = function(deps)
 				logger.debug("junit debug command: ", junit.command, " ", table.concat(junit.args, " "))
 				local terminated_command_event = deps.launch_debug_test(junit.command, junit.args, module.base_dir)
 
-				local project_name = root:name()
+				local project_name = module.name
 				return {
 					strategy = {
 						type = "java",
