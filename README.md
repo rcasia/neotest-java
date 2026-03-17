@@ -37,7 +37,7 @@
 
 ### Prerequisites
 
-- **Neovim 0.10.4+** (or 0.12.0+ for automatic JUnit installation)
+- **Neovim 0.10.4+**
 - **nvim-treesitter** with Java parser: `:TSInstall java`
 - **nvim-jdtls** - Language server for Java
 - **nvim-dap** - For debugging support (optional)
@@ -85,16 +85,10 @@ After setting up the plugin, run:
 :NeotestJava setup
 ```
 
-This will download the JUnit Platform Console Standalone JAR from [Maven Central](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone).
+This will automatically download and verify the JUnit Platform Console Standalone JAR from [Maven Central](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone) with SHA-256 checksum verification.
 
-> [!NOTE]
-> **Automatic installation requires Neovim 0.12.0+** for checksum verification. On older versions, manually download the JAR:
->
-> ```bash
-> mkdir -p ~/.local/share/nvim/neotest-java
-> curl -L -o ~/.local/share/nvim/neotest-java/junit-platform-console-standalone-6.0.3.jar \
->   https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/6.0.3/junit-platform-console-standalone-6.0.3.jar
-> ```
+> [!TIP]
+> The plugin will detect if you have an older JUnit version installed and prompt you to upgrade to the latest version.
 
 ## ⚙️ Configuration
 
