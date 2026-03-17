@@ -1,4 +1,5 @@
 local logger = require("neotest-java.logger")
+local checksum = require("neotest-java.util.checksum")
 local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
 local exists = require("neotest.lib.file").exists
 local version_detector = JunitVersionDetector({
@@ -6,11 +7,11 @@ local version_detector = JunitVersionDetector({
 		return exists(path:to_string())
 	end,
 	checksum = function(path)
-		local result = vim.system({ "shasum", "-a", "256", path:to_string() }):wait()
-		if result.code ~= 0 then
-			error("Failed to compute checksum: " .. result.stderr)
+		local hash, err = checksum.sha256(path:to_string())
+		if not hash then
+			error(err)
 		end
-		return vim.split(result.stdout, "%s+")[1]
+		return hash
 	end,
 	scan = require("neotest-java.util.dir_scan"),
 	stdpath_data = vim.fn.stdpath,

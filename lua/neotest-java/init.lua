@@ -12,21 +12,18 @@ local Path = require("neotest-java.model.path")
 local nio = require("nio")
 local logger = require("neotest-java.logger")
 local Binaries = require("neotest-java.command.binaries")
+local checksum = require("neotest-java.util.checksum")
 local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
 local version_detector = JunitVersionDetector({
 	exists = function(path)
 		return File.exists(path:to_string())
 	end,
 	checksum = function(path)
-		-- Use external shasum command for reliable SHA256 computation
-		-- vim.fn.sha256() has issues with binary data containing null bytes in some Neovim versions
-		local result = vim.system({ "shasum", "-a", "256", path:to_string() }):wait()
-		if result.code ~= 0 then
-			error("Failed to compute checksum: " .. result.stderr)
+		local hash, err = checksum.sha256(path:to_string())
+		if not hash then
+			error(err)
 		end
-		-- shasum output format: "hash  filename\n"
-		-- Extract just the hash part
-		return vim.split(result.stdout, "%s+")[1]
+		return hash
 	end,
 	scan = require("neotest-java.util.dir_scan"),
 	stdpath_data = vim.fn.stdpath,
@@ -97,11 +94,11 @@ local function NeotestJavaAdapter(config, deps)
 						return File.exists(path:to_string())
 					end,
 					checksum = function(path)
-						local result = vim.system({ "shasum", "-a", "256", path:to_string() }):wait()
-						if result.code ~= 0 then
-							error("Failed to compute checksum: " .. result.stderr)
+						local hash, err = checksum.sha256(path:to_string())
+						if not hash then
+							error(err)
 						end
-						return vim.split(result.stdout, "%s+")[1]
+						return hash
 					end,
 					scan = require("neotest-java.util.dir_scan"),
 					stdpath_data = vim.fn.stdpath,
@@ -197,11 +194,11 @@ local function NeotestJavaAdapter(config, deps)
 			local installer = Installer({
 				exists = exists,
 				checksum = function(path)
-					local result = vim.system({ "shasum", "-a", "256", path:to_string() }):wait()
-					if result.code ~= 0 then
-						error("Failed to compute checksum: " .. result.stderr)
+					local hash, err = checksum.sha256(path:to_string())
+					if not hash then
+						error(err)
 					end
-					return vim.split(result.stdout, "%s+")[1]
+					return hash
 				end,
 				download = function(url, output)
 					local out = vim.system({

@@ -1,4 +1,5 @@
 local Path = require("neotest-java.model.path")
+local checksum_util = require("neotest-java.util.checksum")
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
@@ -8,14 +9,11 @@ local DEFAULT_CONFIG = require("neotest-java.default_config")
 local function checksum(file_path, file_reader)
 	file_reader = file_reader
 		or function(path)
-			-- Use external shasum command for reliable SHA256 computation
-			-- vim.fn.sha256() has issues with binary data containing null bytes
-			local result = vim.system({ "shasum", "-a", "256", path }):wait()
-			if result.code ~= 0 then
-				error("Failed to compute checksum: " .. result.stderr)
+			local hash, err = checksum_util.sha256(path)
+			if not hash then
+				error(err)
 			end
-			-- shasum output format: "hash  filename\n"
-			return vim.split(result.stdout, "%s+")[1]
+			return hash
 		end
 	return file_reader(file_path:to_string())
 end
