@@ -26,4 +26,3 @@ if [[ -n $errors ]]; then
 fi
 
 exit 0
-

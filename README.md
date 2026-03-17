@@ -23,6 +23,7 @@
 - ✅ Maven and Gradle projects
 - ✅ Multimodule projects
 - ✅ Integrated with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for test debugging.
+- ✅ Automatic JUnit version detection and upgrade prompts
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
@@ -86,6 +87,7 @@
 | `junit_jar`         | `string?`   | `stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar`        | Path to the JUnit Platform Console standalone JAR.      |
 | `jvm_args`          | `string[]`  | `{}`                                                                                            | Additional JVM arguments passed when running tests.     |
 | `incremental_build` | `boolean`   | `true`                                                                                          | Enable incremental compilation before running tests.   |
+| `disable_update_notifications` | `boolean`   | `false`                                                                                          | Disable notifications about available JUnit jar updates. |
 | `test_classname_patterns` | `string[]`  | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}` | Regular expressions used to include only classes whose names match these patterns. Classes not matching any pattern will be ignored. |
 
 ## :octocat: Contributing
