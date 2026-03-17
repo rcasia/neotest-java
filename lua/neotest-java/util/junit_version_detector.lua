@@ -8,14 +8,16 @@ local DEFAULT_CONFIG = require("neotest-java.default_config")
 local function checksum(file_path, file_reader)
 	file_reader = file_reader
 		or function(path)
-			local f = assert(io.open(path, "rb"))
-			local data = f:read("*a")
-			f:close()
-			return data
+			-- Use external shasum command for reliable SHA256 computation
+			-- vim.fn.sha256() has issues with binary data containing null bytes
+			local result = vim.system({ "shasum", "-a", "256", path }):wait()
+			if result.code ~= 0 then
+				error("Failed to compute checksum: " .. result.stderr)
+			end
+			-- shasum output format: "hash  filename\n"
+			return vim.split(result.stdout, "%s+")[1]
 		end
-	local data = file_reader(file_path:to_string())
-	local hash = vim.fn.sha256(data)
-	return hash
+	return file_reader(file_path:to_string())
 end
 
 --- Get supported versions from default_config

@@ -6,10 +6,11 @@ local version_detector = JunitVersionDetector({
 		return exists(path:to_string())
 	end,
 	checksum = function(path)
-		local f = assert(io.open(path:to_string(), "rb"))
-		local data = f:read("*a")
-		f:close()
-		return vim.fn.sha256(data)
+		local result = vim.system({ "shasum", "-a", "256", path:to_string() }):wait()
+		if result.code ~= 0 then
+			error("Failed to compute checksum: " .. result.stderr)
+		end
+		return vim.split(result.stdout, "%s+")[1]
 	end,
 	scan = require("neotest-java.util.dir_scan"),
 	stdpath_data = vim.fn.stdpath,
