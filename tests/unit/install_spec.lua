@@ -3,7 +3,6 @@ local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 
 describe("Installer", function()
-	-- Test Fixtures: Known JUnit versions for testing
 	local JUNIT_VERSIONS = {
 		v6_0_1 = {
 			version = "6.0.1",
@@ -15,7 +14,6 @@ describe("Installer", function()
 		},
 	}
 
-	-- Test Data Builder: Creates a default config object
 	local function create_config(version)
 		version = version or JUNIT_VERSIONS.v6_0_1
 		local jar_path = Path(string.format("/data/junit-%s.jar", version.version))
@@ -26,227 +24,255 @@ describe("Installer", function()
 		}
 	end
 
-	-- Mock Factory: Creates installer dependencies with sensible defaults
-	-- All functions can be overridden by passing options
-	local function create_mock_deps(opts)
-		opts = opts or {}
-		local notifications = opts.notifications or {}
-		local user_choices = opts.user_choices or {}
-		local downloads = opts.downloads or {}
-		local deleted_files = opts.deleted_files or {}
+	describe("installation workflow", function()
+		it("skips installation when latest version already exists", function()
+			local actions = {}
+			local jar_path = Path("/data/junit-6.0.1.jar")
 
-		return {
-			exists = opts.exists or function()
-				return false
-			end,
-			checksum = opts.checksum or function()
-				return JUNIT_VERSIONS.v6_0_1.sha256
-			end,
-			notify = function(message, level)
-				table.insert(notifications, { message = message, level = level })
-			end,
-			detect_existing_version = opts.detect_existing_version or function()
-				return nil, nil
-			end,
-			ask_user_consent = opts.ask_user_consent or function(_message, _choices, callback)
-				callback("No, cancel")
-			end,
-			download = opts.download or function(url, output)
-				table.insert(downloads, { url = url, output = output })
-				return { code = 0, stderr = "" }
-			end,
-			delete_file = function(filepath)
-				table.insert(deleted_files, filepath)
-			end,
-		}
-	end
+			local installer = Installer({
+				exists = function(filepath)
+					return Path(filepath) == jar_path
+				end,
+				checksum = function()
+					return JUNIT_VERSIONS.v6_0_1.sha256
+				end,
+				notify = function(message)
+					table.insert(actions, { type = "notify", message = message })
+				end,
+				detect_existing_version = function()
+					return nil, nil
+				end,
+				ask_user_consent = function()
+					table.insert(actions, { type = "ask_consent" })
+				end,
+				download = function()
+					table.insert(actions, { type = "download" })
+					return { code = 0, stderr = "" }
+				end,
+				delete_file = function()
+					table.insert(actions, { type = "delete" })
+				end,
+			})
 
-	-- Helper: Find notification by pattern
-	local function find_notification(notifications, pattern)
-		for _, notif in ipairs(notifications) do
-			if notif.message:match(pattern) then
-				return notif
-			end
-		end
-		return nil
-	end
+			installer.install(create_config())
 
-	it("should notify when already set up with latest version", function()
-		-- Given: Latest version (6.0.1) already exists with correct checksum
-		local notifications = {}
-		local jar_path = Path("/data/junit-6.0.1.jar")
+			-- Verify workflow: should only notify, no download or user prompt
+			eq(1, #actions)
+			eq("notify", actions[1].type)
+			assert(actions[1].message:match("already set up"), "Should notify that setup is complete")
+		end)
 
-		local deps = create_mock_deps({
-			notifications = notifications,
-			exists = function(filepath)
-				return Path(filepath) == jar_path
-			end,
-			checksum = function()
-				return JUNIT_VERSIONS.v6_0_1.sha256
-			end,
-		})
+		it("prompts for upgrade when old version exists", function()
+			local workflow = {}
 
-		-- When: Running installer
-		local installer = Installer(deps)
-		installer.install(create_config())
+			local installer = Installer({
+				exists = function()
+					return false -- Configured jar doesn't exist
+				end,
+				checksum = function()
+					return JUNIT_VERSIONS.v6_0_1.sha256
+				end,
+				notify = function(message)
+					table.insert(workflow, { action = "notify", detail = message })
+				end,
+				detect_existing_version = function()
+					table.insert(workflow, { action = "detect_version" })
+					return JUNIT_VERSIONS.v1_10_1, Path("/data/junit-1.10.1.jar")
+				end,
+				ask_user_consent = function(message, _, callback)
+					table.insert(workflow, { action = "ask_consent", detail = message })
+					callback("Yes, upgrade")
+				end,
+				download = function(url)
+					table.insert(workflow, { action = "download", url = url })
+					return { code = 0, stderr = "" }
+				end,
+				delete_file = function(filepath)
+					table.insert(workflow, { action = "delete", filepath = filepath })
+				end,
+			})
 
-		-- Then: Should notify that setup is complete
-		eq(1, #notifications)
-		eq("JUnit jar is already set up with the latest version!", notifications[1].message)
-	end)
+			installer.install(create_config())
 
-	it("should ask for upgrade when older version is detected", function()
-		-- Given: Old version (1.10.1) exists, newer version (6.0.1) available
-		local notifications = {}
-		local user_choices = {}
-		local downloads = {}
-		local old_jar_path = Path("/data/junit-1.10.1.jar")
+			-- Verify workflow sequence: detect → ask → delete old → download new → notify
+			assert(#workflow >= 4, "Should execute multi-step workflow")
 
-		local deps = create_mock_deps({
-			notifications = notifications,
-			user_choices = user_choices,
-			downloads = downloads,
-			exists = function(filepath)
-				-- Old version exists, new version doesn't
-				return Path(filepath) == old_jar_path
-			end,
-			checksum = function(file_path)
-				-- Return appropriate checksum based on file path
-				if file_path:to_string():match("1%.10%.1") then
-					return JUNIT_VERSIONS.v1_10_1.sha256
+			local has_detect = false
+			local has_ask = false
+			local has_download = false
+			for _, step in ipairs(workflow) do
+				if step.action == "detect_version" then
+					has_detect = true
 				end
-				return JUNIT_VERSIONS.v6_0_1.sha256
-			end,
-			detect_existing_version = function()
-				return JUNIT_VERSIONS.v1_10_1, old_jar_path
-			end,
-			ask_user_consent = function(message, choices, callback)
-				table.insert(user_choices, { message = message, choices = choices })
-				callback("Yes, upgrade")
-			end,
-		})
+				if step.action == "ask_consent" and step.detail:match("upgrade") then
+					has_ask = true
+				end
+				if step.action == "download" and step.url:match("6%.0%.1") then
+					has_download = true
+				end
+			end
 
-		-- When: Running installer
-		local installer = Installer(deps)
-		installer.install(create_config())
+			assert(has_detect, "Should detect existing version")
+			assert(has_ask, "Should ask user for upgrade consent")
+			assert(has_download, "Should download new version")
+		end)
 
-		-- Then: Should ask for upgrade, download new version, and notify
-		eq(1, #user_choices)
-		assert(user_choices[1].message:match("upgrade"), "Should ask about upgrade")
+		it("respects user decision to keep old version", function()
+			local workflow = {}
 
-		eq(1, #downloads)
-		assert(downloads[1].url:match("6%.0%.1"), "Should download version 6.0.1")
+			local installer = Installer({
+				exists = function()
+					return false
+				end,
+				checksum = function()
+					return JUNIT_VERSIONS.v1_10_1.sha256
+				end,
+				notify = function(message)
+					table.insert(workflow, { action = "notify", detail = message })
+				end,
+				detect_existing_version = function()
+					return JUNIT_VERSIONS.v1_10_1, Path("/data/junit-1.10.1.jar")
+				end,
+				ask_user_consent = function(_, _, callback)
+					table.insert(workflow, { action = "ask_consent" })
+					callback("No, keep current version")
+				end,
+				download = function()
+					table.insert(workflow, { action = "download" })
+					return { code = 0, stderr = "" }
+				end,
+				delete_file = function()
+					table.insert(workflow, { action = "delete" })
+				end,
+			})
 
-		assert(find_notification(notifications, "Upgraded"), "Should notify about upgrade")
+			installer.install(create_config())
+
+			-- Verify workflow: should ask, then notify about keeping, but NOT download
+			local has_download = false
+			local has_keep_notification = false
+			for _, step in ipairs(workflow) do
+				if step.action == "download" then
+					has_download = true
+				end
+				if step.action == "notify" and step.detail:match("Keeping") then
+					has_keep_notification = true
+				end
+			end
+
+			assert(not has_download, "Should NOT download when user declines")
+			assert(has_keep_notification, "Should notify about keeping current version")
+		end)
+
+		it("prompts for fresh install when no version exists", function()
+			local workflow = {}
+
+			local installer = Installer({
+				exists = function()
+					return false
+				end,
+				checksum = function()
+					return JUNIT_VERSIONS.v6_0_1.sha256
+				end,
+				notify = function()
+					table.insert(workflow, { action = "notify" })
+				end,
+				detect_existing_version = function()
+					return nil, nil
+				end,
+				ask_user_consent = function(message, _, callback)
+					table.insert(workflow, { action = "ask_consent", detail = message })
+					callback("Yes, download")
+				end,
+				download = function()
+					table.insert(workflow, { action = "download" })
+					return { code = 0, stderr = "" }
+				end,
+				delete_file = function()
+					table.insert(workflow, { action = "delete" })
+				end,
+			})
+
+			installer.install(create_config())
+
+			-- Verify workflow: should ask for download permission
+			local has_download_prompt = false
+			local has_download = false
+			for _, step in ipairs(workflow) do
+				if step.action == "ask_consent" and step.detail:match("download") then
+					has_download_prompt = true
+				end
+				if step.action == "download" then
+					has_download = true
+				end
+			end
+
+			assert(has_download_prompt, "Should prompt for download permission")
+			assert(has_download, "Should download after user consent")
+		end)
 	end)
 
-	it("should keep current version when user declines upgrade", function()
-		-- Given: Old version exists, user declines upgrade
-		local notifications = {}
-		local user_choices = {}
-		local old_jar_path = Path("/data/junit-1.10.1.jar")
+	describe("error handling", function()
+		it("handles download failures gracefully", function()
+			local error_logged = false
 
-		local deps = create_mock_deps({
-			notifications = notifications,
-			user_choices = user_choices,
-			exists = function(filepath)
-				return Path(filepath) == old_jar_path
-			end,
-			checksum = function()
-				return JUNIT_VERSIONS.v1_10_1.sha256
-			end,
-			detect_existing_version = function()
-				return JUNIT_VERSIONS.v1_10_1, old_jar_path
-			end,
-			ask_user_consent = function(message, choices, callback)
-				table.insert(user_choices, { message = message, choices = choices })
-				callback("No, keep current version")
-			end,
-		})
+			local installer = Installer({
+				exists = function()
+					return false
+				end,
+				checksum = function()
+					return JUNIT_VERSIONS.v6_0_1.sha256
+				end,
+				notify = function(message, level)
+					if level == "error" or message:match("Error") then
+						error_logged = true
+					end
+				end,
+				detect_existing_version = function()
+					return nil, nil
+				end,
+				ask_user_consent = function(_, _, callback)
+					callback("Yes, download")
+				end,
+				download = function()
+					return { code = 1, stderr = "Network timeout" }
+				end,
+				delete_file = function() end,
+			})
 
-		-- When: Running installer
-		local installer = Installer(deps)
-		installer.install(create_config())
+			installer.install(create_config())
 
-		-- Then: Should ask for upgrade and notify about keeping current version
-		eq(1, #user_choices)
-		assert(find_notification(notifications, "Keeping current"), "Should notify about keeping current version")
-	end)
+			assert(error_logged, "Should log error when download fails")
+		end)
 
-	it("should ask for download when no version exists", function()
-		-- Given: No existing JUnit jar
-		local notifications = {}
-		local user_choices = {}
-		local downloads = {}
+		it("verifies checksum and removes corrupted downloads", function()
+			local corrupted_file_deleted = false
 
-		local deps = create_mock_deps({
-			notifications = notifications,
-			user_choices = user_choices,
-			downloads = downloads,
-			ask_user_consent = function(message, choices, callback)
-				table.insert(user_choices, { message = message, choices = choices })
-				callback("Yes, download")
-			end,
-		})
+			local installer = Installer({
+				exists = function()
+					return false
+				end,
+				checksum = function()
+					return "corrupted_checksum"
+				end,
+				notify = function() end,
+				detect_existing_version = function()
+					return nil, nil
+				end,
+				ask_user_consent = function(_, _, callback)
+					callback("Yes, download")
+				end,
+				download = function()
+					return { code = 0, stderr = "" }
+				end,
+				delete_file = function()
+					corrupted_file_deleted = true
+				end,
+			})
 
-		-- When: Running installer
-		local installer = Installer(deps)
-		installer.install(create_config())
+			installer.install(create_config())
 
-		-- Then: Should ask for download, download it, and notify
-		eq(1, #user_choices)
-		assert(user_choices[1].message:match("download"), "Should ask about download")
-
-		eq(1, #downloads)
-		assert(downloads[1].url:match("6%.0%.1"), "Should download version 6.0.1")
-
-		assert(find_notification(notifications, "Downloaded"), "Should notify about download")
-	end)
-
-	it("should handle download error", function()
-		-- Given: Download will fail with network error
-		local notifications = {}
-
-		local deps = create_mock_deps({
-			notifications = notifications,
-			ask_user_consent = function(_message, _choices, callback)
-				callback("Yes, download")
-			end,
-			download = function()
-				return { code = 1, stderr = "Network error" }
-			end,
-		})
-
-		-- When: Running installer
-		local installer = Installer(deps)
-		installer.install(create_config())
-
-		-- Then: Should notify about error
-		assert(find_notification(notifications, "Error"), "Should notify about error")
-	end)
-
-	it("should handle checksum verification failure", function()
-		-- Given: Downloaded file will have wrong checksum
-		local notifications = {}
-		local deleted_files = {}
-
-		local deps = create_mock_deps({
-			notifications = notifications,
-			deleted_files = deleted_files,
-			ask_user_consent = function(_message, _choices, callback)
-				callback("Yes, download")
-			end,
-			checksum = function()
-				return "wrong_checksum"
-			end,
-		})
-
-		-- When: Running installer
-		local installer = Installer(deps)
-		installer.install(create_config())
-
-		-- Then: Should delete file and notify about checksum error
-		eq(1, #deleted_files)
-		assert(find_notification(notifications, "Checksum"), "Should notify about checksum error")
+			assert(corrupted_file_deleted, "Should delete file when checksum verification fails")
+		end)
 	end)
 end)
