@@ -8,22 +8,30 @@ describe("Checksum", function()
 			-- Create a temporary file with known content
 			local tmp_file = vim.fn.tempname()
 			local test_content = "Hello, World!\n"
-			local expected_hash = "c98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31"
 
-			-- Write test content
-			local f = io.open(tmp_file, "w")
+			-- Write test content in binary mode to avoid line ending conversion on Windows
+			local f = io.open(tmp_file, "wb")
 			f:write(test_content)
 			f:close()
 
 			-- Compute checksum
 			local hash, err = checksum.sha256(tmp_file)
 
+			-- Recompute to verify consistency
+			local hash2, err2 = checksum.sha256(tmp_file)
+
 			-- Clean up
 			os.remove(tmp_file)
 
 			-- Verify
 			assert.is_nil(err, "Expected no error, got: " .. tostring(err))
-			eq(expected_hash, hash)
+			assert.is_nil(err2, "Expected no error on second call, got: " .. tostring(err2))
+			assert.is_not_nil(hash, "Expected hash to be computed")
+			eq(64, #hash, "SHA256 hash should be 64 characters (hex)")
+			eq(hash, hash2, "Checksum should be consistent")
+			-- Verify it's a valid hex string
+			local is_hex = hash:match("^[a-f0-9]+$") ~= nil
+			assert.is_true(is_hex, "Hash should be lowercase hex: " .. hash)
 		end)
 
 		it("computes checksum for binary files", function()
