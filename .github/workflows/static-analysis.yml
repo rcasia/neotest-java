@@ -3,8 +3,20 @@ name: Static Analysis
 on:
   push:
     branches: ["main"]
+    paths:
+      - "lua/**"
+      - "*.lua"
+      - ".stylua.toml"
+      - ".luacheckrc"
+      - ".github/workflows/static-analysis.yml"
   pull_request:
     branches: ["main"]
+    paths:
+      - "lua/**"
+      - "*.lua"
+      - ".stylua.toml"
+      - ".luacheckrc"
+      - ".github/workflows/static-analysis.yml"
 
 jobs:
   luacheck:
