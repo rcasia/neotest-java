@@ -118,6 +118,33 @@ require("neotest").setup({
 | `disable_update_notifications`| `boolean`  | `false`                                                    | Disable notifications about available JUnit updates                         |
 | `test_classname_patterns`     | `string[]` | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}`                    | Regex patterns for test class names (classes must match at least one pattern)|
 
+## ⚠️ Troubleshooting
+
+### Spring Tests Failing with "parameter name information not available"
+
+If you're running Spring tests that use reflection (e.g., `@MockBean`, `@WebMvcTest`) and encounter errors like:
+
+```
+java.lang.IllegalArgumentException: Name for argument of type [int] not specified,
+and parameter name information not available via reflection.
+Ensure that the compiler uses the '-parameters' flag.
+```
+
+**Solution:** Configure the JDTLS compiler to preserve parameter names in bytecode by adding the following to your project's `.settings/org.eclipse.jdt.core.prefs` file:
+
+```properties
+org.eclipse.jdt.core.compiler.codegen.methodParameters=generate
+```
+
+If the `.settings` directory doesn't exist, create it in your project root:
+
+```bash
+mkdir -p .settings
+echo "org.eclipse.jdt.core.compiler.codegen.methodParameters=generate" > .settings/org.eclipse.jdt.core.prefs
+```
+
+After adding this setting, restart your LSP server (`:LspRestart`) and run your tests again.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to:
