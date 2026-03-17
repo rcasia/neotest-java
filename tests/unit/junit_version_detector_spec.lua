@@ -4,6 +4,10 @@ local eq = require("tests.assertions").eq
 
 describe("JUnit Version Detector", function()
 	local JUNIT_VERSIONS = {
+		v6_0_3 = {
+			version = "6.0.3",
+			sha256 = "3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2",
+		},
 		v6_0_1 = {
 			version = "6.0.1",
 			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
@@ -152,10 +156,10 @@ describe("JUnit Version Detector", function()
 		it("detects when already on latest version", function()
 			local detector = JunitVersionDetector({
 				exists = function()
-					return false
+					return true
 				end,
 				checksum = function()
-					return "dummy"
+					return ""
 				end,
 				scan = function()
 					return {}
@@ -165,7 +169,7 @@ describe("JUnit Version Detector", function()
 				end,
 			})
 
-			local has_update, latest = detector.check_for_update(JUNIT_VERSIONS.v6_0_1)
+			local has_update, latest = detector.check_for_update(JUNIT_VERSIONS.v6_0_3)
 
 			eq(false, has_update)
 			eq(nil, latest)

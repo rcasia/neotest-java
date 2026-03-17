@@ -9,6 +9,10 @@ end
 
 local SUPPORTED_VERSIONS = {
 	{
+		version = "6.0.3",
+		sha256 = "3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2",
+	},
+	{
 		version = "6.0.1",
 		sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
 	},

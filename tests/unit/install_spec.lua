@@ -4,6 +4,10 @@ local eq = require("tests.assertions").eq
 
 describe("Installer", function()
 	local JUNIT_VERSIONS = {
+		v6_0_3 = {
+			version = "6.0.3",
+			sha256 = "3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2",
+		},
 		v6_0_1 = {
 			version = "6.0.1",
 			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
@@ -15,7 +19,7 @@ describe("Installer", function()
 	}
 
 	local function create_config(version)
-		version = version or JUNIT_VERSIONS.v6_0_1
+		version = version or JUNIT_VERSIONS.v6_0_3
 		local jar_path = Path(string.format("/data/junit-%s.jar", version.version))
 		return {
 			junit_jar = jar_path,
@@ -27,14 +31,14 @@ describe("Installer", function()
 	describe("installation workflow", function()
 		it("skips installation when latest version already exists", function()
 			local actions = {}
-			local jar_path = Path("/data/junit-6.0.1.jar")
+			local jar_path = Path("/data/junit-6.0.3.jar")
 
 			local installer = Installer({
 				exists = function(filepath)
 					return Path(filepath) == jar_path
 				end,
 				checksum = function()
-					return JUNIT_VERSIONS.v6_0_1.sha256
+					return JUNIT_VERSIONS.v6_0_3.sha256
 				end,
 				notify = function(message)
 					table.insert(actions, { type = "notify", message = message })
@@ -70,7 +74,7 @@ describe("Installer", function()
 					return false -- Configured jar doesn't exist
 				end,
 				checksum = function()
-					return JUNIT_VERSIONS.v6_0_1.sha256
+					return JUNIT_VERSIONS.v6_0_3.sha256
 				end,
 				notify = function(message)
 					table.insert(workflow, { action = "notify", detail = message })
@@ -107,7 +111,7 @@ describe("Installer", function()
 				if step.action == "ask_consent" and step.detail:match("upgrade") then
 					has_ask = true
 				end
-				if step.action == "download" and step.url:match("6%.0%.1") then
+				if step.action == "download" and step.url:match("6%.0%.3") then
 					has_download = true
 				end
 			end
