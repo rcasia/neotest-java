@@ -3,174 +3,139 @@ local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 
 describe("JUnit Version Detector", function()
-	it("should detect existing version by filename", function()
-		local version_6_0_1 = {
+	-- Test Fixtures: Known JUnit versions
+	local JUNIT_VERSIONS = {
+		v6_0_1 = {
 			version = "6.0.1",
 			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
-		}
-		local version_1_10_1 = {
+		},
+		v1_10_1 = {
 			version = "1.10.1",
 			sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
-		}
+		},
+	}
 
-		-- Use Path to construct expected path (works on both Windows and Unix)
-		local data_dir_str = "data"
-		-- Build the path exactly the same way the detector does
-		local data_dir = Path(data_dir_str):append("neotest-java")
-		local expected_jar_path = data_dir:append("junit-platform-console-standalone-6.0.1.jar")
+	-- Helper: Build standard JUnit jar path in neotest-java data directory
+	local function build_junit_jar_path(data_dir, version)
+		return Path(data_dir)
+			:append("neotest-java")
+			:append(string.format("junit-platform-console-standalone-%s.jar", version))
+	end
 
-		local exists_fn = function(filepath)
-			if filepath ~= expected_jar_path then
+	-- Mock Factory: Creates detector dependencies with sensible defaults
+	local function create_mock_deps(opts)
+		opts = opts or {}
+		return {
+			exists = opts.exists or function()
 				return false
-			end
-			return true
-		end
+			end,
+			checksum = opts.checksum or function()
+				return "unknown"
+			end,
+			scan = opts.scan or function()
+				return {}
+			end,
+			stdpath_data = opts.stdpath_data or function()
+				return "data"
+			end,
+		}
+	end
 
-		local checksum_fn = function(file_path)
-			local path_str = file_path:to_string()
-			-- Mock checksum based on path
-			if path_str:match("6%.0%.1") then
-				return version_6_0_1.sha256
-			elseif path_str:match("1%.10%.1") then
-				return version_1_10_1.sha256
-			end
-			return "unknown"
-		end
+	it("should detect existing version by filename", function()
+		-- Given: JUnit 6.0.1 jar exists with standard filename
+		local data_dir = "data"
+		local expected_jar_path = build_junit_jar_path(data_dir, "6.0.1")
 
-		local detector = JunitVersionDetector({
-			exists = exists_fn,
-			checksum = checksum_fn,
+		local deps = create_mock_deps({
+			exists = function(filepath)
+				return filepath == expected_jar_path
+			end,
+			checksum = function(file_path)
+				if file_path:to_string():match("6%.0%.1") then
+					return JUNIT_VERSIONS.v6_0_1.sha256
+				end
+				return "unknown"
+			end,
 			stdpath_data = function()
-				return data_dir_str
+				return data_dir
 			end,
 		})
 
+		-- When: Detecting existing version
+		local detector = JunitVersionDetector(deps)
 		local detected_version, filepath = detector.detect_existing_version()
 
+		-- Then: Should detect version 6.0.1 by filename
 		assert(detected_version ~= nil, "detected_version should not be nil")
-		eq(version_6_0_1.version, detected_version.version)
-		eq(version_6_0_1.sha256, detected_version.sha256)
-		-- Compare using Path to handle different path formats (Windows vs Unix)
+		eq(JUNIT_VERSIONS.v6_0_1.version, detected_version.version)
+		eq(JUNIT_VERSIONS.v6_0_1.sha256, detected_version.sha256)
 		eq(expected_jar_path, filepath)
 	end)
 
 	it("should return nil when no version is found", function()
-		local exists_fn = function(_filepath)
-			return false
-		end
+		-- Given: No JUnit jar exists in data directory
+		local deps = create_mock_deps()
 
-		local scan_fn = function()
-			return {}
-		end
-
-		local detector = JunitVersionDetector({
-			exists = exists_fn,
-			scan = scan_fn,
-			stdpath_data = function()
-				return "data"
-			end,
-		})
-
+		-- When: Detecting existing version
+		local detector = JunitVersionDetector(deps)
 		local detected_version, filepath = detector.detect_existing_version()
 
+		-- Then: Should return nil for both version and filepath
 		eq(nil, detected_version)
 		eq(nil, filepath)
 	end)
 
 	it("should detect version by checksum when filename doesn't match", function()
-		local version_1_10_1 = {
-			version = "1.10.1",
-			sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
-		}
+		-- Given: JUnit jar with custom filename but valid checksum
+		local data_dir = "data"
+		local custom_jar_path = Path(data_dir):append("neotest-java"):append("custom-junit.jar")
 
-		local data_dir_str = "data"
-		local data_dir = Path(data_dir_str):append("neotest-java")
-		local jar_file = data_dir:append("custom-junit.jar")
-		local jar_file_str = jar_file:to_string()
-
-		local exists_fn = function(_filepath)
-			return false -- No file with expected filename
-		end
-
-		local scan_fn = function()
-			return { jar_file }
-		end
-
-		local checksum_fn = function(file_path)
-			-- Compare using Path to handle different path formats (Windows vs Unix)
-			local file_path_str = Path(file_path:to_string()):to_string()
-			if file_path_str == jar_file_str then
-				return version_1_10_1.sha256
-			end
-			return "unknown"
-		end
-
-		local detector = JunitVersionDetector({
-			exists = exists_fn,
-			scan = scan_fn,
-			checksum = checksum_fn,
+		local deps = create_mock_deps({
+			scan = function()
+				return { custom_jar_path }
+			end,
+			checksum = function(file_path)
+				if Path(file_path:to_string()) == custom_jar_path then
+					return JUNIT_VERSIONS.v1_10_1.sha256
+				end
+				return "unknown"
+			end,
 			stdpath_data = function()
-				return data_dir_str
+				return data_dir
 			end,
 		})
 
+		-- When: Detecting existing version (filename doesn't match, but checksum does)
+		local detector = JunitVersionDetector(deps)
 		local detected_version, filepath = detector.detect_existing_version()
 
+		-- Then: Should detect version 1.10.1 by checksum
 		assert(detected_version ~= nil, "detected_version should not be nil")
-		eq(version_1_10_1.version, detected_version.version)
-		eq(version_1_10_1.sha256, detected_version.sha256)
-		-- Compare using Path to handle different path formats (Windows vs Unix)
-		eq(jar_file, filepath)
+		eq(JUNIT_VERSIONS.v1_10_1.version, detected_version.version)
+		eq(JUNIT_VERSIONS.v1_10_1.sha256, detected_version.sha256)
+		eq(custom_jar_path, filepath)
 	end)
 
 	it("should check for update when current version is older", function()
-		local detector = JunitVersionDetector({
-			exists = function(_path)
-				return false
-			end,
-			checksum = function(_path)
-				return "dummy"
-			end,
-			scan = function()
-				return {}
-			end,
-			stdpath_data = function()
-				return "data"
-			end,
-		})
-		local current_version = {
-			version = "1.10.1",
-			sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
-		}
+		-- Given: Current version is 1.10.1, latest is 6.0.1
+		local detector = JunitVersionDetector(create_mock_deps())
 
-		local has_update, latest_version = detector.check_for_update(current_version)
+		-- When: Checking for updates with old version
+		local has_update, latest_version = detector.check_for_update(JUNIT_VERSIONS.v1_10_1)
 
+		-- Then: Should indicate update is available to 6.0.1
 		eq(true, has_update)
 		eq("6.0.1", latest_version.version)
 	end)
 
 	it("should not find update when current version is latest", function()
-		local detector = JunitVersionDetector({
-			exists = function(_path)
-				return false
-			end,
-			checksum = function(_path)
-				return "dummy"
-			end,
-			scan = function()
-				return {}
-			end,
-			stdpath_data = function()
-				return "data"
-			end,
-		})
-		local current_version = {
-			version = "6.0.1",
-			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
-		}
+		-- Given: Current version is already 6.0.1 (latest)
+		local detector = JunitVersionDetector(create_mock_deps())
 
-		local has_update, latest_version = detector.check_for_update(current_version)
+		-- When: Checking for updates with latest version
+		local has_update, latest_version = detector.check_for_update(JUNIT_VERSIONS.v6_0_1)
 
+		-- Then: Should indicate no update is available
 		eq(false, has_update)
 		eq(nil, latest_version)
 	end)
