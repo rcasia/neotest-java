@@ -20,10 +20,16 @@
 
 ## ⭐ Features
 
-- ✅ Maven and Gradle projects
-- ✅ Multimodule projects
-- ✅ Integrated with [`nvim-dap`](https://github.com/mfussenegger/nvim-dap) for test debugging.
-- ✅ Automatic JUnit version detection and upgrade prompts
+- ✅ **Maven & Gradle** - Full support for both build systems (Groovy & Kotlin DSL)
+- ✅ **Multi-module projects** - Automatic detection and per-module test execution
+- ✅ **JUnit 5 (Jupiter)** - Support for `@Test`, `@ParameterizedTest`, `@TestFactory`, nested tests
+- ✅ **JUnit Platform 1.10.x & 6.x** - Compatible with both legacy and latest versions
+- ✅ **Spring Framework** - Auto-loads `application.yml`, `application-test.yml`, and `.properties` files
+- ✅ **Debugging with nvim-dap** - Full integration with breakpoints, JDWP, and DAP REPL output
+- ✅ **Incremental compilation** - Smart compilation of only changed files via nvim-jdtls
+- ✅ **Automatic classpath management** - Retrieves runtime and test classpaths from LSP
+- ✅ **JUnit JAR management** - Automatic installation, version detection, and upgrade prompts
+- ✅ **Health check** - Comprehensive diagnostics with `:checkhealth neotest-java`
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
