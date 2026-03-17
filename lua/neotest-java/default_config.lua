@@ -13,10 +13,6 @@ local SUPPORTED_VERSIONS = {
 		sha256 = "3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2",
 	},
 	{
-		version = "6.0.1",
-		sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
-	},
-	{
 		version = "1.10.1",
 		sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
 	},

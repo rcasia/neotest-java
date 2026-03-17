@@ -24,7 +24,7 @@ describe("NeotestJava plugin", function()
 
 	describe("JUnit jar fallback behavior", function()
 		it("falls back to detected version when configured jar missing", function()
-			local configured_path = Path("/data/junit-6.0.1.jar")
+			local configured_path = Path("/data/junit-6.0.3.jar")
 			local detected_path = Path("/data/junit-1.10.1.jar")
 			local fallback_occurred = false
 

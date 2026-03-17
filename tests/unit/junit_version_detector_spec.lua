@@ -8,10 +8,6 @@ describe("JUnit Version Detector", function()
 			version = "6.0.3",
 			sha256 = "3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2",
 		},
-		v6_0_1 = {
-			version = "6.0.1",
-			sha256 = "3009120b7953bfe63add272e65b2bbeca0d41d0dfd8dea605201db15b640e0ff",
-		},
 		v1_10_1 = {
 			version = "1.10.1",
 			sha256 = "b42eaa53d13576d17db5fb8b280722a6ae9e36daf95f4262bc6e96d4cb20725f",
@@ -23,7 +19,7 @@ describe("JUnit Version Detector", function()
 			local detection_attempts = {}
 			local data_dir = "data"
 			local expected_path =
-				Path(data_dir):append("neotest-java"):append("junit-platform-console-standalone-6.0.1.jar")
+				Path(data_dir):append("neotest-java"):append("junit-platform-console-standalone-1.10.1.jar")
 
 			local detector = JunitVersionDetector({
 				exists = function(filepath)
@@ -32,7 +28,7 @@ describe("JUnit Version Detector", function()
 				end,
 				checksum = function()
 					table.insert(detection_attempts, { method = "checksum" })
-					return JUNIT_VERSIONS.v6_0_1.sha256
+					return JUNIT_VERSIONS.v1_10_1.sha256
 				end,
 				scan = function()
 					table.insert(detection_attempts, { method = "scan" })
@@ -46,7 +42,7 @@ describe("JUnit Version Detector", function()
 			local version, path = detector.detect_existing_version()
 
 			-- Should detect by filename first without scanning
-			eq(JUNIT_VERSIONS.v6_0_1.version, version.version)
+			eq(JUNIT_VERSIONS.v1_10_1.version, version.version)
 			eq(expected_path, path)
 
 			-- Verify detection strategy: filename check → checksum verify, NO scan
