@@ -3,6 +3,13 @@ name: CI
 on:
   push:
     branches: ["main"]
+    paths:
+      - "lua/**"
+      - "tests/**"
+      - "scripts/**"
+      - "*.lua"
+      - "Makefile"
+      - ".github/workflows/**"
 
 jobs:
   test:
