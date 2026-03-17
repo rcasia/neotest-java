@@ -33,78 +33,109 @@
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
-## :wrench: Installation
+## 📦 Installation
 
-##### Install in 3 steps :athletic_shoe:
+### Prerequisites
 
-1. Make sure you have installed nvim-treesitter parsers. Use `:TSInstall java`
-2. Add neotest-java to your config:
+- **Neovim 0.10.4+** (or 0.12.0+ for automatic JUnit installation)
+- **nvim-treesitter** with Java parser: `:TSInstall java`
+- **nvim-jdtls** - Language server for Java
+- **nvim-dap** - For debugging support (optional)
 
-<details>
-  <summary><a href="https://github.com/folke/lazy.nvim">lazy.nvim</a> plugin manager example</summary>
+### Setup with [lazy.nvim](https://github.com/folke/lazy.nvim)
 
-  ```lua
-  return {
-    {
-      "rcasia/neotest-java",
-      ft = "java",
-      dependencies = {
-        "mfussenegger/nvim-jdtls",
-        "mfussenegger/nvim-dap", -- for the debugger
-        "rcarriga/nvim-dap-ui", -- recommended
-        "theHamsta/nvim-dap-virtual-text", -- recommended
-      },
+```lua
+return {
+  {
+    "rcasia/neotest-java",
+    ft = "java",
+    dependencies = {
+      "mfussenegger/nvim-jdtls",
+      "mfussenegger/nvim-dap", -- for debugging (optional)
+      "rcarriga/nvim-dap-ui", -- recommended
+      "theHamsta/nvim-dap-virtual-text", -- recommended
     },
-   {
+  },
+  {
     "nvim-neotest/neotest",
-      dependencies = {
-        "nvim-neotest/nvim-nio",
-        "nvim-lua/plenary.nvim",
-        "antoinemadec/FixCursorHold.nvim",
-        "nvim-treesitter/nvim-treesitter",
+    dependencies = {
+      "nvim-neotest/nvim-nio",
+      "nvim-lua/plenary.nvim",
+      "antoinemadec/FixCursorHold.nvim",
+      "nvim-treesitter/nvim-treesitter",
     },
     config = function()
       require("neotest").setup({
         adapters = {
           require("neotest-java")({
-            -- config here
+            -- Optional configuration here
           }),
         },
       })
     end,
-  }
- }
-  ```
+  },
+}
+```
 
-</details>
+### JUnit JAR Installation
 
-3. Run `:NeotestJava setup`
+After setting up the plugin, run:
+
+```vim
+:NeotestJava setup
+```
+
+This will download the JUnit Platform Console Standalone JAR from [Maven Central](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone).
 
 > [!NOTE]
-> It will download the JUnit standalone jar from
-> <https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone>
+> **Automatic installation requires Neovim 0.12.0+** for checksum verification. On older versions, manually download the JAR:
 >
-> **Autoinstall requires Neovim v0.12.0+ (nightly)** - The `vim.fn.sha256()` function used for checksum verification requires this version. For older versions, manually download the JAR file.
+> ```bash
+> mkdir -p ~/.local/share/nvim/neotest-java
+> curl -L -o ~/.local/share/nvim/neotest-java/junit-platform-console-standalone-6.0.3.jar \
+>   https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/6.0.3/junit-platform-console-standalone-6.0.3.jar
+> ```
 
-## :gear: Configuration
+## ⚙️ Configuration
 
-| Option              | Type        | Default                                                                                         | Description                                             |
-|---------------------|-------------|-------------------------------------------------------------------------------------------------|---------------------------------------------------------|
-| `junit_jar`         | `string?`   | `stdpath("data") .. /nvim/neotest-java/junit-platform-console-standalone-[version].jar`        | Path to the JUnit Platform Console standalone JAR.      |
-| `jvm_args`          | `string[]`  | `{}`                                                                                            | Additional JVM arguments passed when running tests.     |
-| `incremental_build` | `boolean`   | `true`                                                                                          | Enable incremental compilation before running tests.   |
-| `disable_update_notifications` | `boolean`   | `false`                                                                                          | Disable notifications about available JUnit jar updates. |
-| `test_classname_patterns` | `string[]`  | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}` | Regular expressions used to include only classes whose names match these patterns. Classes not matching any pattern will be ignored. |
+All configuration options are optional. Pass them to `require("neotest-java")({})`:
 
-## :octocat: Contributing
+```lua
+require("neotest").setup({
+  adapters = {
+    require("neotest-java")({
+      junit_jar = nil, -- default: auto-detected
+      jvm_args = { "-Xmx512m" }, -- custom JVM arguments
+      incremental_build = true, -- recompile only changed files
+      disable_update_notifications = false, -- show JUnit update prompts
+      test_classname_patterns = { "^.*Tests?$", "^.*IT$", "^.*Spec$" },
+    }),
+  },
+})
+```
 
-Feel free to contribute to this project by creating issues for bug
-reports, feature requests, or suggestions.
+### Options
 
-You can also submit pull requests for any enhancements, bug fixes, or new features.
+| Option                        | Type       | Default                                                    | Description                                                                 |
+|-------------------------------|------------|------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `junit_jar`                   | `string?`  | `stdpath("data")/neotest-java/junit-*.jar`                | Path to JUnit Platform Console Standalone JAR                               |
+| `jvm_args`                    | `string[]` | `{}`                                                       | Additional JVM arguments for test execution                                 |
+| `incremental_build`           | `boolean`  | `true`                                                     | Enable incremental compilation (recompile only changed files)               |
+| `disable_update_notifications`| `boolean`  | `false`                                                    | Disable notifications about available JUnit updates                         |
+| `test_classname_patterns`     | `string[]` | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}`                    | Regex patterns for test class names (classes must match at least one pattern)|
 
-Your contributions are greatly appreciated. See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
+## 🤝 Contributing
 
-## :sparkles: Acknowledgements
+Contributions are welcome! Please feel free to:
+
+- 🐛 Report bugs and issues
+- 💡 Suggest new features or improvements
+- 🔧 Submit pull requests
+
+See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md) for guidelines.
+
+## ✨ Acknowledgements
+
+Thanks to all contributors who have helped improve this project!
 
 [![Contributors](https://contrib.rocks/image?repo=rcasia/neotest-java)](https://github.com/rcasia/neotest-java/graphs/contributors)
