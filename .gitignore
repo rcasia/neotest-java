@@ -5,3 +5,14 @@
 
 deps
 .vscode
+
+# Test artifacts
+tests/fixtures/*/target/
+tests/fixtures/*/.mvn/wrapper/maven-wrapper.jar
+
+# Temporary test files
+/tmp/neotest-e2e*.lua
+/tmp/neotest-e2e*.log
+/tmp/neotest-e2e*.txt
+/tmp/maven-classpath.txt
+/tmp/test-*.lua
