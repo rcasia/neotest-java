@@ -15,6 +15,19 @@ FIXTURE_DIR="$PROJ_ROOT/tests/fixtures/maven-simple"
 TEST_FILE="$FIXTURE_DIR/src/test/java/com/example/SampleTest.java"
 MVNW="$FIXTURE_DIR/mvnw"
 
+# Use cross-platform temp directory
+if [ -n "$RUNNER_TEMP" ]; then
+    # GitHub Actions provides RUNNER_TEMP
+    TEMP_DIR="$RUNNER_TEMP"
+elif [ -d "/tmp" ]; then
+    # Unix-like systems
+    TEMP_DIR="/tmp"
+else
+    # Windows fallback
+    TEMP_DIR="${TEMP:-$PROJ_ROOT/.tmp}"
+    mkdir -p "$TEMP_DIR"
+fi
+
 echo -e "${BLUE}=== Neotest-Java E2E Test ===${NC}\n"
 
 # Check prerequisites
@@ -88,23 +101,24 @@ else
 fi
 
 echo -e "${YELLOW}Resolving classpath...${NC}"
-if "$MVNW" dependency:build-classpath -Dmdep.outputFile=/tmp/maven-classpath.txt -q 2>&1; then
+if "$MVNW" dependency:build-classpath -Dmdep.outputFile="$TEMP_DIR/maven-classpath.txt" -q 2>&1; then
     echo -e "${GREEN}✓ Classpath resolved${NC}"
 else
     echo -e "${RED}✗ Classpath resolution failed${NC}"
-    "$MVNW" dependency:build-classpath -Dmdep.outputFile=/tmp/maven-classpath.txt || true
+    "$MVNW" dependency:build-classpath -Dmdep.outputFile="$TEMP_DIR/maven-classpath.txt" || true
     exit 1
 fi
 cd "$PROJ_ROOT"
 
 # Read Maven classpath and add target directories (use absolute paths)
-MAVEN_CP=$(cat /tmp/maven-classpath.txt)
+MAVEN_CP=$(cat "$TEMP_DIR/maven-classpath.txt")
 FULL_CP="$(cd "$FIXTURE_DIR" && pwd)/target/classes:$(cd "$FIXTURE_DIR" && pwd)/target/test-classes:$MAVEN_CP"
 
 # Create Lua script to run tests via Neotest with mocked dependencies
-cat > /tmp/neotest-e2e.lua << EOFSCRIPT
+cat > "$TEMP_DIR/neotest-e2e.lua" << EOFSCRIPT
 local test_file = vim.fn.argv()[1]
 local classpath = vim.fn.argv()[2]
+local temp_dir = vim.fn.argv()[3]
 
 -- Install mocks for jdtls-dependent modules BEFORE loading neotest-java
 require("tests.e2e.mocks").install_mocks(classpath)
@@ -156,7 +170,7 @@ vim.schedule(function()
     end
 
     if not counts or counts.total == 0 then
-      local f = io.open("/tmp/neotest-e2e-error.txt", "w")
+      local f = io.open(temp_dir .. "/neotest-e2e-error.txt", "w")
       if f then
         f:write("Timeout: No test results after " .. attempt .. " attempts\\n")
         f:close()
@@ -168,7 +182,7 @@ vim.schedule(function()
     end
 
     -- Write status counts as JSON for snapshot testing
-    local f = io.open("/tmp/neotest-e2e-results.json", "w")
+    local f = io.open(temp_dir .. "/neotest-e2e-results.json", "w")
     if f then
       f:write(vim.fn.json_encode(counts))
       f:close()
@@ -182,7 +196,7 @@ end)
 
 -- Overall timeout
 vim.defer_fn(function()
-  local f = io.open("/tmp/neotest-e2e-error.txt", "w")
+  local f = io.open(temp_dir .. "/neotest-e2e-error.txt", "w")
   if f then
     f:write("Global timeout (60s) reached\\n")
     f:close()
@@ -193,20 +207,20 @@ EOFSCRIPT
 
 # Run the E2E test
 echo -e "${YELLOW}Running tests via Neotest...${NC}"
-rm -f /tmp/neotest-e2e-results.json /tmp/neotest-e2e-error.txt
+rm -f "$TEMP_DIR/neotest-e2e-results.json" "$TEMP_DIR/neotest-e2e-error.txt"
 
 if nvim --headless --noplugin -u tests/testrc.vim \
-    -c "luafile /tmp/neotest-e2e.lua" \
-    "$TEST_FILE" "$FULL_CP" 2>&1 | tee /tmp/neotest-e2e.log; then
+    -c "luafile $TEMP_DIR/neotest-e2e.lua" \
+    "$TEST_FILE" "$FULL_CP" "$TEMP_DIR" 2>&1 | tee "$TEMP_DIR/neotest-e2e.log"; then
 
-    if [ -f /tmp/neotest-e2e-error.txt ]; then
+    if [ -f "$TEMP_DIR/neotest-e2e-error.txt" ]; then
         echo -e "${RED}✗ Test execution failed${NC}"
-        cat /tmp/neotest-e2e-error.txt
-        cat /tmp/neotest-e2e.log
+        cat "$TEMP_DIR/neotest-e2e-error.txt"
+        cat "$TEMP_DIR/neotest-e2e.log"
         exit 1
     fi
 
-    if [ -f /tmp/neotest-e2e-results.json ]; then
+    if [ -f "$TEMP_DIR/neotest-e2e-results.json" ]; then
         echo -e "${GREEN}✓ Tests executed${NC}"
 
         # Path to snapshot file
@@ -217,7 +231,7 @@ if nvim --headless --noplugin -u tests/testrc.vim \
             echo -e "${YELLOW}⚠ Snapshot file not found. Creating new snapshot at:${NC}"
             echo -e "${YELLOW}  $SNAPSHOT_FILE${NC}"
             mkdir -p "$(dirname "$SNAPSHOT_FILE")"
-            cp /tmp/neotest-e2e-results.json "$SNAPSHOT_FILE"
+            cp "$TEMP_DIR/neotest-e2e-results.json" "$SNAPSHOT_FILE"
             echo -e "${GREEN}✓ Snapshot created${NC}"
             exit 0
         fi
@@ -225,7 +239,7 @@ if nvim --headless --noplugin -u tests/testrc.vim \
         # Compare results with snapshot
         if command -v jq &> /dev/null; then
             # Use jq for pretty comparison
-            ACTUAL=$(jq -S . /tmp/neotest-e2e-results.json)
+            ACTUAL=$(jq -S . "$TEMP_DIR/neotest-e2e-results.json")
             EXPECTED=$(jq -S . "$SNAPSHOT_FILE")
 
             if [ "$ACTUAL" == "$EXPECTED" ]; then
@@ -242,34 +256,34 @@ if nvim --headless --noplugin -u tests/testrc.vim \
             fi
         else
             # Fallback to basic comparison without jq
-            if diff -w "$SNAPSHOT_FILE" /tmp/neotest-e2e-results.json > /dev/null 2>&1; then
+            if diff -w "$SNAPSHOT_FILE" "$TEMP_DIR/neotest-e2e-results.json" > /dev/null 2>&1; then
                 echo -e "${GREEN}✓ E2E TEST PASSED - Results match snapshot${NC}"
             else
                 echo -e "${RED}✗ Results don't match snapshot${NC}"
                 echo -e "${YELLOW}Expected:${NC}"
                 cat "$SNAPSHOT_FILE"
                 echo -e "${YELLOW}Actual:${NC}"
-                cat /tmp/neotest-e2e-results.json
+                cat "$TEMP_DIR/neotest-e2e-results.json"
                 echo -e "${YELLOW}Diff:${NC}"
-                diff -u "$SNAPSHOT_FILE" /tmp/neotest-e2e-results.json || true
+                diff -u "$SNAPSHOT_FILE" "$TEMP_DIR/neotest-e2e-results.json" || true
                 exit 1
             fi
         fi
     else
         echo -e "${RED}✗ No results generated${NC}"
-        cat /tmp/neotest-e2e.log
+        cat "$TEMP_DIR/neotest-e2e.log"
         exit 1
     fi
 else
     echo -e "${RED}✗ Neovim exited with error${NC}"
-    if [ -f /tmp/neotest-e2e-error.txt ]; then
-        cat /tmp/neotest-e2e-error.txt
+    if [ -f "$TEMP_DIR/neotest-e2e-error.txt" ]; then
+        cat "$TEMP_DIR/neotest-e2e-error.txt"
     fi
-    cat /tmp/neotest-e2e.log
+    cat "$TEMP_DIR/neotest-e2e.log"
     exit 1
 fi
 
 # Cleanup
-rm -f /tmp/neotest-e2e.lua /tmp/neotest-e2e-results.json /tmp/neotest-e2e-error.txt /tmp/neotest-e2e.log /tmp/maven-classpath.txt
+rm -f "$TEMP_DIR/neotest-e2e.lua" "$TEMP_DIR/neotest-e2e-results.json" "$TEMP_DIR/neotest-e2e-error.txt" "$TEMP_DIR/neotest-e2e.log" "$TEMP_DIR/maven-classpath.txt"
 
 echo -e "\n${GREEN}=== E2E Test Complete ===${NC}"

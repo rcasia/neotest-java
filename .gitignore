@@ -10,6 +10,7 @@ deps
 tests/fixtures/*/target/
 tests/fixtures/*/bin/
 tests/fixtures/*/.mvn/wrapper/maven-wrapper.jar
+.tmp/
 
 # IDE files (Eclipse, IntelliJ, VSCode, etc.)
 tests/fixtures/*/.classpath
