@@ -333,8 +333,9 @@ vim.schedule(function()
     end
 
     -- Extract expected class name from test file path
-    -- e.g., /path/to/SampleTest.java -> SampleTest
-    local expected_class = test_file:match("([^/]+)%.java$")
+    -- e.g., /path/to/SampleTest.java or C:\path\to\SampleTest.java -> SampleTest
+    -- Handle both Unix (/) and Windows (\) path separators
+    local expected_class = test_file:match("([^/\\]+)%.java$")
 
     -- Collect test method names and IDs from positions tree
     -- ONLY include tests from the specific test file we're running
