@@ -85,9 +85,36 @@ tests/fixtures/maven-simple/
    - Polls `neotest.state.status_counts()` for results
 
 3. **Validation Phase**:
-   - Verifies that exactly 4 tests ran
-   - Verifies that exactly 2 tests passed
-   - Verifies that exactly 2 tests failed
+   - Compares results against a snapshot file
+   - Verifies test counts, pass/fail statuses match expected values
+
+### Snapshot Testing
+
+The E2E test uses **snapshot testing** to validate test results:
+
+- Test results are captured as JSON (test counts and statuses)
+- Results are compared against a snapshot file at `__snapshots__/maven-simple.json`
+- If no snapshot exists, one is automatically created
+- Any deviation from the snapshot causes the test to fail with a detailed diff
+
+**Snapshot Format:**
+```json
+{
+  "total": 4,
+  "passed": 2,
+  "failed": 2,
+  "skipped": 0,
+  "running": 0
+}
+```
+
+**Updating Snapshots:**
+
+If test expectations legitimately change, update the snapshot:
+```bash
+rm tests/e2e/__snapshots__/maven-simple.json
+./tests/e2e/run.sh  # Generates new snapshot
+```
 
 ### Mocked Dependencies
 
@@ -106,14 +133,14 @@ When successful, you'll see:
 ```
 === Neotest-Java E2E Test ===
 
+✓ JUnit JAR already present
 Compiling test project...
 ✓ Compiled
 Resolving classpath...
 ✓ Classpath resolved
 Running tests via Neotest...
 ✓ Tests executed
-Results: 4 total, 2 passed, 2 failed
-✓ E2E TEST PASSED - Got expected 4 tests (2 pass, 2 fail)
+✓ E2E TEST PASSED - Results match snapshot
 
 === E2E Test Complete ===
 ```
@@ -198,11 +225,12 @@ The current E2E test:
 
 - Only tests Maven projects (Gradle support could be added)
 - Only tests JUnit 5 (JUnit 4 support exists in the adapter)
-- Only validates status counts (not individual test details)
+- Uses snapshot testing for status counts (not individual test details)
 - Requires jdtls mocking (doesn't test with real LSP)
 
 Future improvements could add:
 - Gradle fixture
-- JUnit 4 fixture
+- JUnit 4 fixture  
 - Spring Boot application tests
 - Multi-module Maven project tests
+- More detailed result snapshots (individual test names, errors, diagnostics)

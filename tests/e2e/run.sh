@@ -167,12 +167,10 @@ vim.schedule(function()
       return
     end
 
-    -- Write results using status counts
-    local f = io.open("/tmp/neotest-e2e-results.txt", "w")
+    -- Write status counts as JSON for snapshot testing
+    local f = io.open("/tmp/neotest-e2e-results.json", "w")
     if f then
-      f:write(string.format("%d,%d,%d\\n", counts.total, counts.passed, counts.failed))
-      -- Also write full counts for debug
-      f:write(string.format("Status counts: %s\\n", vim.inspect(counts)))
+      f:write(vim.fn.json_encode(counts))
       f:close()
     end
 
@@ -195,7 +193,7 @@ EOFSCRIPT
 
 # Run the E2E test
 echo -e "${YELLOW}Running tests via Neotest...${NC}"
-rm -f /tmp/neotest-e2e-results.txt /tmp/neotest-e2e-error.txt
+rm -f /tmp/neotest-e2e-results.json /tmp/neotest-e2e-error.txt
 
 if nvim --headless --noplugin -u tests/testrc.vim \
     -c "luafile /tmp/neotest-e2e.lua" \
@@ -208,25 +206,54 @@ if nvim --headless --noplugin -u tests/testrc.vim \
         exit 1
     fi
 
-    if [ -f /tmp/neotest-e2e-results.txt ]; then
-        IFS=',' read -r total passed failed < /tmp/neotest-e2e-results.txt
+    if [ -f /tmp/neotest-e2e-results.json ]; then
         echo -e "${GREEN}✓ Tests executed${NC}"
-        echo -e "${BLUE}Results: $total total, $passed passed, $failed failed${NC}"
 
-        # Calculate expected counts based on test method names containing "fail" (case-insensitive)
-        EXPECTED_TOTAL=$(grep -c "@Test" "$TEST_FILE" || echo 0)
-        EXPECTED_FAILED=$(grep -iE "void.*fail.*\(" "$TEST_FILE" | wc -l | tr -d ' ')
-        EXPECTED_PASSED=$((EXPECTED_TOTAL - EXPECTED_FAILED))
+        # Path to snapshot file
+        SNAPSHOT_FILE="$PROJ_ROOT/tests/e2e/__snapshots__/maven-simple.json"
 
-        echo -e "${BLUE}Expected: $EXPECTED_TOTAL total, $EXPECTED_PASSED passed, $EXPECTED_FAILED failed${NC}"
+        # Check if snapshot exists
+        if [ ! -f "$SNAPSHOT_FILE" ]; then
+            echo -e "${YELLOW}⚠ Snapshot file not found. Creating new snapshot at:${NC}"
+            echo -e "${YELLOW}  $SNAPSHOT_FILE${NC}"
+            mkdir -p "$(dirname "$SNAPSHOT_FILE")"
+            cp /tmp/neotest-e2e-results.json "$SNAPSHOT_FILE"
+            echo -e "${GREEN}✓ Snapshot created${NC}"
+            exit 0
+        fi
 
-        if [ "$total" -eq "$EXPECTED_TOTAL" ] && [ "$passed" -eq "$EXPECTED_PASSED" ] && [ "$failed" -eq "$EXPECTED_FAILED" ]; then
-            echo -e "${GREEN}✓ E2E TEST PASSED - Got expected counts${NC}"
+        # Compare results with snapshot
+        if command -v jq &> /dev/null; then
+            # Use jq for pretty comparison
+            ACTUAL=$(jq -S . /tmp/neotest-e2e-results.json)
+            EXPECTED=$(jq -S . "$SNAPSHOT_FILE")
+
+            if [ "$ACTUAL" == "$EXPECTED" ]; then
+                echo -e "${GREEN}✓ E2E TEST PASSED - Results match snapshot${NC}"
+            else
+                echo -e "${RED}✗ Results don't match snapshot${NC}"
+                echo -e "${YELLOW}Expected:${NC}"
+                echo "$EXPECTED"
+                echo -e "${YELLOW}Actual:${NC}"
+                echo "$ACTUAL"
+                echo -e "${YELLOW}Diff:${NC}"
+                diff <(echo "$EXPECTED") <(echo "$ACTUAL") || true
+                exit 1
+            fi
         else
-            echo -e "${RED}✗ Unexpected results${NC}"
-            echo "Full results:"
-            cat /tmp/neotest-e2e-results.txt
-            exit 1
+            # Fallback to basic comparison without jq
+            if diff -w "$SNAPSHOT_FILE" /tmp/neotest-e2e-results.json > /dev/null 2>&1; then
+                echo -e "${GREEN}✓ E2E TEST PASSED - Results match snapshot${NC}"
+            else
+                echo -e "${RED}✗ Results don't match snapshot${NC}"
+                echo -e "${YELLOW}Expected:${NC}"
+                cat "$SNAPSHOT_FILE"
+                echo -e "${YELLOW}Actual:${NC}"
+                cat /tmp/neotest-e2e-results.json
+                echo -e "${YELLOW}Diff:${NC}"
+                diff -u "$SNAPSHOT_FILE" /tmp/neotest-e2e-results.json || true
+                exit 1
+            fi
         fi
     else
         echo -e "${RED}✗ No results generated${NC}"
@@ -243,6 +270,6 @@ else
 fi
 
 # Cleanup
-rm -f /tmp/neotest-e2e.lua /tmp/neotest-e2e-results.txt /tmp/neotest-e2e-error.txt /tmp/neotest-e2e.log /tmp/maven-classpath.txt
+rm -f /tmp/neotest-e2e.lua /tmp/neotest-e2e-results.json /tmp/neotest-e2e-error.txt /tmp/neotest-e2e.log /tmp/maven-classpath.txt
 
 echo -e "\n${GREEN}=== E2E Test Complete ===${NC}"
