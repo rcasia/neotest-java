@@ -45,7 +45,9 @@ fi
 # Download JUnit Platform Console Standalone JAR if not present
 JUNIT_VERSION="6.0.3"
 JUNIT_JAR_NAME="junit-platform-console-standalone-${JUNIT_VERSION}.jar"
-JUNIT_JAR_DIR="${HOME}/.local/share/nvim/neotest-java"
+# Use Neovim's stdpath to get the correct data directory (cross-platform)
+NVIM_DATA_DIR=$(nvim --headless --noplugin -u NONE -c "lua print(vim.fn.stdpath('data'))" -c "quitall" 2>&1 | grep -v "^E" | tail -1 | tr -d '\r')
+JUNIT_JAR_DIR="${NVIM_DATA_DIR}/neotest-java"
 JUNIT_JAR_PATH="${JUNIT_JAR_DIR}/${JUNIT_JAR_NAME}"
 JUNIT_URL="https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/${JUNIT_VERSION}/${JUNIT_JAR_NAME}"
 JUNIT_SHA256="3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2"
