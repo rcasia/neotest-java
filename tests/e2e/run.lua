@@ -2,7 +2,7 @@
 -- E2E test for neotest-java
 -- Runs real tests through Neotest and verifies results
 
-local uv = vim.loop
+local uv = vim.uv
 
 -- ANSI color codes
 local colors = {
@@ -163,7 +163,7 @@ local function main()
 	local test_file = args.test_file or (fixture_dir .. "/src/test/java/com/example/SampleTest.java")
 
 	-- Detect platform
-	local is_windows = vim.loop.os_uname().sysname == "Windows_NT"
+	local is_windows = vim.uv.os_uname().sysname == "Windows_NT"
 	local mvnw = fixture_dir .. (is_windows and "/mvnw.cmd" or "/mvnw")
 	local path_sep = is_windows and ";" or ":"
 

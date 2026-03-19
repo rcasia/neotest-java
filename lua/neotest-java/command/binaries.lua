@@ -42,12 +42,16 @@ local Binaries = function(deps)
 
 		--- @param cwd neotest-java.Path
 		java = function(cwd)
-			return Path(get_java_home(cwd)):append("/bin/java")
+			local is_windows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+			local exe_ext = is_windows and ".exe" or ""
+			return Path(get_java_home(cwd)):append("bin/java" .. exe_ext)
 		end,
 
 		--- @param cwd neotest-java.Path
 		javap = function(cwd)
-			return Path(get_java_home(cwd)):append("/bin/javap")
+			local is_windows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+			local exe_ext = is_windows and ".exe" or ""
+			return Path(get_java_home(cwd)):append("bin/javap" .. exe_ext)
 		end,
 	}
 end
