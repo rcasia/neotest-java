@@ -92,19 +92,37 @@ tests/fixtures/maven-simple/
 
 The E2E test uses **snapshot testing** to validate test results:
 
-- Test results are captured as JSON (test counts and statuses)
-- Results are compared against a snapshot file at `__snapshots__/maven-simple.json`
+- Test results are captured as JSON (test counts and individual test details)
+- Results are compared against a snapshot file stored alongside each test fixture
 - If no snapshot exists, one is automatically created
 - Any deviation from the snapshot causes the test to fail with a detailed diff
+
+**Snapshot Location:**
+Each test fixture has its own snapshot file:
+```
+tests/fixtures/maven-simple/
+├── snapshot.json          # Test results snapshot
+├── pom.xml
+└── src/test/java/...
+```
 
 **Snapshot Format:**
 ```json
 {
-  "total": 4,
-  "passed": 2,
-  "failed": 2,
-  "skipped": 0,
-  "running": 0
+  "summary": {
+    "total": 4,
+    "passed": 2,
+    "failed": 2,
+    "skipped": 0,
+    "running": 0
+  },
+  "results": {
+    "testThatPasses": {
+      "id": "com.example.SampleTest#testThatPasses()",
+      "name": "testThatPasses",
+      "type": "test"
+    }
+  }
 }
 ```
 
@@ -112,8 +130,8 @@ The E2E test uses **snapshot testing** to validate test results:
 
 If test expectations legitimately change, update the snapshot:
 ```bash
-rm tests/e2e/__snapshots__/maven-simple.json
-./tests/e2e/run.sh  # Generates new snapshot
+rm tests/fixtures/maven-simple/snapshot.json
+make test-e2e  # Generates new snapshot
 ```
 
 ### Mocked Dependencies
@@ -225,7 +243,7 @@ The current E2E test:
 
 - Only tests Maven projects (Gradle support could be added)
 - Only tests JUnit 5 (JUnit 4 support exists in the adapter)
-- Uses snapshot testing for status counts (not individual test details)
+- Uses snapshot testing for status counts and test IDs (not test output/diagnostics)
 - Requires jdtls mocking (doesn't test with real LSP)
 
 Future improvements could add:
@@ -233,4 +251,4 @@ Future improvements could add:
 - JUnit 4 fixture  
 - Spring Boot application tests
 - Multi-module Maven project tests
-- More detailed result snapshots (individual test names, errors, diagnostics)
+- Test output and diagnostic snapshots

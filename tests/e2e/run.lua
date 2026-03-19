@@ -389,12 +389,11 @@ end, 30000)
 	log_success("Tests executed")
 
 	-- Compare with snapshot
-	local snapshot_file = proj_root .. "/tests/e2e/__snapshots__/maven-simple.json"
+	local snapshot_file = fixture_dir .. "/snapshot.json"
 
 	if not file_exists(snapshot_file) then
 		log_info("⚠ Snapshot file not found. Creating new snapshot at:")
 		log_info("  " .. snapshot_file)
-		mkdir_p(proj_root .. "/tests/e2e/__snapshots__")
 		execute(string.format("cp /tmp/neotest-e2e-results.json %s", vim.fn.shellescape(snapshot_file)))
 		log_success("Snapshot created")
 		os.exit(0)
