@@ -4,13 +4,13 @@ This directory contains end-to-end tests for neotest-java that validate the comp
 
 ## What the E2E Test Validates
 
-The E2E test (`run.sh`) validates the **full user workflow**:
+The E2E test validates the **full user workflow**:
 
 1. ✅ **Test Discovery**: Adapter recognizes Java test files
 2. ✅ **Test Compilation**: Tests are compiled (via Maven in this case)
 3. ✅ **Test Execution**: Tests run through neotest's `run.run()` API
 4. ✅ **Result Parsing**: Pass/fail results are correctly captured
-5. ✅ **Status Reporting**: Results are accessible via `neotest.state.status_counts()`
+5. ✅ **Status Reporting**: Results are accessible via `neotest.state`
 
 This validates that neotest-java works correctly in a **headless Neovim environment**, making it suitable for CI/CD pipelines.
 
@@ -35,25 +35,111 @@ echo $JAVA_HOME
 
 # Check Neovim
 nvim --version
-
-# Maven wrapper is included in the test fixture
-ls tests/fixtures/maven-simple/mvnw
 ```
 
 ## Running the E2E Tests
 
-### From the Project Root
+### Run All E2E Tests
 
 ```bash
-# Run the E2E test
-./tests/e2e/run.sh
-```
-
-### From the Makefile (if integrated)
-
-```bash
+# From the project root
 make test-e2e
+
+# Or directly
+./tests/e2e/run-all.sh
 ```
+
+This will run E2E tests for all test files in the fixture and compare results against their snapshots.
+
+### Run a Specific Test File
+
+```bash
+nvim -l tests/e2e/run.lua \
+  --fixture maven-simple \
+  --test-file tests/fixtures/maven-simple/src/test/java/com/example/SampleTest.java
+```
+
+## Managing Snapshots
+
+### Snapshot Testing
+
+Each test file has its own snapshot that captures the expected test structure:
+
+```
+tests/fixtures/maven-simple/src/test/java/com/example/
+├── SampleTest.java
+├── SampleTest.snapshot.json          # Snapshot for SampleTest
+├── CalculatorTest.java
+└── CalculatorTest.snapshot.json      # Snapshot for CalculatorTest
+```
+
+**Snapshot Format:**
+```json
+{
+  "results": {
+    "testMethodName": {
+      "id": "com.example.ClassName#testMethodName()",
+      "name": "testMethodName",
+      "type": "test"
+    }
+  }
+}
+```
+
+### Update All Snapshots
+
+When you add new test methods or test files, regenerate snapshots:
+
+```bash
+# Update all snapshots in a fixture
+./tests/e2e/update-snapshots.sh maven-simple
+```
+
+### Update a Single Snapshot
+
+```bash
+nvim -l tests/e2e/run.lua \
+  --update-snapshots \
+  --fixture maven-simple \
+  --test-file tests/fixtures/maven-simple/src/test/java/com/example/SampleTest.java
+```
+
+### Workflow for Adding New Tests
+
+1. **Add new test methods** or **create new test files** in your fixture:
+   ```bash
+   # Example: Add a new test file
+   cat > tests/fixtures/maven-simple/src/test/java/com/example/MathTest.java <<'EOF'
+   package com.example;
+
+   import org.junit.jupiter.api.Test;
+   import static org.junit.jupiter.api.Assertions.*;
+
+   public class MathTest {
+       @Test
+       public void testAddition() {
+           assertEquals(4, 2 + 2);
+       }
+   }
+   EOF
+   ```
+
+2. **Generate snapshots** for all test files:
+   ```bash
+   ./tests/e2e/update-snapshots.sh maven-simple
+   ```
+
+3. **Run E2E tests** to verify:
+   ```bash
+   make test-e2e
+   ```
+
+4. **Commit the changes**:
+   ```bash
+   git add tests/fixtures/maven-simple/src/test/java/com/example/MathTest.java
+   git add tests/fixtures/maven-simple/src/test/java/com/example/MathTest.snapshot.json
+   git commit -m "test: add MathTest fixture"
+   ```
 
 ## Test Structure
 
@@ -63,12 +149,12 @@ The test uses a Maven-based fixture located at:
 ```
 tests/fixtures/maven-simple/
 ├── pom.xml
-└── src/test/java/com/example/SampleTest.java
+└── src/test/java/com/example/
+    ├── SampleTest.java           # 4 tests (2 pass, 2 fail)
+    ├── SampleTest.snapshot.json
+    ├── CalculatorTest.java       # 4 tests (all pass)
+    └── CalculatorTest.snapshot.json
 ```
-
-**SampleTest.java** contains 4 test methods:
-- 2 tests that **pass** (`testThatPasses`, `anotherPassingTest`)
-- 2 tests that **fail** (`testThatFails`, `anotherFailingTest`)
 
 ### How It Works
 
@@ -82,57 +168,11 @@ tests/fixtures/maven-simple/
    - Loads neotest with the Java adapter
    - Mocks jdtls dependencies (binaries, classpath, compiler)
    - Calls `neotest.run.run()` to execute tests
-   - Polls `neotest.state.status_counts()` for results
+   - Filters results to only include tests from the target file
 
 3. **Validation Phase**:
-   - Compares results against a snapshot file
-   - Verifies test counts, pass/fail statuses match expected values
-
-### Snapshot Testing
-
-The E2E test uses **snapshot testing** to validate test results:
-
-- Test results are captured as JSON (test counts and individual test details)
-- Results are compared against a snapshot file stored alongside each test fixture
-- If no snapshot exists, one is automatically created
-- Any deviation from the snapshot causes the test to fail with a detailed diff
-
-**Snapshot Location:**
-Each test fixture has its own snapshot file:
-```
-tests/fixtures/maven-simple/
-├── snapshot.json          # Test results snapshot
-├── pom.xml
-└── src/test/java/...
-```
-
-**Snapshot Format:**
-```json
-{
-  "summary": {
-    "total": 4,
-    "passed": 2,
-    "failed": 2,
-    "skipped": 0,
-    "running": 0
-  },
-  "results": {
-    "testThatPasses": {
-      "id": "com.example.SampleTest#testThatPasses()",
-      "name": "testThatPasses",
-      "type": "test"
-    }
-  }
-}
-```
-
-**Updating Snapshots:**
-
-If test expectations legitimately change, update the snapshot:
-```bash
-rm tests/fixtures/maven-simple/snapshot.json
-make test-e2e  # Generates new snapshot
-```
+   - Compares results against the test file's snapshot
+   - Verifies test IDs and names match expected values
 
 ### Mocked Dependencies
 

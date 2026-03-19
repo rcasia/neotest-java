@@ -125,13 +125,42 @@ local function compare_json_files(file1, file2)
 	end
 end
 
+-- Parse command-line arguments
+local function parse_args()
+	local opts = {
+		update_snapshots = false,
+		test_file = nil,
+		fixture = "maven-simple",
+	}
+
+	-- Use _G.arg (global arg table in Lua scripts run with -l)
+	local args = _G.arg or {}
+
+	local i = 1
+	while i <= #args do
+		if args[i] == "--update-snapshots" or args[i] == "-u" then
+			opts.update_snapshots = true
+		elseif args[i] == "--fixture" or args[i] == "-f" then
+			i = i + 1
+			opts.fixture = args[i]
+		elseif args[i] == "--test-file" or args[i] == "-t" then
+			i = i + 1
+			opts.test_file = args[i]
+		end
+		i = i + 1
+	end
+
+	return opts
+end
+
 -- Main E2E test function
 local function main()
 	log_section("Neotest-Java E2E Test")
 
+	local args = parse_args()
 	local proj_root = uv.cwd()
-	local fixture_dir = proj_root .. "/tests/fixtures/maven-simple"
-	local test_file = fixture_dir .. "/src/test/java/com/example/SampleTest.java"
+	local fixture_dir = proj_root .. "/tests/fixtures/" .. args.fixture
+	local test_file = args.test_file or (fixture_dir .. "/src/test/java/com/example/SampleTest.java")
 	local mvnw = fixture_dir .. "/mvnw"
 
 	-- Check prerequisites
@@ -224,7 +253,8 @@ local function main()
 	local full_cp = string.format("%s/target/classes:%s/target/test-classes:%s", fixture_dir, fixture_dir, maven_cp)
 
 	-- Create the embedded Lua test script
-	local test_script = string.format([[
+	-- Note: Using [=[ ]=] instead of [[ ]] to avoid escaping issues with % in patterns
+	local test_script = [=[
 local test_file = vim.fn.argv()[1]
 local classpath = vim.fn.argv()[2]
 
@@ -290,7 +320,12 @@ vim.schedule(function()
       return
     end
 
+    -- Extract expected class name from test file path
+    -- e.g., /path/to/SampleTest.java -> SampleTest
+    local expected_class = test_file:match("([^/]+)%.java$")
+
     -- Collect test method names and IDs from positions tree
+    -- ONLY include tests from the specific test file we're running
     local test_results = {}
     local positions_tree = neotest.state.positions(adapter_id)
     if positions_tree then
@@ -298,14 +333,19 @@ vim.schedule(function()
         if node then
           local pos = node:data()
           if pos and pos.type == "test" then
-            -- Extract method name from position ID (format: com.example.Class#methodName())
-            local method_name = pos.id:match("#([^(]+)")
-            if method_name then
-              test_results[method_name] = {
-                id = pos.id,
-                name = pos.name,
-                type = pos.type
-              }
+            -- Extract class name from position ID (format: com.example.ClassName#methodName())
+            local class_name = pos.id:match("%.([^.]+)#")
+
+            -- Only include tests from the target file
+            if class_name == expected_class then
+              local method_name = pos.id:match("#([^(]+)")
+              if method_name then
+                test_results[method_name] = {
+                  id = pos.id,
+                  name = pos.name,
+                  type = pos.type
+                }
+              end
             end
           end
         end
@@ -313,8 +353,8 @@ vim.schedule(function()
     end
 
     -- Write results as JSON for snapshot testing
+    -- Only include the test IDs, not counts (counts would include all files)
     local snapshot = {
-      summary = counts,
       results = test_results
     }
 
@@ -339,7 +379,7 @@ vim.defer_fn(function()
   end
   vim.cmd("cquit! 1")
 end, 30000)
-]])
+]=]
 
 	local test_script_path = "/tmp/neotest-e2e.lua"
 	write_file(test_script_path, test_script)
@@ -388,14 +428,23 @@ end, 30000)
 
 	log_success("Tests executed")
 
-	-- Compare with snapshot
-	local snapshot_file = fixture_dir .. "/snapshot.json"
+	-- Derive snapshot file name from test file
+	-- e.g., /path/to/SampleTest.java -> /path/to/SampleTest.snapshot.json
+	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json")
+	if snapshot_file == test_file then
+		log_error("Could not derive snapshot file name from: " .. test_file)
+		os.exit(1)
+	end
 
-	if not file_exists(snapshot_file) then
-		log_info("⚠ Snapshot file not found. Creating new snapshot at:")
+	if args.update_snapshots or not file_exists(snapshot_file) then
+		if not file_exists(snapshot_file) then
+			log_info("⚠ Snapshot file not found. Creating new snapshot at:")
+		else
+			log_info("Updating snapshot at:")
+		end
 		log_info("  " .. snapshot_file)
 		execute(string.format("cp /tmp/neotest-e2e-results.json %s", vim.fn.shellescape(snapshot_file)))
-		log_success("Snapshot created")
+		log_success("Snapshot saved")
 		os.exit(0)
 	end
 

@@ -12,8 +12,7 @@ test-fail-fast: install
 	bash scripts/test --fail-fast
 
 test-e2e: install
-	@echo "Running E2E tests..."
-	@nvim -l tests/e2e/run.lua
+	@tests/e2e/run-all.sh
 
 
 install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
