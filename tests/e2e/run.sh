@@ -67,9 +67,9 @@ if [ ! -f "$JUNIT_JAR_PATH" ]; then
 
     # Verify checksum
     if command -v sha256sum &> /dev/null; then
-        ACTUAL_SHA256=$(sha256sum "$JUNIT_JAR_PATH" | awk '{print $1}')
+        ACTUAL_SHA256=$(sha256sum "$JUNIT_JAR_PATH" | awk '{print $1}' | tr -d '\\')
     elif command -v shasum &> /dev/null; then
-        ACTUAL_SHA256=$(shasum -a 256 "$JUNIT_JAR_PATH" | awk '{print $1}')
+        ACTUAL_SHA256=$(shasum -a 256 "$JUNIT_JAR_PATH" | awk '{print $1}' | tr -d '\\')
     else
         echo -e "${YELLOW}⚠ No checksum tool found. Skipping verification.${NC}"
         ACTUAL_SHA256="$JUNIT_SHA256"  # Skip verification
