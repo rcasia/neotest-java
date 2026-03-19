@@ -32,18 +32,23 @@ fi
 # Compile test project and get classpath using Maven wrapper
 echo -e "${YELLOW}Compiling test project...${NC}"
 cd "$FIXTURE_DIR"
-if "$MVNW" clean test-compile -q; then
+if "$MVNW" clean test-compile -q 2>&1; then
     echo -e "${GREEN}✓ Compiled${NC}"
 else
     echo -e "${RED}✗ Compilation failed${NC}"
+    echo "Maven wrapper: $MVNW"
+    echo "Current directory: $(pwd)"
+    echo "Trying with verbose output:"
+    "$MVNW" clean test-compile || true
     exit 1
 fi
 
 echo -e "${YELLOW}Resolving classpath...${NC}"
-if "$MVNW" dependency:build-classpath -Dmdep.outputFile=/tmp/maven-classpath.txt -q; then
+if "$MVNW" dependency:build-classpath -Dmdep.outputFile=/tmp/maven-classpath.txt -q 2>&1; then
     echo -e "${GREEN}✓ Classpath resolved${NC}"
 else
     echo -e "${RED}✗ Classpath resolution failed${NC}"
+    "$MVNW" dependency:build-classpath -Dmdep.outputFile=/tmp/maven-classpath.txt || true
     exit 1
 fi
 cd "$PROJ_ROOT"
