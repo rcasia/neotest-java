@@ -114,7 +114,15 @@ cd "$PROJ_ROOT"
 
 # Read Maven classpath and add target directories (use absolute paths)
 MAVEN_CP=$(cat "$TEMP_DIR/maven-classpath.txt")
-FULL_CP="$(cd "$FIXTURE_DIR" && pwd)/target/classes:$(cd "$FIXTURE_DIR" && pwd)/target/test-classes:$MAVEN_CP"
+
+# Detect platform-specific path separator
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
+    PATH_SEP=";"
+else
+    PATH_SEP=":"
+fi
+
+FULL_CP="$(cd "$FIXTURE_DIR" && pwd)/target/classes${PATH_SEP}$(cd "$FIXTURE_DIR" && pwd)/target/test-classes${PATH_SEP}$MAVEN_CP"
 
 # Create Lua script to run tests via Neotest with mocked dependencies
 cat > "$TEMP_DIR/neotest-e2e.lua" << EOFSCRIPT
