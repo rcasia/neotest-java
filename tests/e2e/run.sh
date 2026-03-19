@@ -127,7 +127,7 @@ vim.schedule(function()
     neotest.run.run(test_file)
 
     -- Wait for test execution to complete using status_counts
-    local max_attempts = 60  -- 30 seconds
+    local max_attempts = 40  -- 20 seconds (500ms * 40)
     local attempt = 0
     local counts = nil
 
@@ -180,15 +180,15 @@ vim.schedule(function()
   end)
 end)
 
--- Overall timeout
+-- Overall timeout (30 seconds)
 vim.defer_fn(function()
   local f = io.open("/tmp/neotest-e2e-error.txt", "w")
   if f then
-    f:write("Global timeout (60s) reached\\n")
+    f:write("Global timeout (30s) reached\\n")
     f:close()
   end
   vim.cmd("cquit! 1")
-end, 60000)
+end, 30000)
 EOFSCRIPT
 
 # Run the E2E test
