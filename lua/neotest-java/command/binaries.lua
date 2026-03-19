@@ -7,9 +7,18 @@ local nio = require("nio")
 --- @field java fun(cwd: neotest-java.Path): neotest-java.Path
 --- @field javap fun(cwd: neotest-java.Path): neotest-java.Path
 
---- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
+--- @class neotest-java.BinariesDeps
+--- @field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
+--- @field is_windows? fun(): boolean
+
+--- @param deps neotest-java.BinariesDeps
 --- @return neotest-java.LspBinaries
 local Binaries = function(deps)
+	-- Default platform detection if not provided
+	local is_windows = deps.is_windows or function()
+		return vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+	end
+
 	local cached_java_homes = {}
 	--- @param cwd neotest-java.Path
 	local get_java_home = function(cwd)
@@ -42,12 +51,14 @@ local Binaries = function(deps)
 
 		--- @param cwd neotest-java.Path
 		java = function(cwd)
-			return Path(get_java_home(cwd)):append("/bin/java")
+			local exe_ext = is_windows() and ".exe" or ""
+			return Path(get_java_home(cwd)):append("bin/java" .. exe_ext)
 		end,
 
 		--- @param cwd neotest-java.Path
 		javap = function(cwd)
-			return Path(get_java_home(cwd)):append("/bin/javap")
+			local exe_ext = is_windows() and ".exe" or ""
+			return Path(get_java_home(cwd)):append("bin/javap" .. exe_ext)
 		end,
 	}
 end

@@ -34,10 +34,10 @@ describe("E2E: neotest-java full workflow", function()
 
 			-- Wait for results (with timeout)
 			local max_wait = 30000 -- 30 seconds
-			local start_time = vim.loop.now()
+			local start_time = vim.uv.now()
 			local results = nil
 
-			while vim.loop.now() - start_time < max_wait do
+			while vim.uv.now() - start_time < max_wait do
 				nio.sleep(500)
 				results = neotest.state.results()
 

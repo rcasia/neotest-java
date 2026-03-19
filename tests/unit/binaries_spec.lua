@@ -24,13 +24,23 @@ describe("Binaries", function()
 	end
 
 	it("resolves jdtls java binary", function()
-		local bin = Binaries({ client_provider = test_client_provider })
+		local bin = Binaries({
+			client_provider = test_client_provider,
+			is_windows = function()
+				return false
+			end,
+		})
 		local result = bin.java(expected_cwd)
 		eq(Path("my_java_home/bin/java"), result)
 	end)
 
 	it("resolves jdtls javap binary", function()
-		local bin = Binaries({ client_provider = test_client_provider })
+		local bin = Binaries({
+			client_provider = test_client_provider,
+			is_windows = function()
+				return false
+			end,
+		})
 		local result = bin.javap(expected_cwd)
 		eq(Path("my_java_home/bin/javap"), result)
 	end)
@@ -46,6 +56,9 @@ describe("Binaries", function()
 					end,
 				}
 			end,
+			is_windows = function()
+				return false
+			end,
 		})
 
 		for _ = 1, 10 do
@@ -56,5 +69,18 @@ describe("Binaries", function()
 		end
 
 		assert(invocation_count == 2, "Expected two invocations of the LSP request, got " .. invocation_count)
+	end)
+
+	it("adds .exe extension on Windows", function()
+		local bin = Binaries({
+			client_provider = test_client_provider,
+			is_windows = function()
+				return true
+			end,
+		})
+		local java_result = bin.java(expected_cwd)
+		local javap_result = bin.javap(expected_cwd)
+		eq(Path("my_java_home/bin/java.exe"), java_result)
+		eq(Path("my_java_home/bin/javap.exe"), javap_result)
 	end)
 end)

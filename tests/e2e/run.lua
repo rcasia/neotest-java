@@ -2,7 +2,7 @@
 -- E2E test for neotest-java
 -- Runs real tests through Neotest and verifies results
 
-local uv = vim.loop
+local uv = vim.uv
 
 -- ANSI color codes
 local colors = {
@@ -78,7 +78,6 @@ local function write_file(path, content)
 end
 
 local function download_file(url, output_path)
-	local cmd = "curl"
 	local has_curl = execute("command -v curl") ~= ""
 	local has_wget = execute("command -v wget") ~= ""
 
@@ -161,7 +160,11 @@ local function main()
 	local proj_root = uv.cwd()
 	local fixture_dir = proj_root .. "/tests/fixtures/" .. args.fixture
 	local test_file = args.test_file or (fixture_dir .. "/src/test/java/com/example/SampleTest.java")
-	local mvnw = fixture_dir .. "/mvnw"
+
+	-- Detect platform
+	local is_windows = vim.uv.os_uname().sysname == "Windows_NT"
+	local mvnw = fixture_dir .. (is_windows and "/mvnw.cmd" or "/mvnw")
+	local path_sep = is_windows and ";" or ":"
 
 	-- Check prerequisites
 	if not file_exists(mvnw) then
@@ -250,7 +253,15 @@ local function main()
 	end
 	maven_cp = maven_cp:gsub("\n", "")
 
-	local full_cp = string.format("%s/target/classes:%s/target/test-classes:%s", fixture_dir, fixture_dir, maven_cp)
+	-- Build full classpath with platform-specific separator
+	local full_cp = string.format(
+		"%s/target/classes%s%s/target/test-classes%s%s",
+		fixture_dir,
+		path_sep,
+		fixture_dir,
+		path_sep,
+		maven_cp
+	)
 
 	-- Create the embedded Lua test script
 	-- Note: Using [=[ ]=] instead of [[ ]] to avoid escaping issues with % in patterns
@@ -321,8 +332,9 @@ vim.schedule(function()
     end
 
     -- Extract expected class name from test file path
-    -- e.g., /path/to/SampleTest.java -> SampleTest
-    local expected_class = test_file:match("([^/]+)%.java$")
+    -- e.g., /path/to/SampleTest.java or C:\path\to\SampleTest.java -> SampleTest
+    -- Handle both Unix (/) and Windows (\) path separators
+    local expected_class = test_file:match("([^/\\]+)%.java$")
 
     -- Collect test method names and IDs from positions tree
     -- ONLY include tests from the specific test file we're running
@@ -396,7 +408,7 @@ end, 30000)
 		vim.fn.shellescape(full_cp)
 	)
 
-	local nvim_result, nvim_success = execute(nvim_cmd)
+	local _, nvim_success = execute(nvim_cmd)
 
 	if not nvim_success then
 		log_error("Neovim exited with error")
