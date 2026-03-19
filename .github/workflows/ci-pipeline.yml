@@ -15,8 +15,11 @@ jobs:
   test:
     uses: ./.github/workflows/test.yml
 
+  e2e-test:
+    uses: ./.github/workflows/e2e-test.yml
+
   release:
-    needs: test
+    needs: [test, e2e-test]
     name: release
     permissions:
       contents: write
