@@ -12,9 +12,9 @@ function M.install_mocks(classpath)
 	local path_sep = is_windows and ";" or ":"
 
 	-- Mock the client_provider module - returns a fake client that provides Java home
-	package.loaded["neotest-java.core.spec_builder.compiler.client_provider"] = function(cwd)
+	package.loaded["neotest-java.core.spec_builder.compiler.client_provider"] = function(_)
 		return {
-			request = function(self, method, params, callback)
+			request = function(_, method, params, callback)
 				if method == "workspace/executeCommand" and params.command == "java.project.getSettings" then
 					-- Return Java home from environment
 					local java_home = vim.env.JAVA_HOME
@@ -26,9 +26,9 @@ function M.install_mocks(classpath)
 	end
 
 	-- Mock classpath provider - returns pre-resolved Maven classpath
-	package.loaded["neotest-java.core.spec_builder.compiler.classpath_provider"] = function(deps)
+	package.loaded["neotest-java.core.spec_builder.compiler.classpath_provider"] = function(_)
 		return {
-			get_classpath = function(base_dir, additional_classpath_entries)
+			get_classpath = function(_, additional_classpath_entries)
 				additional_classpath_entries = additional_classpath_entries or {}
 				local paths = {}
 
@@ -46,9 +46,9 @@ function M.install_mocks(classpath)
 	end
 
 	-- Mock LSP compiler - no-op since tests are pre-compiled by Maven
-	package.loaded["neotest-java.core.spec_builder.compiler.lsp_compiler"] = function(deps)
+	package.loaded["neotest-java.core.spec_builder.compiler.lsp_compiler"] = function(_)
 		return {
-			compile = function(args)
+			compile = function(_)
 				-- No-op: tests are already compiled by Maven
 			end,
 		}

@@ -78,7 +78,6 @@ local function write_file(path, content)
 end
 
 local function download_file(url, output_path)
-	local cmd = "curl"
 	local has_curl = execute("command -v curl") ~= ""
 	local has_wget = execute("command -v wget") ~= ""
 
@@ -409,7 +408,7 @@ end, 30000)
 		vim.fn.shellescape(full_cp)
 	)
 
-	local nvim_result, nvim_success = execute(nvim_cmd)
+	local _, nvim_success = execute(nvim_cmd)
 
 	if not nvim_success then
 		log_error("Neovim exited with error")
