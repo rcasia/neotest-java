@@ -26,9 +26,7 @@ describe("Binaries", function()
 	it("resolves jdtls java binary", function()
 		local bin = Binaries({
 			client_provider = test_client_provider,
-			is_windows = function()
-				return false
-			end,
+			is_windows = false,
 		})
 		local result = bin.java(expected_cwd)
 		eq(Path("my_java_home/bin/java"), result)
@@ -37,9 +35,7 @@ describe("Binaries", function()
 	it("resolves jdtls javap binary", function()
 		local bin = Binaries({
 			client_provider = test_client_provider,
-			is_windows = function()
-				return false
-			end,
+			is_windows = false,
 		})
 		local result = bin.javap(expected_cwd)
 		eq(Path("my_java_home/bin/javap"), result)
@@ -56,9 +52,7 @@ describe("Binaries", function()
 					end,
 				}
 			end,
-			is_windows = function()
-				return false
-			end,
+			is_windows = false,
 		})
 
 		for _ = 1, 10 do
@@ -74,9 +68,7 @@ describe("Binaries", function()
 	it("adds .exe extension on Windows", function()
 		local bin = Binaries({
 			client_provider = test_client_provider,
-			is_windows = function()
-				return true
-			end,
+			is_windows = true,
 		})
 		local java_result = bin.java(expected_cwd)
 		local javap_result = bin.javap(expected_cwd)
