@@ -10,6 +10,13 @@ deps
 tests/fixtures/*/target/
 tests/fixtures/*/.mvn/wrapper/maven-wrapper.jar
 
+# IDE files (Eclipse, IntelliJ, VSCode, etc.)
+tests/fixtures/*/.classpath
+tests/fixtures/*/.project
+tests/fixtures/*/.settings/
+tests/fixtures/*/.idea/
+tests/fixtures/*/*.iml
+
 # Temporary test files
 /tmp/neotest-e2e*.lua
 /tmp/neotest-e2e*.log
