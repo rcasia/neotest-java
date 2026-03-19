@@ -35,6 +35,9 @@ local function log_info(msg)
 end
 
 local function execute(cmd, cwd)
+	if not cmd then
+		return nil, "Command is nil"
+	end
 	local handle = io.popen((cwd and ("cd " .. vim.fn.shellescape(cwd) .. " && ") or "") .. cmd .. " 2>&1")
 	if not handle then
 		return nil, "Failed to execute command"
@@ -249,6 +252,7 @@ vim.schedule(function()
     local max_attempts = 40  -- 20 seconds (500ms * 40)
     local attempt = 0
     local counts = nil
+    local adapter_id = nil
 
     while attempt < max_attempts do
       nio.sleep(500)
@@ -262,7 +266,7 @@ vim.schedule(function()
       end
 
       -- Get status counts from the registered adapter
-      local adapter_id = adapter_ids[1]
+      adapter_id = adapter_ids[1]
       counts = neotest.state.status_counts(adapter_id)
 
       -- Check if tests have finished (no tests running)
@@ -286,10 +290,37 @@ vim.schedule(function()
       return
     end
 
-    -- Write status counts as JSON for snapshot testing
+    -- Collect test method names and IDs from positions tree
+    local test_results = {}
+    local positions_tree = neotest.state.positions(adapter_id)
+    if positions_tree then
+      for _, node in positions_tree:iter_nodes() do
+        if node then
+          local pos = node:data()
+          if pos and pos.type == "test" then
+            -- Extract method name from position ID (format: com.example.Class#methodName())
+            local method_name = pos.id:match("#([^(]+)")
+            if method_name then
+              test_results[method_name] = {
+                id = pos.id,
+                name = pos.name,
+                type = pos.type
+              }
+            end
+          end
+        end
+      end
+    end
+
+    -- Write results as JSON for snapshot testing
+    local snapshot = {
+      summary = counts,
+      results = test_results
+    }
+
     local f = io.open("/tmp/neotest-e2e-results.json", "w")
     if f then
-      f:write(vim.fn.json_encode(counts))
+      f:write(vim.fn.json_encode(snapshot))
       f:close()
     end
 
