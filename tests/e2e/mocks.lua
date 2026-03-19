@@ -9,6 +9,10 @@ local M = {}
 --- @param classpath string The classpath to use
 --- @return table
 function M.create_mocks(classpath)
+	-- Detect Windows for executable extensions
+	local is_windows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+	local exe_ext = is_windows and ".exe" or ""
+
 	return {
 		-- Mock binaries module - returns system Java
 		binaries = function(deps)
@@ -16,12 +20,12 @@ function M.create_mocks(classpath)
 				java = function(cwd)
 					local java_home = vim.env.JAVA_HOME
 					assert(java_home, "JAVA_HOME environment variable must be set")
-					return Path(java_home):append("bin/java")
+					return Path(java_home):append("bin/java" .. exe_ext)
 				end,
 				javap = function(cwd)
 					local java_home = vim.env.JAVA_HOME
 					assert(java_home, "JAVA_HOME environment variable must be set")
-					return Path(java_home):append("bin/javap")
+					return Path(java_home):append("bin/javap" .. exe_ext)
 				end,
 			}
 		end,
@@ -41,7 +45,9 @@ function M.create_mocks(classpath)
 					-- Add the Maven-resolved classpath
 					table.insert(paths, classpath)
 
-					return table.concat(paths, ":")
+					-- Use platform-specific path separator
+					local sep = vim.loop.os_uname().sysname == "Windows_NT" and ";" or ":"
+					return table.concat(paths, sep)
 				end,
 			}
 		end,

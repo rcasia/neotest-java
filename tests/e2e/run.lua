@@ -161,7 +161,11 @@ local function main()
 	local proj_root = uv.cwd()
 	local fixture_dir = proj_root .. "/tests/fixtures/" .. args.fixture
 	local test_file = args.test_file or (fixture_dir .. "/src/test/java/com/example/SampleTest.java")
-	local mvnw = fixture_dir .. "/mvnw"
+
+	-- Detect platform
+	local is_windows = vim.loop.os_uname().sysname == "Windows_NT"
+	local mvnw = fixture_dir .. (is_windows and "/mvnw.cmd" or "/mvnw")
+	local path_sep = is_windows and ";" or ":"
 
 	-- Check prerequisites
 	if not file_exists(mvnw) then
@@ -250,7 +254,15 @@ local function main()
 	end
 	maven_cp = maven_cp:gsub("\n", "")
 
-	local full_cp = string.format("%s/target/classes:%s/target/test-classes:%s", fixture_dir, fixture_dir, maven_cp)
+	-- Build full classpath with platform-specific separator
+	local full_cp = string.format(
+		"%s/target/classes%s%s/target/test-classes%s%s",
+		fixture_dir,
+		path_sep,
+		fixture_dir,
+		path_sep,
+		maven_cp
+	)
 
 	-- Create the embedded Lua test script
 	-- Note: Using [=[ ]=] instead of [[ ]] to avoid escaping issues with % in patterns
