@@ -115,11 +115,18 @@ cd "$PROJ_ROOT"
 # Read Maven classpath and add target directories (use absolute paths)
 MAVEN_CP=$(cat "$TEMP_DIR/maven-classpath.txt")
 
-# Detect platform-specific path separator
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
-    PATH_SEP=";"
-else
-    PATH_SEP=":"
+# Get platform-specific path separator from Java
+PATH_SEP=$(cd "$FIXTURE_DIR" && "$MVNW" -q exec:exec -Dexec.executable="echo" -Dexec.args='${path.separator}' 2>/dev/null | tail -1)
+if [ -z "$PATH_SEP" ]; then
+    # Fallback: detect by OS
+    case "$(uname -s)" in
+        CYGWIN*|MINGW*|MSYS*|Windows_NT)
+            PATH_SEP=";"
+            ;;
+        *)
+            PATH_SEP=":"
+            ;;
+    esac
 fi
 
 FULL_CP="$(cd "$FIXTURE_DIR" && pwd)/target/classes${PATH_SEP}$(cd "$FIXTURE_DIR" && pwd)/target/test-classes${PATH_SEP}$MAVEN_CP"
@@ -129,9 +136,10 @@ cat > "$TEMP_DIR/neotest-e2e.lua" << EOFSCRIPT
 local test_file = vim.fn.argv()[1]
 local classpath = vim.fn.argv()[2]
 local temp_dir = vim.fn.argv()[3]
+local path_separator = vim.fn.argv()[4]
 
 -- Install mocks for jdtls-dependent modules BEFORE loading neotest-java
-require("tests.e2e.mocks").install_mocks(classpath)
+require("tests.e2e.mocks").install_mocks(classpath, path_separator)
 
 -- Setup neotest
 local neotest = require("neotest")
@@ -221,7 +229,7 @@ rm -f "$TEMP_DIR/neotest-e2e-results.json" "$TEMP_DIR/neotest-e2e-error.txt"
 
 if nvim --headless --noplugin -u tests/testrc.vim \
     -c "luafile $TEMP_DIR/neotest-e2e.lua" \
-    "$TEST_FILE" "$FULL_CP" "$TEMP_DIR" 2>&1 | tee "$TEMP_DIR/neotest-e2e.log"; then
+    "$TEST_FILE" "$FULL_CP" "$TEMP_DIR" "$PATH_SEP" 2>&1 | tee "$TEMP_DIR/neotest-e2e.log"; then
 
     if [ -f "$TEMP_DIR/neotest-e2e-error.txt" ]; then
         echo -e "${RED}✗ Test execution failed${NC}"

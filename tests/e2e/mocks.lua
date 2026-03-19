@@ -7,8 +7,11 @@ local M = {}
 
 --- Create mock binaries that use system Java from JAVA_HOME
 --- @param classpath string The classpath to use
+--- @param path_separator string The platform-specific path separator (":" or ";")
 --- @return table
-function M.create_mocks(classpath)
+function M.create_mocks(classpath, path_separator)
+	path_separator = path_separator or ":"
+
 	return {
 		-- Mock binaries module - returns system Java
 		binaries = function(deps)
@@ -41,7 +44,7 @@ function M.create_mocks(classpath)
 					-- Add the Maven-resolved classpath
 					table.insert(paths, classpath)
 
-					return table.concat(paths, ":")
+					return table.concat(paths, path_separator)
 				end,
 			}
 		end,
@@ -59,8 +62,9 @@ end
 
 --- Install mocks into package.loaded
 --- @param classpath string The classpath to use
-function M.install_mocks(classpath)
-	local mocks = M.create_mocks(classpath)
+--- @param path_separator string The platform-specific path separator (":" or ";")
+function M.install_mocks(classpath, path_separator)
+	local mocks = M.create_mocks(classpath, path_separator)
 
 	package.loaded["neotest-java.command.binaries"] = mocks.binaries
 	package.loaded["neotest-java.core.spec_builder.compiler.classpath_provider"] = mocks.classpath_provider
