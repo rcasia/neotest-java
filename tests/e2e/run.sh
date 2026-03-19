@@ -29,6 +29,50 @@ if [ -z "$JAVA_HOME" ]; then
     exit 1
 fi
 
+# Download JUnit Platform Console Standalone JAR if not present
+JUNIT_VERSION="6.0.3"
+JUNIT_JAR_NAME="junit-platform-console-standalone-${JUNIT_VERSION}.jar"
+JUNIT_JAR_DIR="${HOME}/.local/share/nvim/neotest-java"
+JUNIT_JAR_PATH="${JUNIT_JAR_DIR}/${JUNIT_JAR_NAME}"
+JUNIT_URL="https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/${JUNIT_VERSION}/${JUNIT_JAR_NAME}"
+JUNIT_SHA256="3ba0d6150af79214a1411f9ea2fbef864eef68b68c89a17f672c0b89bff9d3a2"
+
+if [ ! -f "$JUNIT_JAR_PATH" ]; then
+    echo -e "${YELLOW}Downloading JUnit Platform Console Standalone JAR...${NC}"
+    mkdir -p "$JUNIT_JAR_DIR"
+
+    if command -v curl &> /dev/null; then
+        curl -fsSL -o "$JUNIT_JAR_PATH" "$JUNIT_URL"
+    elif command -v wget &> /dev/null; then
+        wget -q -O "$JUNIT_JAR_PATH" "$JUNIT_URL"
+    else
+        echo -e "${RED}✗ Neither curl nor wget found. Cannot download JUnit JAR.${NC}"
+        exit 1
+    fi
+
+    # Verify checksum
+    if command -v sha256sum &> /dev/null; then
+        ACTUAL_SHA256=$(sha256sum "$JUNIT_JAR_PATH" | awk '{print $1}')
+    elif command -v shasum &> /dev/null; then
+        ACTUAL_SHA256=$(shasum -a 256 "$JUNIT_JAR_PATH" | awk '{print $1}')
+    else
+        echo -e "${YELLOW}⚠ No checksum tool found. Skipping verification.${NC}"
+        ACTUAL_SHA256="$JUNIT_SHA256"  # Skip verification
+    fi
+
+    if [ "$ACTUAL_SHA256" != "$JUNIT_SHA256" ]; then
+        echo -e "${RED}✗ Checksum verification failed${NC}"
+        echo "Expected: $JUNIT_SHA256"
+        echo "Got:      $ACTUAL_SHA256"
+        rm -f "$JUNIT_JAR_PATH"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✓ JUnit JAR downloaded and verified${NC}"
+else
+    echo -e "${GREEN}✓ JUnit JAR already present${NC}"
+fi
+
 # Compile test project and get classpath using Maven wrapper
 echo -e "${YELLOW}Compiling test project...${NC}"
 cd "$FIXTURE_DIR"
@@ -169,10 +213,17 @@ if nvim --headless --noplugin -u tests/testrc.vim \
         echo -e "${GREEN}✓ Tests executed${NC}"
         echo -e "${BLUE}Results: $total total, $passed passed, $failed failed${NC}"
 
-        if [ "$total" -eq 4 ] && [ "$passed" -eq 2 ] && [ "$failed" -eq 2 ]; then
-            echo -e "${GREEN}✓ E2E TEST PASSED - Got expected 4 tests (2 pass, 2 fail)${NC}"
+        # Calculate expected counts based on test method names containing "fail" (case-insensitive)
+        EXPECTED_TOTAL=$(grep -c "@Test" "$TEST_FILE" || echo 0)
+        EXPECTED_FAILED=$(grep -iE "void.*fail.*\(" "$TEST_FILE" | wc -l | tr -d ' ')
+        EXPECTED_PASSED=$((EXPECTED_TOTAL - EXPECTED_FAILED))
+
+        echo -e "${BLUE}Expected: $EXPECTED_TOTAL total, $EXPECTED_PASSED passed, $EXPECTED_FAILED failed${NC}"
+
+        if [ "$total" -eq "$EXPECTED_TOTAL" ] && [ "$passed" -eq "$EXPECTED_PASSED" ] && [ "$failed" -eq "$EXPECTED_FAILED" ]; then
+            echo -e "${GREEN}✓ E2E TEST PASSED - Got expected counts${NC}"
         else
-            echo -e "${RED}✗ Unexpected results (expected: 4 total, 2 passed, 2 failed)${NC}"
+            echo -e "${RED}✗ Unexpected results${NC}"
             echo "Full results:"
             cat /tmp/neotest-e2e-results.txt
             exit 1
