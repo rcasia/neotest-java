@@ -155,6 +155,28 @@ Contributions are welcome! Please feel free to:
 
 See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md) for guidelines.
 
+### Running Tests
+
+The project includes both unit tests and end-to-end (E2E) tests:
+
+```bash
+# Run unit tests
+make test
+
+# Run E2E tests (requires Java and JAVA_HOME)
+make test-e2e
+
+# Run all tests
+make test && make test-e2e
+```
+
+**E2E Test Requirements:**
+- Java JDK (11 or higher)
+- `JAVA_HOME` environment variable set
+- Maven wrapper is included in the test fixture
+
+See [tests/e2e/README.md](tests/e2e/README.md) for detailed E2E test documentation.
+
 ## ✨ Acknowledgements
 
 Thanks to all contributors who have helped improve this project!

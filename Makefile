@@ -1,4 +1,4 @@
-.PHONY: clean
+.PHONY: clean test test-fail-fast test-e2e
 
 all: hooks test
 
@@ -10,6 +10,9 @@ test: install
 
 test-fail-fast: install
 	bash scripts/test --fail-fast
+
+test-e2e: install
+	@tests/e2e/run-all.sh
 
 
 install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
