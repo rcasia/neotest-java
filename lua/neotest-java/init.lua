@@ -39,6 +39,7 @@ local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.class
 local CommandExecutor = require("neotest-java.command.command_executor")
 local scan = require("neotest-java.util.dir_scan")
 local build_tools = require("neotest-java.build_tool")
+local launcher = require("neotest-java.build_tool.launcher")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local compilers = require("neotest-java.core.spec_builder.compiler")
 
@@ -185,7 +186,7 @@ local function NeotestJavaAdapter(config, deps)
 		end,
 		build_tool_getter = build_tools.get,
 		detect_project_type = detect_project_type,
-		launch_debug_test = build_tools.launch_debug_test,
+		launch_debug_test = launcher.launch_debug_test,
 	})
 	return setmetatable({
 
