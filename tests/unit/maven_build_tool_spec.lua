@@ -1,6 +1,5 @@
 local Path = require("neotest-java.model.path")
 local create_build_tool = require("neotest-java.build_tool.build_tool")
-local maven_config = require("neotest-java.build_tool.maven")
 local read_xml_tag = require("neotest-java.util.read_xml_tag")
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 
@@ -9,7 +8,21 @@ local eq = assertions.eq
 local it = require("nio").tests.it
 
 describe("MavenBuildTool", function()
-	local maven = create_build_tool(maven_config, {
+	local maven = create_build_tool({
+		project_filename = "pom.xml",
+		get_build_dirname = function(base_dir, deps)
+			local pom_path = base_dir:append("pom.xml"):to_string()
+			local build_dir = deps.read_xml_tag(pom_path, "project.build.directory")
+			return Path(build_dir or "target")
+		end,
+		get_artifact_id = function(base_dir, deps)
+			local pom_path = base_dir:append("pom.xml"):to_string()
+			return deps.read_xml_tag(pom_path, "project.artifactId") or base_dir:name()
+		end,
+		get_spring_subdirs = function(root)
+			return { root:append("classes"), root:append("test-classes") }
+		end,
+	}, {
 		read_xml_tag = read_xml_tag,
 		generate_spring_property_filepaths = generate_spring_property_filepaths,
 	})
