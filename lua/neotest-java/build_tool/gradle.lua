@@ -6,7 +6,7 @@ local PROJECT_FILENAME = "build.gradle"
 ---@class neotest-java.GradleBuildTool : neotest-java.BuildTool
 local gradle = {}
 
-gradle.get_build_dirname = function()
+function gradle.get_build_dirname(_base_dir)
 	return Path("bin")
 end
 

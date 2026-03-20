@@ -7,9 +7,10 @@ local PROJECT_FILE = "pom.xml"
 ---@class neotest-java.MavenBuildTool : neotest-java.BuildTool
 local maven = {}
 
-maven.get_build_dirname = function()
-	-- TODO: read from pom.xml <build><directory>
-	return Path("target/classes")
+function maven.get_build_dirname(base_dir)
+	local pom_path = base_dir:append("pom.xml"):to_string()
+	local build_dir = read_xml_tag(pom_path, "project.build.directory")
+	return Path(build_dir or "target")
 end
 
 function maven.get_project_filename()
