@@ -442,7 +442,8 @@ end, 30000)
 
 	-- Derive snapshot file name from test file
 	-- e.g., /path/to/SampleTest.java -> /path/to/SampleTest.snapshot.json
-	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json")
+	-- e.g., /path/to/CalculatorSpec.groovy -> /path/to/CalculatorSpec.snapshot.json
+	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json"):gsub("%.groovy$", ".snapshot.json")
 	if snapshot_file == test_file then
 		log_error("Could not derive snapshot file name from: " .. test_file)
 		os.exit(1)
