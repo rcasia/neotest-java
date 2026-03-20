@@ -55,7 +55,7 @@ local SpecBuilder = function(deps)
 			deps.chdir(root)
 
 			-- make sure build directory is created to operate in it
-			local build_dir = build_tool.get_build_dirname()
+			local build_dir = build_tool.get_build_dirname(root)
 
 			deps.mkdir(build_dir)
 			deps.mkdir(build_dir:parent())
