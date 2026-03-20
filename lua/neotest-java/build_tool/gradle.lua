@@ -1,39 +1,23 @@
-local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 local Path = require("neotest-java.model.path")
 
-local PROJECT_FILENAME = "build.gradle"
+---@type neotest-java.BuildToolConfig
+local gradle_config = {
+	project_filename = "build.gradle",
 
----@class neotest-java.GradleBuildTool : neotest-java.BuildTool
-local gradle = {}
+	get_build_dirname = function(_base_dir, _deps)
+		return Path("bin")
+	end,
 
-gradle.get_build_dirname = function()
-	return Path("bin")
-end
+	get_artifact_id = function(base_dir, _deps)
+		return base_dir:name()
+	end,
 
-function gradle.get_project_filename()
-	return PROJECT_FILENAME
-end
+	get_spring_subdirs = function(root)
+		return {
+			root:append("main"),
+			root:append("test"),
+		}
+	end,
+}
 
-function gradle.get_artifact_id(base_dir)
-	return base_dir:name()
-end
-
---- @param roots neotest-java.Path[]
-function gradle.get_spring_property_filepaths(roots)
-	local base_dirs = vim
-		.iter(roots)
-		--- @param root neotest-java.Path
-		:map(function(root)
-			return {
-				root:append("main"),
-				root:append("test"),
-			}
-		end)
-		:flatten()
-		:totable()
-
-	return generate_spring_property_filepaths(base_dirs)
-end
-
----@type neotest-java.BuildTool
-return gradle
+return gradle_config

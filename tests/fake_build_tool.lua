@@ -3,7 +3,7 @@ local spring = require("neotest-java.util.spring_property_filepaths")
 
 --- @type neotest-java.BuildTool
 return {
-	get_build_dirname = function()
+	get_build_dirname = function(_base_dir)
 		return Path("target")
 	end,
 	get_module_dependencies = function()
