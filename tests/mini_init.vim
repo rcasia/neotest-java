@@ -1,6 +1,10 @@
 " Minimal init for mini.test test runner
 " Sets up runtime paths for all dependencies
 
+" Disable shada to avoid file lock issues
+set noswapfile
+set shada=""
+
 " Add project root to runtime path
 let &rtp .= ',' . getcwd()
 
@@ -16,7 +20,9 @@ runtime! plugin/plenary.vim
 
 " Configure mini.test to find *_spec.lua files
 lua << EOF
-require('mini.test').setup({
+local MiniTest = require('mini.test')
+
+MiniTest.setup({
   collect = {
     emulate_busted = true,
     find_files = function()
@@ -26,6 +32,9 @@ require('mini.test').setup({
         limit = math.huge
       })
     end
+  },
+  execute = {
+    reporter = MiniTest.gen_reporter.stdout({ quit_on_finish = true })
   }
 })
 EOF
