@@ -1,5 +1,9 @@
 local root_finder = require("neotest-java.core.root_finder")
 
+local function eq(expected, actual)
+	MiniTest.expect.equality(expected, actual)
+end
+
 describe("RootFinder", function()
 	it("should find the root when matcher matches", function()
 		-- given
@@ -14,7 +18,7 @@ describe("RootFinder", function()
 		local actualRoot = root_finder.find_root(dir, matcher)
 
 		-- then
-		assert.are.same(dir, actualRoot)
+		eq(dir, actualRoot)
 	end)
 
 	it("should not find the root when matcher does not match", function()
@@ -30,7 +34,7 @@ describe("RootFinder", function()
 		local actualRoot = root_finder.find_root(dir, matcher)
 
 		-- then
-		assert.is_nil(actualRoot)
+		eq(nil, actualRoot)
 	end)
 
 	it("should find build.gradle before .git for single-module Gradle projects", function()
@@ -47,8 +51,10 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/some/dir", matcher)
 
-		assert.are.same("/path/to/project", root)
-		assert.is_true(patterns_checked[#patterns_checked] == "build.gradle")
-		assert.is_true(patterns_checked[#patterns_checked - 1] ~= ".git")
+		eq("/path/to/project", root)
+		MiniTest.expect.no_error(function()
+			assert(patterns_checked[#patterns_checked] == "build.gradle")
+			assert(patterns_checked[#patterns_checked - 1] ~= ".git")
+		end)
 	end)
 end)

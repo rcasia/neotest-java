@@ -1,7 +1,9 @@
 local Project = require("neotest-java.model.project")
 local Path = require("neotest-java.model.path")
 
-local eq = assert.are.same
+local function eq(expected, actual)
+	MiniTest.expect.equality(expected, actual)
+end
 
 describe("project", function()
 	local fake_build_tool_with_artifact_id = {

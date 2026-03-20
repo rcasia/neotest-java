@@ -2,7 +2,9 @@ local default_config = require("neotest-java.default_config")
 local Path = require("neotest-java.model.path")
 local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
 local Tree = require("neotest.types").Tree
-local eq = assert.are.same
+local function eq(expected, actual)
+	MiniTest.expect.equality(expected, actual)
+end
 
 describe("NeotestJava plugin", function()
 	describe("initialization", function()

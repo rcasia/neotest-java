@@ -1,6 +1,8 @@
 local Path = require("neotest-java.model.path")
 
-local eq = assert.are.same
+local function eq(expected, actual)
+	MiniTest.expect.equality(expected, actual)
+end
 
 describe("Path", function()
 	it("returns name", function()

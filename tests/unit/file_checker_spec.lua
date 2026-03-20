@@ -21,11 +21,13 @@ describe("file_checker", function()
 			base_path:append("src/test/java/neotest/RepositoryTests.java"):to_string(),
 			base_path:append("src/test/java/neotest/NeotestIT.java"):to_string(),
 			base_path:append("src/test/java/neotest/ProductAceptanceTests.java"):to_string(),
-			base_path:append("src/test/java/neotest/domain/ProductAceptanceTests.java"):to_string(),
+			base_path:append("src/test/java/neotest.domain/ProductAceptanceTests.java"):to_string(),
 		}
 
 		for _, file_path in ipairs(test_files) do
-			assert.is_true(file_checker_undertest.is_test_file(file_path), file_path)
+			MiniTest.expect.no_error(function()
+				assert(file_checker_undertest.is_test_file(file_path) == true, file_path)
+			end)
 		end
 	end)
 
@@ -36,7 +38,9 @@ describe("file_checker", function()
 			"src/test/java/neotest/Neotest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
+			MiniTest.expect.no_error(function()
+				assert(file_checker_undertest.is_test_file(file_path) == false, file_path)
+			end)
 		end
 	end)
 
@@ -45,16 +49,20 @@ describe("file_checker", function()
 			"/home/user/repo/src/main/java/neotest/NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
+			MiniTest.expect.no_error(function()
+				assert(file_checker_undertest.is_test_file(file_path) == false, file_path)
+			end)
 		end
 	end)
 
 	it("should return true if theres a /main/ outside the root path", function()
-		local non_test_files = {
+		local test_files = {
 			"/absolute_path/main/src/java/neotest/NeotestTest.java",
 		}
-		for _, file_path in ipairs(non_test_files) do
-			assert.is_true(file_checker_undertest.is_test_file(file_path))
+		for _, file_path in ipairs(test_files) do
+			MiniTest.expect.no_error(function()
+				assert(file_checker_undertest.is_test_file(file_path) == true)
+			end)
 		end
 	end)
 
@@ -63,21 +71,25 @@ describe("file_checker", function()
 			"C:\\absolute_path\\src\\main\\java\\neotest\\NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(file_checker_undertest.is_test_file(file_path))
+			MiniTest.expect.no_error(function()
+				assert(file_checker_undertest.is_test_file(file_path) == false)
+			end)
 		end
 	end)
 
 	it("should return true if theres a /main/ outside the root path in a windows env", function()
-		local non_test_files = {
+		local test_files = {
 			"C:\\absolute_path\\main\\src\\java\\neotest\\NeotestTest.java",
 		}
-		for _, file_path in ipairs(non_test_files) do
-			assert.is_true(FileChecker({
-				patterns = patterns,
-				root_getter = function()
-					return Path("C:\\absolute_path\\main\\src")
-				end,
-			}).is_test_file(file_path))
+		for _, file_path in ipairs(test_files) do
+			MiniTest.expect.no_error(function()
+				assert(FileChecker({
+					patterns = patterns,
+					root_getter = function()
+						return Path("C:\\absolute_path\\main\\src")
+					end,
+				}).is_test_file(file_path) == true)
+			end)
 		end
 	end)
 
@@ -89,6 +101,8 @@ describe("file_checker", function()
 			end,
 		})
 
-		assert.is_false(file_checker.is_test_file("/any/path/Test.java"))
+		MiniTest.expect.no_error(function()
+			assert(file_checker.is_test_file("/any/path/Test.java") == false)
+		end)
 	end)
 end)

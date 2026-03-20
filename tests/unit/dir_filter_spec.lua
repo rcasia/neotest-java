@@ -13,19 +13,13 @@ describe("DirFilter", function()
 		}
 
 		local root = "/home/user/project"
-
 		local name = "java"
 
-		-- then
 		for _, path in ipairs(relative_paths) do
 			local result = plugin.filter_dir(name, path, root)
-
-			-- print path when test fails
-			if result then
-				print("Expected to filter out: " .. path)
-			end
-
-			assert.is_false(result)
+			MiniTest.expect.no_error(function()
+				assert(result == false, "Expected " .. path .. " to be filtered out")
+			end)
 		end
 	end)
 
@@ -39,18 +33,13 @@ describe("DirFilter", function()
 		}
 
 		local root = "/home/user/project"
-
 		local name = "java"
 
-		-- then
 		for _, path in ipairs(relative_paths) do
 			local result = plugin.filter_dir(name, path, root)
-
-			-- print path when test fails
-			if not result then
-				print("Expected to not filter out: " .. path)
-			end
-			assert.is_true(result)
+			MiniTest.expect.no_error(function()
+				assert(result == true, "Expected " .. path .. " to NOT be filtered out")
+			end)
 		end
 	end)
 end)

@@ -68,7 +68,7 @@ describe("ResultBuilder", function()
 		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		-- then
-		assert.are.same(expected, results)
+		eq(expected, results)
 	end)
 
 	async.it("should build results from report", function()
@@ -423,6 +423,6 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 
 		-- Verify remove_file was called with the correct file path
-		assert.are.same({ report_file:to_string() }, removed_files)
+		eq({ report_file:to_string() }, removed_files)
 	end)
 end)
