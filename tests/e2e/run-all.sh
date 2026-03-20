@@ -23,8 +23,10 @@ fi
 echo "Running E2E tests for fixture: $FIXTURE"
 echo ""
 
-# Find all test files in the fixture
-TEST_FILES=$(find "$FIXTURE_DIR/src/test/java" -name "*Test.java" 2>/dev/null || true)
+# Find all test files in the fixture (Java and Groovy)
+JAVA_TEST_FILES=$(find "$FIXTURE_DIR/src/test/java" -name "*Test.java" -o -name "*Spec.java" 2>/dev/null || true)
+GROOVY_TEST_FILES=$(find "$FIXTURE_DIR/src/test/groovy" \( -name "*Test.groovy" -o -name "*Spec.groovy" \) 2>/dev/null || true)
+TEST_FILES="$JAVA_TEST_FILES $GROOVY_TEST_FILES"
 
 if [ -z "$TEST_FILES" ]; then
     echo "No test files found in $FIXTURE_DIR/src/test/java"
@@ -37,7 +39,8 @@ FAILED=0
 
 for test_file in $TEST_FILES; do
     TOTAL=$((TOTAL + 1))
-    test_name=$(basename "$test_file" .java)
+    # Remove both .java and .groovy extensions
+    test_name=$(basename "$test_file" | sed 's/\.\(java\|groovy\)$//')
 
     echo "Running E2E test: $test_name"
 
