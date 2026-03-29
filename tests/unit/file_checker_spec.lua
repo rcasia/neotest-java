@@ -29,6 +29,20 @@ describe("file_checker", function()
 		end
 	end)
 
+	it("should return true for Groovy/Spock test files", function()
+		local groovy_test_files = {
+			base_path:append("src/test/groovy/neotest/CalculatorSpec.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/UserServiceTest.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/RepositoryTests.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/IntegrationIT.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/domain/OrderSpec.groovy"):to_string(),
+		}
+
+		for _, file_path in ipairs(groovy_test_files) do
+			assert.is_true(file_checker_undertest.is_test_file(file_path), file_path)
+		end
+	end)
+
 	it("should return false for a java non-test file", function()
 		local non_test_files = {
 			"src/test/java/neotest/Configuration.java",

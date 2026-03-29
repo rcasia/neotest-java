@@ -268,6 +268,10 @@ local function main()
 	local test_script = [=[
 local test_file = vim.fn.argv()[1]
 local classpath = vim.fn.argv()[2]
+local fixture_dir = vim.fn.argv()[3]
+
+-- Change to fixture directory so neotest-java finds the correct pom.xml/build.gradle
+vim.api.nvim_set_current_dir(fixture_dir)
 
 -- Install mocks for jdtls-dependent modules BEFORE loading neotest-java
 require("tests.e2e.mocks").install_mocks(classpath)
@@ -281,6 +285,14 @@ neotest.setup({
     })
   },
 })
+
+-- Store test results as they come in
+local test_results_store = {}
+neotest.listeners.results = function(adapter_id, results)
+  for pos_id, result in pairs(results) do
+    test_results_store[pos_id] = result
+  end
+end
 
 -- Run tests asynchronously
 vim.schedule(function()
@@ -333,8 +345,9 @@ vim.schedule(function()
 
     -- Extract expected class name from test file path
     -- e.g., /path/to/SampleTest.java or C:\path\to\SampleTest.java -> SampleTest
+    -- e.g., /path/to/CalculatorSpec.groovy -> CalculatorSpec
     -- Handle both Unix (/) and Windows (\) path separators
-    local expected_class = test_file:match("([^/\\]+)%.java$")
+    local expected_class = test_file:match("([^/\\]+)%.java$") or test_file:match("([^/\\]+)%.groovy$")
 
     -- Collect test method names and IDs from positions tree
     -- ONLY include tests from the specific test file we're running
@@ -352,10 +365,18 @@ vim.schedule(function()
             if class_name == expected_class then
               local method_name = pos.id:match("#([^(]+)")
               if method_name then
+                -- Get execution status from stored results
+                local status = "unknown"
+                local result = test_results_store[pos.id]
+                if result then
+                  status = result.status or "unknown"
+                end
+
                 test_results[method_name] = {
                   id = pos.id,
                   name = pos.name,
-                  type = pos.type
+                  type = pos.type,
+                  status = status
                 }
               end
             end
@@ -402,10 +423,11 @@ end, 30000)
 	os.remove("/tmp/neotest-e2e-error.txt")
 
 	local nvim_cmd = string.format(
-		'nvim --headless --noplugin -u tests/testrc.vim -c "luafile %s" %s %s 2>&1 | tee /tmp/neotest-e2e.log',
+		'nvim --headless --noplugin -u tests/testrc.vim -c "luafile %s" %s %s %s 2>&1 | tee /tmp/neotest-e2e.log',
 		test_script_path,
 		vim.fn.shellescape(test_file),
-		vim.fn.shellescape(full_cp)
+		vim.fn.shellescape(full_cp),
+		vim.fn.shellescape(fixture_dir)
 	)
 
 	local _, nvim_success = execute(nvim_cmd)
@@ -442,7 +464,8 @@ end, 30000)
 
 	-- Derive snapshot file name from test file
 	-- e.g., /path/to/SampleTest.java -> /path/to/SampleTest.snapshot.json
-	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json")
+	-- e.g., /path/to/CalculatorSpec.groovy -> /path/to/CalculatorSpec.snapshot.json
+	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json"):gsub("%.groovy$", ".snapshot.json")
 	if snapshot_file == test_file then
 		log_error("Could not derive snapshot file name from: " .. test_file)
 		os.exit(1)

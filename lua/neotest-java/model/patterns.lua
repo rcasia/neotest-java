@@ -18,6 +18,13 @@ local JAVA_TEST_FILE_PATTERNS = {
 	"IT%.java$",
 }
 
+local GROOVY_TEST_FILE_PATTERNS = {
+	"Test%.groovy$",
+	"Tests%.groovy$",
+	"Spec%.groovy$",
+	"IT%.groovy$",
+}
+
 local IGNORE_PATH_PATTERNS = {
 	"^build[/\\]", -- build directory at the root
 	"[/\\]build[/\\]", -- build directory in subdirectories
@@ -53,6 +60,7 @@ local IGNORE_PATH_PATTERNS = {
 return {
 	TEST_CLASS_PATTERNS = TEST_CLASS_PATTERNS,
 	JAVA_TEST_FILE_PATTERNS = JAVA_TEST_FILE_PATTERNS,
+	GROOVY_TEST_FILE_PATTERNS = GROOVY_TEST_FILE_PATTERNS,
 	IGNORE_PATH_PATTERNS = IGNORE_PATH_PATTERNS,
 	JAVA_TEST_FILE_REGEXES = JAVA_TEST_FILE_REGEXES,
 }

@@ -26,7 +26,7 @@ local FileChecker = function(dependencies)
 			end
 
 			for _, re in ipairs(dependencies.patterns) do
-				local name_without_extension = my_path:name():gsub("%.java$", "")
+				local name_without_extension = my_path:name():gsub("%.java$", ""):gsub("%.groovy$", "")
 				if name_without_extension:match(re) then
 					return true
 				end
