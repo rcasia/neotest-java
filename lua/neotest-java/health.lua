@@ -1,14 +1,25 @@
 local health = vim.health or require("health")
 
-local function check_treesitter()
+local function java_parser_installed()
+	-- nvim-treesitter main branch (for Neovim 0.12+) removed has_parser();
+	-- fall back to the native Neovim API.
 	local ok, parsers = pcall(require, "nvim-treesitter.parsers")
+	if ok and type(parsers.has_parser) == "function" then
+		return parsers.has_parser("java")
+	end
+	local lang_ok = pcall(vim.treesitter.language.require_language, "java", nil, true)
+	return lang_ok
+end
+
+local function check_treesitter()
+	local ok = pcall(require, "nvim-treesitter")
 	if not ok then
 		health.error("'nvim-treesitter' is not installed", {
 			"Install it: https://github.com/nvim-treesitter/nvim-treesitter",
 		})
 		return
 	end
-	if not parsers.has_parser("java") then
+	if not java_parser_installed() then
 		health.error("Tree-sitter parser for 'java' is missing", {
 			"Run :TSInstall java",
 		})
