@@ -100,6 +100,61 @@ describe("project", function()
 		eq("artifact-my_project", modules[1].name)
 	end)
 
+	it("detects gradle modules with custom build file names (e.g. app.gradle.kts)", function()
+		-- Gradle projects can use custom build file names like app.gradle.kts, list.gradle.kts
+		-- configured via: project.buildFileName = "${project.name}.gradle.kts" in settings.gradle.kts
+		-- The project_filename pattern "%.gradle" should match these custom filenames
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/settings.gradle.kts"),
+			Path("./my_project/app.gradle.kts"),
+			Path("./my_project/app/app.gradle.kts"),
+			Path("./my_project/list/list.gradle.kts"),
+			Path("./my_project/utilities/utilities.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local modules = project:get_modules()
+		-- settings.gradle.kts should NOT be treated as a module build file
+		-- each custom-named .gradle.kts file should create a module
+		eq(4, #modules)
+		local module_names = vim.iter(modules)
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+		local expected_custom = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/app"):to_string(),
+			Path("./my_project/list"):to_string(),
+			Path("./my_project/utilities"):to_string(),
+		}
+		table.sort(expected_custom)
+		eq(expected_custom, module_names)
+	end)
+
+	it("does not treat settings.gradle as a module build file", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/settings.gradle"),
+			Path("./my_project/build.gradle"),
+			Path("./my_project/subproject/build.gradle"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local modules = project:get_modules()
+		eq(2, #modules)
+		local module_names = vim.iter(modules)
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+		local expected_settings = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/subproject"):to_string(),
+		}
+		table.sort(expected_settings)
+		eq(expected_settings, module_names)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 

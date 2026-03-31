@@ -7,11 +7,14 @@ local Module = require("neotest-java.model.module")
 local Project = {}
 Project.__index = Project
 
+local GRADLE_SETTINGS_PATTERN = "settings%.gradle"
+
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
 	---@type table<neotest-java.Module>
 	local modules = {}
 	for _, path in ipairs(dirs) do
-		if path:to_string():find(project_filename) then
+		local path_str = path:to_string()
+		if path_str:find(project_filename) and not path_str:find(GRADLE_SETTINGS_PATTERN) then
 			modules[#modules + 1] = Module.new(path:parent(), build_tool)
 		end
 	end
