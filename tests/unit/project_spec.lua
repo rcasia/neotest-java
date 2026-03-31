@@ -100,6 +100,57 @@ describe("project", function()
 		eq("artifact-my_project", modules[1].name)
 	end)
 
+	it("detects gradle modules with custom build file names (e.g. app.gradle.kts)", function()
+		-- Gradle projects can use custom build file names like app.gradle.kts, list.gradle.kts
+		-- configured via: project.buildFileName = "${project.name}.gradle.kts" in settings.gradle.kts
+		-- The project_filename pattern "%.gradle" should match these custom filenames
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/settings.gradle.kts"),
+			Path("./my_project/app.gradle.kts"),
+			Path("./my_project/app/app.gradle.kts"),
+			Path("./my_project/list/list.gradle.kts"),
+			Path("./my_project/utilities/utilities.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local modules = project:get_modules()
+		-- settings.gradle.kts should NOT be treated as a module build file
+		-- each custom-named .gradle.kts file should create a module
+		eq(4, #modules)
+		local module_names = vim.iter(modules)
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+		eq({
+			"./my_project",
+			"./my_project/app",
+			"./my_project/list",
+			"./my_project/utilities",
+		}, module_names)
+	end)
+
+	it("does not treat settings.gradle as a module build file", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/settings.gradle"),
+			Path("./my_project/build.gradle"),
+			Path("./my_project/subproject/build.gradle"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local modules = project:get_modules()
+		eq(2, #modules)
+		local module_names = vim.iter(modules)
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+		eq({
+			"./my_project",
+			"./my_project/subproject",
+		}, module_names)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 

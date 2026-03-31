@@ -34,7 +34,7 @@ local build_tools = {
 	}, deps),
 
 	gradle = create_build_tool({
-		project_filename = "build.gradle",
+		project_filename = "%.gradle",
 		get_build_dirname = function(_base_dir, _d)
 			return Path("bin")
 		end,
