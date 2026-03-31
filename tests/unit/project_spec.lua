@@ -122,12 +122,14 @@ describe("project", function()
 			end)
 			:totable()
 		table.sort(module_names)
-		eq({
-			"./my_project",
-			"./my_project/app",
-			"./my_project/list",
-			"./my_project/utilities",
-		}, module_names)
+		local expected_custom = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/app"):to_string(),
+			Path("./my_project/list"):to_string(),
+			Path("./my_project/utilities"):to_string(),
+		}
+		table.sort(expected_custom)
+		eq(expected_custom, module_names)
 	end)
 
 	it("does not treat settings.gradle as a module build file", function()
@@ -145,10 +147,12 @@ describe("project", function()
 			end)
 			:totable()
 		table.sort(module_names)
-		eq({
-			"./my_project",
-			"./my_project/subproject",
-		}, module_names)
+		local expected_settings = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/subproject"):to_string(),
+		}
+		table.sort(expected_settings)
+		eq(expected_settings, module_names)
 	end)
 
 	it("find module by filepath", function()
