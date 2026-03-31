@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        nvim-version: [stable, nightly]
+        nvim-version: [stable, v0.11.0, nightly]
     steps:
       - name: checkout
         uses: actions/checkout@v6
