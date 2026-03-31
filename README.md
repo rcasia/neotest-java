@@ -39,10 +39,12 @@
 
 - **Neovim 0.10.4+**
 - **nvim-treesitter** with Java parser: `:TSInstall java`
-- **nvim-jdtls** - Language server for Java
+- **A JDTLS-based Java LSP** — either [nvim-jdtls](https://github.com/mfussenegger/nvim-jdtls) or [nvim-java](https://github.com/nvim-java/nvim-java) (both are compatible)
 - **nvim-dap** - For debugging support (optional)
 
 ### Setup with [lazy.nvim](https://github.com/folke/lazy.nvim)
+
+#### Using nvim-jdtls
 
 ```lua
 return {
@@ -56,6 +58,42 @@ return {
       "theHamsta/nvim-dap-virtual-text", -- recommended
     },
   },
+  {
+    "nvim-neotest/neotest",
+    dependencies = {
+      "nvim-neotest/nvim-nio",
+      "nvim-lua/plenary.nvim",
+      "antoinemadec/FixCursorHold.nvim",
+      "nvim-treesitter/nvim-treesitter",
+    },
+    config = function()
+      require("neotest").setup({
+        adapters = {
+          require("neotest-java")({
+            -- Optional configuration here
+          }),
+        },
+      })
+    end,
+  },
+}
+```
+
+#### Using nvim-java
+
+[nvim-java](https://github.com/nvim-java/nvim-java) is fully compatible — neotest-java communicates with the LSP through the standard `vim.lsp.Client` API and does not depend directly on nvim-jdtls.
+
+```lua
+return {
+  {
+    "rcasia/neotest-java",
+    ft = "java",
+    dependencies = {
+      "mfussenegger/nvim-dap", -- for debugging (optional)
+    },
+  },
+  -- nvim-java handles JDTLS setup separately
+  { "nvim-java/nvim-java" },
   {
     "nvim-neotest/neotest",
     dependencies = {
