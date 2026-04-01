@@ -155,6 +155,98 @@ describe("project", function()
 		eq(expected_settings, module_names)
 	end)
 
+	it("ignores files from .gradle internal directory when detecting modules", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./big_project/settings.gradle.kts"),
+			Path("./big_project/app.gradle.kts"),
+			Path("./big_project/service/service.gradle.kts"),
+			Path("./big_project/.gradle"),
+			Path("./big_project/.gradle/8.10.2/generated/some-plugin.gradle.kts"),
+			Path("./big_project/.gradle/kotlin-dsl/accessors/build.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local modules = project:get_modules()
+		local module_names = vim.iter(modules)
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./big_project"):to_string(),
+			Path("./big_project/service"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
+	it("accepts custom gradle filenames that contain 'settings.gradle' as substring", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/mysettings.gradle.kts"),
+			Path("./my_project/app/appsettings.gradle.kts"),
+			Path("./my_project/settings.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local module_names = vim.iter(project:get_modules())
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/app"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
+	it("deduplicates modules when multiple build files exist in same directory", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/build.gradle"),
+			Path("./my_project/build.gradle.kts"),
+			Path("./my_project/service/service.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local module_names = vim.iter(project:get_modules())
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/service"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
+	it("matches exact filename for non-pattern project filename", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/some-pom.xml.backup"),
+			Path("./my_project/pom.xml"),
+			Path("./my_project/module/pom.xml"),
+		}, "pom.xml", fake_build_tool_dir_name)
+
+		local module_names = vim.iter(project:get_modules())
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/module"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 
