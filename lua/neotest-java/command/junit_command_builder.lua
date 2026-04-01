@@ -69,13 +69,27 @@ end
 --- @param tree neotest.Tree
 --- @return neotest-java.CommandBuilder
 function CommandBuilder:add_test_references_from_tree(tree)
+	local function as_position(item)
+		if type(item) == "table" and type(item.data) == "function" then
+			local ok, position = pcall(item.data, item)
+			if ok and type(position) == "table" then
+				return position
+			end
+		end
+
+		return item
+	end
+
 	local position = tree:data()
 	if position.type == "test" then
 		self:add_test_method(position.ref())
+	elseif position.type == "namespace" then
+		self:add_test_class(position.id)
 	else
 		for _, child in tree:iter() do
-			if child.type == "namespace" then
-				self:add_test_class(child.id)
+			local child_position = as_position(child)
+			if child_position.type == "namespace" then
+				self:add_test_class(child_position.id)
 			end
 		end
 	end
