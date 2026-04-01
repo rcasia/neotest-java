@@ -155,6 +155,32 @@ describe("project", function()
 		eq(expected_settings, module_names)
 	end)
 
+	it("ignores files from .gradle internal directory when detecting modules", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./big_project/settings.gradle.kts"),
+			Path("./big_project/app.gradle.kts"),
+			Path("./big_project/service/service.gradle.kts"),
+			Path("./big_project/.gradle"),
+			Path("./big_project/.gradle/8.10.2/generated/some-plugin.gradle.kts"),
+			Path("./big_project/.gradle/kotlin-dsl/accessors/build.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local modules = project:get_modules()
+		local module_names = vim.iter(modules)
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./big_project"):to_string(),
+			Path("./big_project/service"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 
