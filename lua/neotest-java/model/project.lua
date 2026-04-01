@@ -13,60 +13,30 @@ local GRADLE_SETTINGS_FILENAMES = {
 	["settings.gradle.kts"] = true,
 }
 
-local is_project_build_file = function(filename, project_filename, uses_lua_pattern)
-	if uses_lua_pattern then
-		return filename:find(project_filename) ~= nil
-	end
-
-	return filename == project_filename
-end
-
-local is_internal_gradle_file = function(path, filename)
-	return GRADLE_SETTINGS_FILENAMES[filename] or path:contains(GRADLE_INTERNAL_DIR)
-end
-
-local is_candidate_module_path = function(path, project_filename, uses_lua_pattern)
-	local filename = path:name()
-	if filename == "" then
-		return false
-	end
-
-	if not is_project_build_file(filename, project_filename, uses_lua_pattern) then
-		return false
-	end
-
-	if is_internal_gradle_file(path, filename) then
-		return false
-	end
-
-	return true
-end
-
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
+	---@type neotest-java.Module[]
+	local modules = {}
+	local seen_module_paths = {}
 	local uses_lua_pattern = project_filename:find("%", 1, true) ~= nil
 
-	local result = vim.iter(dirs)
-		:filter(function(path)
-			return is_candidate_module_path(path, project_filename, uses_lua_pattern)
-		end)
-		:map(function(path)
-			local module_dir = path:parent()
-			return {
-				module_dir = module_dir,
-				module_dir_path = module_dir:to_string(),
-			}
-		end)
-		:fold({ modules = {}, seen_module_directory_paths = {} }, function(acc, candidate)
-			if acc.seen_module_directory_paths[candidate.module_dir_path] then
-				return acc
+	for _, path in ipairs(dirs) do
+		local filename = path:name()
+		local matches_project_file = uses_lua_pattern and filename:find(project_filename) ~= nil
+			or filename == project_filename
+
+		local is_gradle_settings_file = GRADLE_SETTINGS_FILENAMES[filename]
+		local is_gradle_internal_file = path:contains(GRADLE_INTERNAL_DIR)
+
+		if filename ~= "" and matches_project_file and not is_gradle_settings_file and not is_gradle_internal_file then
+			local module_path = path:parent():to_string()
+			if not seen_module_paths[module_path] then
+				modules[#modules + 1] = Module.new(path:parent(), build_tool)
+				seen_module_paths[module_path] = true
 			end
+		end
+	end
 
-			acc.seen_module_directory_paths[candidate.module_dir_path] = true
-			acc.modules[#acc.modules + 1] = Module.new(candidate.module_dir, build_tool)
-			return acc
-		end)
-
-	return result.modules
+	return modules
 end
 
 ---@param dirs neotest-java.Path[]
