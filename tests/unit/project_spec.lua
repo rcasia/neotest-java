@@ -225,6 +225,28 @@ describe("project", function()
 		eq(expected, module_names)
 	end)
 
+	it("matches exact filename for non-pattern project filename", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/some-pom.xml.backup"),
+			Path("./my_project/pom.xml"),
+			Path("./my_project/module/pom.xml"),
+		}, "pom.xml", fake_build_tool_dir_name)
+
+		local module_names = vim.iter(project:get_modules())
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/module"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 

@@ -14,16 +14,28 @@ local is_gradle_settings_file = function(path)
 	return name == "settings.gradle" or name == "settings.gradle.kts"
 end
 
+local matches_project_filename = function(path, project_filename)
+	local filename = path:name()
+	if filename == "" then
+		return false
+	end
+
+	if project_filename:find("%", 1, true) then
+		return filename:find(project_filename) ~= nil
+	end
+
+	return filename == project_filename
+end
+
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
 	---@type table<neotest-java.Module>
 	local modules = {}
 	local seen = {}
 	for _, path in ipairs(dirs) do
-		local path_str = path:to_string()
 		local module_dir = path:parent()
 		local module_dir_str = module_dir:to_string()
 		if
-			path_str:find(project_filename)
+			matches_project_filename(path, project_filename)
 			and not is_gradle_settings_file(path)
 			and not path:contains(GRADLE_INTERNAL_DIR)
 			and not seen[module_dir_str]
