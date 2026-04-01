@@ -52,15 +52,26 @@ local modules_from_dirs_and_project_file = function(dirs, project_filename, buil
 		:filter(function(path)
 			return is_candidate_module_path(path, project_filename, uses_lua_pattern)
 		end)
-		:each(function(path)
+		:map(function(path)
 			local module_dir = path:parent()
-			local module_dir_path = module_dir:to_string()
-			if seen_module_directory_paths[module_dir_path] then
-				return
+			return {
+				module_dir = module_dir,
+				module_dir_path = module_dir:to_string(),
+			}
+		end)
+		:filter(function(candidate)
+			if seen_module_directory_paths[candidate.module_dir_path] then
+				return false
 			end
 
-			modules[#modules + 1] = Module.new(module_dir, build_tool)
-			seen_module_directory_paths[module_dir_path] = true
+			seen_module_directory_paths[candidate.module_dir_path] = true
+			return true
+		end)
+		:map(function(candidate)
+			return Module.new(candidate.module_dir, build_tool)
+		end)
+		:each(function(module)
+			modules[#modules + 1] = module
 		end)
 
 	return modules
