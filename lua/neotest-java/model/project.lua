@@ -8,10 +8,17 @@ local Project = {}
 Project.__index = Project
 
 local GRADLE_INTERNAL_DIR = ".gradle"
+local GRADLE_SETTINGS_FILENAMES = {
+	["settings.gradle"] = true,
+	["settings.gradle.kts"] = true,
+}
 
 local is_gradle_settings_file = function(path)
-	local name = path:name()
-	return name == "settings.gradle" or name == "settings.gradle.kts"
+	return GRADLE_SETTINGS_FILENAMES[path:name()] == true
+end
+
+local matcher_uses_lua_pattern = function(project_filename)
+	return project_filename:find("%", 1, true) ~= nil
 end
 
 local matches_project_filename = function(path, project_filename)
@@ -20,28 +27,44 @@ local matches_project_filename = function(path, project_filename)
 		return false
 	end
 
-	if project_filename:find("%", 1, true) then
+	if matcher_uses_lua_pattern(project_filename) then
 		return filename:find(project_filename) ~= nil
 	end
 
 	return filename == project_filename
 end
 
+local should_include_module = function(path, project_filename, seen_module_dirs)
+	if not matches_project_filename(path, project_filename) then
+		return false
+	end
+
+	if is_gradle_settings_file(path) then
+		return false
+	end
+
+	if path:contains(GRADLE_INTERNAL_DIR) then
+		return false
+	end
+
+	local module_dir = path:parent()
+	local module_dir_key = module_dir:to_string()
+
+	if seen_module_dirs[module_dir_key] then
+		return false
+	end
+
+	seen_module_dirs[module_dir_key] = true
+	return true
+end
+
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
 	---@type table<neotest-java.Module>
 	local modules = {}
-	local seen = {}
+	local seen_module_dirs = {}
 	for _, path in ipairs(dirs) do
-		local module_dir = path:parent()
-		local module_dir_str = module_dir:to_string()
-		if
-			matches_project_filename(path, project_filename)
-			and not is_gradle_settings_file(path)
-			and not path:contains(GRADLE_INTERNAL_DIR)
-			and not seen[module_dir_str]
-		then
-			modules[#modules + 1] = Module.new(module_dir, build_tool)
-			seen[module_dir_str] = true
+		if should_include_module(path, project_filename, seen_module_dirs) then
+			modules[#modules + 1] = Module.new(path:parent(), build_tool)
 		end
 	end
 	return modules
