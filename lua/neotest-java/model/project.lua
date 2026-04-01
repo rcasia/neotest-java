@@ -25,27 +25,44 @@ local is_internal_gradle_file = function(path, filename)
 	return GRADLE_SETTINGS_FILENAMES[filename] or path:contains(GRADLE_INTERNAL_DIR)
 end
 
+local is_candidate_module_path = function(path, project_filename, uses_lua_pattern)
+	local filename = path:name()
+	if filename == "" then
+		return false
+	end
+
+	if not is_project_build_file(filename, project_filename, uses_lua_pattern) then
+		return false
+	end
+
+	if is_internal_gradle_file(path, filename) then
+		return false
+	end
+
+	return true
+end
+
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
 	---@type table<neotest-java.Module>
 	local modules = {}
 	local seen_module_directory_paths = {}
 	local uses_lua_pattern = project_filename:find("%", 1, true) ~= nil
 
-	for _, path in ipairs(dirs) do
-		local filename = path:name()
-		local is_candidate = filename ~= ""
-			and is_project_build_file(filename, project_filename, uses_lua_pattern)
-			and not is_internal_gradle_file(path, filename)
-
-		if is_candidate then
+	vim.iter(dirs)
+		:filter(function(path)
+			return is_candidate_module_path(path, project_filename, uses_lua_pattern)
+		end)
+		:each(function(path)
 			local module_dir = path:parent()
 			local module_dir_path = module_dir:to_string()
-			if not seen_module_directory_paths[module_dir_path] then
-				modules[#modules + 1] = Module.new(module_dir, build_tool)
-				seen_module_directory_paths[module_dir_path] = true
+			if seen_module_directory_paths[module_dir_path] then
+				return
 			end
-		end
-	end
+
+			modules[#modules + 1] = Module.new(module_dir, build_tool)
+			seen_module_directory_paths[module_dir_path] = true
+		end)
+
 	return modules
 end
 
