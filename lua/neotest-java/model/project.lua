@@ -43,12 +43,9 @@ local is_candidate_module_path = function(path, project_filename, uses_lua_patte
 end
 
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
-	---@type table<neotest-java.Module>
-	local modules = {}
-	local seen_module_directory_paths = {}
 	local uses_lua_pattern = project_filename:find("%", 1, true) ~= nil
 
-	vim.iter(dirs)
+	local result = vim.iter(dirs)
 		:filter(function(path)
 			return is_candidate_module_path(path, project_filename, uses_lua_pattern)
 		end)
@@ -59,22 +56,17 @@ local modules_from_dirs_and_project_file = function(dirs, project_filename, buil
 				module_dir_path = module_dir:to_string(),
 			}
 		end)
-		:filter(function(candidate)
-			if seen_module_directory_paths[candidate.module_dir_path] then
-				return false
+		:fold({ modules = {}, seen_module_directory_paths = {} }, function(acc, candidate)
+			if acc.seen_module_directory_paths[candidate.module_dir_path] then
+				return acc
 			end
 
-			seen_module_directory_paths[candidate.module_dir_path] = true
-			return true
-		end)
-		:map(function(candidate)
-			return Module.new(candidate.module_dir, build_tool)
-		end)
-		:each(function(module)
-			modules[#modules + 1] = module
+			acc.seen_module_directory_paths[candidate.module_dir_path] = true
+			acc.modules[#acc.modules + 1] = Module.new(candidate.module_dir, build_tool)
+			return acc
 		end)
 
-	return modules
+	return result.modules
 end
 
 ---@param dirs neotest-java.Path[]
