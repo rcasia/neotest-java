@@ -7,20 +7,29 @@ local Module = require("neotest-java.model.module")
 local Project = {}
 Project.__index = Project
 
-local GRADLE_SETTINGS_PATTERN = "settings%.gradle"
 local GRADLE_INTERNAL_DIR = ".gradle"
+
+local is_gradle_settings_file = function(path)
+	local name = path:name()
+	return name == "settings.gradle" or name == "settings.gradle.kts"
+end
 
 local modules_from_dirs_and_project_file = function(dirs, project_filename, build_tool)
 	---@type table<neotest-java.Module>
 	local modules = {}
+	local seen = {}
 	for _, path in ipairs(dirs) do
 		local path_str = path:to_string()
+		local module_dir = path:parent()
+		local module_dir_str = module_dir:to_string()
 		if
 			path_str:find(project_filename)
-			and not path_str:find(GRADLE_SETTINGS_PATTERN)
+			and not is_gradle_settings_file(path)
 			and not path:contains(GRADLE_INTERNAL_DIR)
+			and not seen[module_dir_str]
 		then
-			modules[#modules + 1] = Module.new(path:parent(), build_tool)
+			modules[#modules + 1] = Module.new(module_dir, build_tool)
+			seen[module_dir_str] = true
 		end
 	end
 	return modules

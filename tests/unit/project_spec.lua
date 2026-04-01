@@ -181,6 +181,50 @@ describe("project", function()
 		eq(expected, module_names)
 	end)
 
+	it("accepts custom gradle filenames that contain 'settings.gradle' as substring", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/mysettings.gradle.kts"),
+			Path("./my_project/app/appsettings.gradle.kts"),
+			Path("./my_project/settings.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local module_names = vim.iter(project:get_modules())
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/app"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
+	it("deduplicates modules when multiple build files exist in same directory", function()
+		local project = Project.from_dirs_and_project_file({
+			Path("./my_project/build.gradle"),
+			Path("./my_project/build.gradle.kts"),
+			Path("./my_project/service/service.gradle.kts"),
+		}, "%.gradle", fake_build_tool_dir_name)
+
+		local module_names = vim.iter(project:get_modules())
+			:map(function(m)
+				return m.base_dir:to_string()
+			end)
+			:totable()
+		table.sort(module_names)
+
+		local expected = {
+			Path("./my_project"):to_string(),
+			Path("./my_project/service"):to_string(),
+		}
+		table.sort(expected)
+		eq(expected, module_names)
+	end)
+
 	it("find module by filepath", function()
 		local project = Project.from_dirs_and_project_file({
 
