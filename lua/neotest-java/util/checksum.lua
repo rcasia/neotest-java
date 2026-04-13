@@ -18,9 +18,14 @@ function M.sha256(filepath)
 		cmd = "CertUtil"
 		args = { "-hashfile", filepath, "SHA256" }
 	else
-		-- Unix-like (Linux, macOS): use shasum
-		cmd = "shasum"
-		args = { "-a", "256", filepath }
+		-- Unix-like (Linux, macOS): use sha256sum or fallback to shasum
+		if vim.fn.executable("sha256sum") == 1 then
+			cmd = "sha256sum"
+			args = { filepath }
+		else
+			cmd = "shasum"
+			args = { "-a", "256", filepath }
+		end
 	end
 
 	local result = vim.system(vim.list_extend({ cmd }, args)):wait()
