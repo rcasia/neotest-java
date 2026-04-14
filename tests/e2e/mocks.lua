@@ -11,18 +11,20 @@ function M.install_mocks(classpath)
 	local is_windows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
 	local path_sep = is_windows and ";" or ":"
 
-	-- Mock the client_provider module - returns a fake client that provides Java home
-	package.loaded["neotest-java.core.spec_builder.compiler.client_provider"] = function(_)
-		return {
-			request = function(_, method, params, callback)
-				if method == "workspace/executeCommand" and params.command == "java.project.getSettings" then
-					-- Return Java home from environment
-					local java_home = vim.env.JAVA_HOME
-					assert(java_home, "JAVA_HOME environment variable must be set")
-					callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = java_home })
-				end
-			end,
-		}
+	-- Mock the client_provider module - factory that returns a function(cwd) -> fake client
+	package.loaded["neotest-java.core.spec_builder.compiler.client_provider"] = function(_deps)
+		return function(_cwd)
+			return {
+				request = function(_, method, params, callback)
+					if method == "workspace/executeCommand" and params.command == "java.project.getSettings" then
+						-- Return Java home from environment
+						local java_home = vim.env.JAVA_HOME
+						assert(java_home, "JAVA_HOME environment variable must be set")
+						callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = java_home })
+					end
+				end,
+			}
+		end
 	end
 
 	-- Mock classpath provider - returns pre-resolved Maven classpath

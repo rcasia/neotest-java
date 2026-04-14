@@ -20,10 +20,8 @@ local MethodIdResolver = function(deps)
 			end
 			local classpath = classpaths[module_dir:to_string()]
 
-			local result = deps.command_executor.execute_command(
-				"bash",
-				{ "-c", javap_path:to_string() .. " -cp '" .. classpath .. "' '" .. classname .. "'" }
-			)
+			local result =
+				deps.command_executor.execute_command(javap_path:to_string(), { "-cp", classpath, classname })
 
 			assert(
 				result.exit_code == 0,

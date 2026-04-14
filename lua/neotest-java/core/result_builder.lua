@@ -2,7 +2,7 @@ local xml = require("neotest.lib.xml")
 local flat_map = require("neotest-java.util.flat_map")
 local log = require("neotest-java.logger")
 local lib = require("neotest.lib")
-local JunitResult = require("neotest-java.model.junit_result")
+local JunitResultFactory = require("neotest-java.model.junit_result")
 local dir_scan = require("neotest-java.util.dir_scan")
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
@@ -49,7 +49,7 @@ local function load_all_testcases(paths, read_file)
 end
 
 --- @return table <string, neotest-java.JunitResult[]>
-local function group_by_method_base(testcases)
+local function group_by_method_base(testcases, JunitResult)
 	local groups = {}
 	for _, tc in ipairs(testcases) do
 		local jres = JunitResult:new(tc)
@@ -70,7 +70,9 @@ local ResultBuilder = {}
 --- @param remove_file? fun(filepath: string): boolean, string? Function to remove a file, returns success, error
 --- @param tree neotest.Tree
 --- @param scan fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): string[]
-function ResultBuilder.build_results(spec, result, tree, scan, read_file, remove_file)
+--- @param write_output? fun(data: string): string  injected file writer; defaults to io.open + nio.fn.tempname
+function ResultBuilder.build_results(spec, result, tree, scan, read_file, remove_file, write_output)
+	local JunitResult = JunitResultFactory(write_output and { write_output = write_output } or nil)
 	scan = scan or dir_scan
 	read_file = read_file or require("neotest-java.util.read_file")
 	remove_file = remove_file
@@ -93,7 +95,7 @@ function ResultBuilder.build_results(spec, result, tree, scan, read_file, remove
 
 	local report_files = scan(spec.context.reports_dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } })
 	local testcases = load_all_testcases(report_files, read_file)
-	local groups = group_by_method_base(testcases)
+	local groups = group_by_method_base(testcases, JunitResult)
 
 	local results = {}
 

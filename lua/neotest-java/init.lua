@@ -33,7 +33,7 @@ local exists = require("neotest.lib.file").exists
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
-local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
+local ClientProvider = require("neotest-java.core.spec_builder.compiler.client_provider")
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 local CommandExecutor = require("neotest-java.command.command_executor")
@@ -63,6 +63,7 @@ end
 --- @class neotest-java.Dependencies
 ---@field root_finder? { find_root: fun(dir: string): string | nil }
 ---@field check_junit_jar_deps? neotest-java.CheckJunitJarDeps
+---@field client_provider? fun(cwd: neotest-java.Path): vim.lsp.Client
 
 --- @param config neotest-java.ConfigOpts
 --- @param deps? neotest-java.Dependencies
@@ -72,6 +73,18 @@ local function NeotestJavaAdapter(config, deps)
 	deps = deps or {}
 	local _root_finder = deps and deps.root_finder or root_finder
 	local check_junit_jar_deps = deps.check_junit_jar_deps or {}
+	local client_provider = deps.client_provider
+		or ClientProvider({
+			get_clients = function(opts)
+				return vim.lsp.get_clients(opts)
+			end,
+			buf_add = vim.fn.bufadd,
+			buf_load = vim.fn.bufload,
+			hrtime = function()
+				return vim.uv.hrtime() / 1e6
+			end,
+			globpath = nio.fn.globpath,
+		})
 
 	log.info("neotest-java adapter initialized")
 

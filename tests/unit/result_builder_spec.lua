@@ -1,7 +1,6 @@
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 local async = require("nio").tests
 local result_builder = require("neotest-java.core.result_builder")
-local tempname_fn = require("nio").fn.tempname
 local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 local TREES = require("tests.trees")
@@ -24,17 +23,13 @@ local DEFAULT_SPEC = {
 
 local tempfiles = {}
 
+-- Stub write_output: always records the path and returns TEMPNAME
+local fake_write_output = function(_data)
+	return TEMPNAME
+end
+
 describe("ResultBuilder", function()
-	async.before_each(function()
-		-- mock the tempname function to return a fixed value
-		require("nio").fn.tempname = function()
-			return TEMPNAME
-		end
-	end)
-
 	async.after_each(function()
-		require("nio").fn.tempname = tempname_fn
-
 		-- remove all temp files
 		for _, path in ipairs(tempfiles) do
 			os.remove(path)
@@ -65,7 +60,15 @@ describe("ResultBuilder", function()
 			-- },
 		}
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		-- then
 		assert.are.same(expected, results)
@@ -109,7 +112,15 @@ describe("ResultBuilder", function()
 		}
 
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
@@ -159,7 +170,15 @@ describe("ResultBuilder", function()
 		}
 
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
@@ -223,7 +242,15 @@ describe("ResultBuilder", function()
 			},
 		}
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
@@ -267,7 +294,15 @@ describe("ResultBuilder", function()
 			},
 		}
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
@@ -308,7 +343,15 @@ describe("ResultBuilder", function()
 		}
 
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
@@ -363,7 +406,15 @@ describe("ResultBuilder", function()
 		}
 
 		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			nil,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
@@ -416,8 +467,15 @@ describe("ResultBuilder", function()
 		}
 
 		--when
-		local results =
-			result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file, remove_file)
+		local results = result_builder.build_results(
+			DEFAULT_SPEC,
+			SUCCESSFUL_RESULT,
+			tree,
+			scan_dir,
+			read_file,
+			remove_file,
+			fake_write_output
+		)
 
 		--then
 		eq(expected, results)
