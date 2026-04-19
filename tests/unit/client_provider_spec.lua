@@ -76,6 +76,9 @@ describe("ClientProvider", function()
 		local bufadd_arg, bufload_arg
 		local sleep_count = 0
 
+		local cwd = Path("/some/project")
+		local java_file = Path("/some/project/src/Main.java")
+
 		local provider = ClientProvider({
 			get_clients = function(_)
 				get_clients_call_count = get_clients_call_count + 1
@@ -90,9 +93,9 @@ describe("ClientProvider", function()
 				return {}
 			end,
 			globpath = function(dir, _, _, list)
-				eq("/some/project", dir)
+				eq(cwd:to_string(), dir)
 				eq(true, list)
-				return { "/some/project/src/Main.java" }
+				return { java_file:to_string() }
 			end,
 			bufadd = function(path)
 				bufadd_arg = path
@@ -109,11 +112,11 @@ describe("ClientProvider", function()
 			end,
 		})
 
-		local result = provider(Path("/some/project"))
+		local result = provider(cwd)
 
 		eq(mock_client, result)
-		eq("/some/project/src/Main.java", bufadd_arg)
-		eq("/some/project/src/Main.java", bufload_arg)
+		eq(java_file:to_string(), bufadd_arg)
+		eq(java_file:to_string(), bufload_arg)
 		assert(sleep_count >= 1, "expected at least one sleep call during polling")
 	end)
 end)
