@@ -156,6 +156,57 @@ require("neotest").setup({
 
 ## ⚠️ Troubleshooting
 
+### Multi-module projects: "Given URI does not belong to any Java project" (-32001)
+
+Tests in one module pass but tests in another module fail with an error like:
+
+```
+Error -32001: Given URI does not belong to any Java project.
+```
+
+**Cause:** eclipse.jdt.ls (jdtls) is started once per module instead of once per
+workspace. When neotest-java runs tests for module B, it ends up talking to
+module A's jdtls instance, which rejects URIs it doesn't own.
+
+This happens when `pom.xml` or `build.gradle` is used as a root marker in the
+jdtls configuration. Because every module directory contains its own build file,
+jdtls resolves `root_dir` to the nearest module root rather than the repository
+root, and a separate server process is started for each module you open.
+
+**Solution:** Remove `pom.xml` and `build.gradle` from the `root_dir` markers
+and keep only the repo-level markers (`.git`, `mvnw`, `gradlew`). These files
+only exist at the workspace root, so jdtls resolves a single `root_dir` for the
+entire monorepo.
+
+With **nvim-jdtls** (`ftplugin/java.lua` style):
+
+```lua
+-- Before (broken for multimodule):
+root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew", "pom.xml" })
+
+-- After (correct):
+root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew" })
+```
+
+With the newer `vim.lsp.config` / `vim.fs.root` API (Neovim 0.11+):
+
+```lua
+-- Before (broken for multimodule):
+root_dir = vim.fs.root(0, { ".git", "mvnw", "gradlew", "pom.xml" })
+
+-- After (correct):
+root_dir = vim.fs.root(0, { ".git", "mvnw", "gradlew" })
+```
+
+With this change a single jdtls instance starts at the repository root and
+handles all modules. eclipse.jdt.ls natively understands Maven and Gradle
+multimodule projects, so no further configuration is needed.
+
+> [!NOTE]
+> The first time you open a Java file after this change, jdtls will reindex the
+> whole workspace from a new `-data` directory. This can take a couple of minutes
+> for large projects.
+
 ### Spring Tests Failing with "parameter name information not available"
 
 If you're running Spring tests that use reflection (e.g., `@MockBean`, `@WebMvcTest`) and encounter errors like:
