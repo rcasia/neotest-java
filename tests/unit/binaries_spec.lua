@@ -7,6 +7,12 @@ local Path = require("neotest-java.model.path")
 describe("Binaries", function()
 	local expected_cwd = Path("some")
 
+	-- Inject a synchronous schedule so mock callbacks fire immediately
+	-- without needing the Neovim event loop.
+	local sync_schedule = function(fn)
+		fn()
+	end
+
 	local test_client_provider = function(cwd)
 		eq(expected_cwd, cwd)
 		return {
@@ -27,6 +33,7 @@ describe("Binaries", function()
 		local bin = Binaries({
 			client_provider = test_client_provider,
 			is_windows = false,
+			schedule = sync_schedule,
 		})
 		local result = bin.java(expected_cwd)
 		eq(Path("my_java_home/bin/java"), result)
@@ -36,6 +43,7 @@ describe("Binaries", function()
 		local bin = Binaries({
 			client_provider = test_client_provider,
 			is_windows = false,
+			schedule = sync_schedule,
 		})
 		local result = bin.javap(expected_cwd)
 		eq(Path("my_java_home/bin/javap"), result)
@@ -53,6 +61,7 @@ describe("Binaries", function()
 				}
 			end,
 			is_windows = false,
+			schedule = sync_schedule,
 		})
 
 		for _ = 1, 10 do
@@ -69,6 +78,7 @@ describe("Binaries", function()
 		local bin = Binaries({
 			client_provider = test_client_provider,
 			is_windows = true,
+			schedule = sync_schedule,
 		})
 		local java_result = bin.java(expected_cwd)
 		local javap_result = bin.javap(expected_cwd)
