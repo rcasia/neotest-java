@@ -170,7 +170,6 @@ local function NeotestJavaAdapter(config, deps)
 	local spec_builder_instance = SpecBuilder({
 		classpath_provider = classpath_provider,
 		binaries = binaries,
-		root_getter = root_getter,
 		mkdir = mkdir,
 		chdir = chdir,
 		scan = scan,

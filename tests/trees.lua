@@ -10,36 +10,45 @@ local TREES = {
 	TWO_TESTS_IN_FILE = function(file_path)
 		return Tree.from_list({
 			{
-				id = file_path:to_string(),
-				name = file_path:to_string(),
-				path = file_path:to_string(),
+				id = file_path:parent():to_string(),
+				name = file_path:parent():to_string(),
+				path = file_path:parent():to_string(),
 				range = { 0, 0, 13, 2 },
-				type = "file",
+				type = "dir",
 			},
 			{
 				{
-					id = "com.example.ExampleTest",
-					name = "ExampleTest",
+					id = file_path:to_string(),
+					name = file_path:to_string(),
 					path = file_path:to_string(),
-					range = { 0, 0, 12, 1 },
-					type = "namespace",
+					range = { 0, 0, 13, 2 },
+					type = "file",
 				},
 				{
 					{
-						id = "com.example.ExampleTest#firstTestMethod()",
-						name = "firstTestMethod",
+						id = "com.example.ExampleTest",
+						name = "ExampleTest",
 						path = file_path:to_string(),
-						range = { 2, 2, 5, 3 },
-						type = "test",
+						range = { 0, 0, 12, 1 },
+						type = "namespace",
 					},
-				},
-				{
 					{
-						id = "com.example.ExampleTest#secondTestMethod()",
-						name = "secondTestMethod",
-						path = file_path:to_string(),
-						range = { 7, 2, 10, 3 },
-						type = "test",
+						{
+							id = "com.example.ExampleTest#firstTestMethod()",
+							name = "firstTestMethod",
+							path = file_path:to_string(),
+							range = { 2, 2, 5, 3 },
+							type = "test",
+						},
+					},
+					{
+						{
+							id = "com.example.ExampleTest#secondTestMethod()",
+							name = "secondTestMethod",
+							path = file_path:to_string(),
+							range = { 7, 2, 10, 3 },
+							type = "test",
+						},
 					},
 				},
 			},

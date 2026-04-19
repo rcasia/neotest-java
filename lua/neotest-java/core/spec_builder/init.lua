@@ -9,7 +9,6 @@ local Path = require("neotest-java.model.path")
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
 --- @field chdir fun(dir: neotest-java.Path)
---- @field root_getter fun(): neotest-java.Path
 --- @field scan fun(base_dir: neotest-java.Path, opts?: { search_patterns?: string[] }): neotest-java.Path[]
 --- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
@@ -41,7 +40,7 @@ local SpecBuilder = function(deps)
 			local tree = args.tree
 			local position = tree:data()
 			local filepath = Path(position.path)
-			local root = deps.root_getter()
+			local root = Path(args.tree:root():data().path)
 			local project_type = deps.detect_project_type(root)
 			--- @type neotest-java.BuildTool
 			local build_tool = deps.build_tool_getter(project_type)
@@ -129,7 +128,7 @@ local SpecBuilder = function(deps)
 			logger.info("junit command: ", command_string)
 			return {
 				command = command_string,
-				cwd = module.base_dir:to_string(),
+				cwd = position.type == "dir" and root:to_string() or module.base_dir:to_string(),
 				symbol = position.name,
 				context = { reports_dir = reports_dir },
 			}

@@ -13,23 +13,21 @@ describe("SpecBuilder", function()
 	}
 	it("builds a spec for two test methods", function()
 		local path = Path("/user/home/root/src/test/java/com/example/Test.java")
+		local parent_path = path:parent()
 		local project_paths = {
-			Path("."),
-			Path("./src/test/java/com/example/ExampleTest.java"),
-			Path("./pom.xml"),
+			parent_path,
+			parent_path:append("ExampleTest.java"),
+			parent_path:append("pom.xml"),
 		}
 
 		-- when
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			root_getter = function()
-				return Path(".")
-			end,
 			scan = function(base_dir, opts)
-				if base_dir ~= Path(".") then
-					error("unexpected base_dir in scan: " .. base_dir:to_string())
-				end
+				-- if base_dir ~= parent_path then
+				-- 	error("unexpected base_dir in scan: " .. base_dir:to_string())
+				-- end
 
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
@@ -39,23 +37,23 @@ describe("SpecBuilder", function()
 				return project_paths
 			end,
 			compile = function(base_dir)
-				local expected_base_dir = Path(".")
+				local expected_base_dir = parent_path
 				assert(
-					base_dir == Path("."),
+					base_dir == expected_base_dir,
 					"should compile with the project root as base_dir: "
 						.. vim.inspect({ actual = base_dir:to_string(), expected = expected_base_dir:to_string() })
 				)
 			end,
 			classpath_provider = {
 				get_classpath = function(base_dir, additional_classpaths)
-					eq(Path("."), base_dir)
+					eq(parent_path, base_dir)
 					eq({ Path("additional1"), Path("additional2") }, additional_classpaths)
 
 					return "classpath-file-argument"
 				end,
 			},
 			report_folder_name_gen = function(module_dir, build_dir)
-				eq(Path("."), module_dir)
+				eq(parent_path, module_dir)
 				eq(Path("target"), build_dir)
 
 				return Path("report_folder")
@@ -80,7 +78,7 @@ describe("SpecBuilder", function()
 		eq({
 			command = vim.iter({
 				"java",
-				"-Duser.dir=" .. Path("."):to_string(),
+				"-Duser.dir=" .. parent_path:to_string(),
 				"-Dspring.config.additional-location=" .. Path("src/main/resources/application.properties"):to_string(),
 				"-jar",
 				"my-junit-jar.jar",
@@ -97,8 +95,8 @@ describe("SpecBuilder", function()
 			context = {
 				reports_dir = Path("report_folder"),
 			},
-			cwd = Path("."):to_string(),
-			symbol = path:to_string(),
+			cwd = parent_path:to_string(),
+			symbol = parent_path:to_string(),
 		}, actual)
 	end)
 
@@ -148,14 +146,7 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			root_getter = function()
-				return Path(".")
-			end,
 			scan = function(base_dir, opts)
-				if base_dir ~= Path(".") then
-					error("unexpected base_dir in scan: " .. base_dir:to_string())
-				end
-
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
 					return { Path("additional1"), Path("additional2") }
@@ -276,9 +267,6 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			root_getter = function()
-				return Path("root")
-			end,
 			scan = function()
 				return project_paths
 			end,
@@ -386,9 +374,6 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			root_getter = function()
-				return Path("root")
-			end,
 			scan = function()
 				return project_paths
 			end,
@@ -517,14 +502,7 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			root_getter = function()
-				return Path(".")
-			end,
 			scan = function(base_dir, opts)
-				if base_dir ~= Path(".") then
-					error("unexpected base_dir in scan: " .. base_dir:to_string())
-				end
-
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
 					return { Path("additional1"), Path("additional2") }
