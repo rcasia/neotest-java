@@ -33,7 +33,6 @@ local exists = require("neotest.lib.file").exists
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
-local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 local CommandExecutor = require("neotest-java.command.command_executor")
@@ -42,6 +41,7 @@ local build_tools = require("neotest-java.build_tool")
 local launcher = require("neotest-java.build_tool.launcher")
 local detect_project_type = require("neotest-java.util.detect_project_type")
 local compilers = require("neotest-java.core.spec_builder.compiler")
+local client_provider = compilers.client_provider
 
 local mkdir = function(dir)
 	vim.uv.fs_mkdir(dir:to_string(), 493)
