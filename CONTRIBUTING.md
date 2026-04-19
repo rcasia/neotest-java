@@ -24,6 +24,7 @@ You will need to have installed:
 * This list of commands available in your terminal:
   * pre-commit (<https://pre-commit.com/#install>)
   * `stylua`
+  * `luacheck`
   * `make`
   * `git`
 
