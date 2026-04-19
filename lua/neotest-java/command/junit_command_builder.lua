@@ -181,6 +181,13 @@ CommandBuilder.build_to_table = function(self)
 			"--details=testfeed",
 			"--config=junit.platform.output.capture.stdout=true",
 			"--config=junit.platform.output.capture.stderr=true",
+			-- ArchUnit's JUnit Platform engine crashes with a JUnitException when it
+			-- receives a --select-method selector for a class it does not own, instead
+			-- of gracefully ignoring it. neotest-java never generates ArchUnit-compatible
+			-- selectors (ArchUnit tests use @ArchTest fields, not @Test methods), so
+			-- excluding the engine is always safe and has no effect when ArchUnit is not
+			-- on the classpath.
+			"--exclude-engine=archunit",
 		})
 			:flatten()
 			:totable(),

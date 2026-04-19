@@ -59,4 +59,24 @@ describe("JUnitCommandBuilder", function()
 			return arg == "--select-class='com.example.ExampleTest'"
 		end))
 	end)
+
+	it("always excludes the archunit engine to prevent cross-engine interference", function()
+		local tree = {
+			data = function()
+				return { type = "namespace", id = "com.example.ExampleTest" }
+			end,
+			iter = function()
+				return ipairs({})
+			end,
+		}
+
+		local command = base_builder():add_test_references_from_tree(tree):build_to_table()
+
+		assert(
+			vim.iter(command.args):any(function(arg)
+				return arg == "--exclude-engine=archunit"
+			end),
+			"expected --exclude-engine=archunit in command args"
+		)
+	end)
 end)

@@ -90,6 +90,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
+				"--exclude-engine=archunit",
 				"--select-class='com.example.ExampleTest'",
 			}):join(" "),
 			context = {
@@ -207,6 +208,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
+				"--exclude-engine=archunit",
 				"--select-method='com.example.ExampleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
@@ -311,6 +313,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
+				"--exclude-engine=archunit",
 				"--select-method='com.example.ExampleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
@@ -423,6 +426,7 @@ describe("SpecBuilder", function()
 				"--details=testfeed",
 				"--config=junit.platform.output.capture.stdout=true",
 				"--config=junit.platform.output.capture.stderr=true",
+				"--exclude-engine=archunit",
 				"--select-method='com.example.ExampleInSecondModuleTest#shouldNotFail()'",
 			}):join(" "),
 			context = {
