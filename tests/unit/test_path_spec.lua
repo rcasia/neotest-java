@@ -1,6 +1,6 @@
 local Path = require("neotest-java.model.path")
 
-local eq = assert.are.same
+local eq = require("tests.assertions").eq
 
 describe("Path", function()
 	it("returns name", function()

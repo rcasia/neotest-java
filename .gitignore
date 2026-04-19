@@ -24,3 +24,7 @@ tests/fixtures/*/*.iml
 /tmp/neotest-e2e*.txt
 /tmp/maven-classpath.txt
 /tmp/test-*.lua
+
+# Test dependencies (auto-cloned)
+.dependencies/
+pack/

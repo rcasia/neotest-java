@@ -15,7 +15,7 @@ test-e2e: install
 	@tests/e2e/run-all.sh
 
 
-install: deps/plenary.nvim deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
+install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
 
 deps/plenary.nvim:
 	mkdir -p deps
@@ -38,7 +38,7 @@ deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 
 
 clean:
-	rm -rf deps/plenary.nvim deps/nvim-treesitter deps/neotest
+	rm -rf deps/nvim-treesitter deps/neotest
 
 validate:
 	stylua --check .

@@ -1,6 +1,6 @@
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 local Path = require("neotest-java.model.path")
-local eq = assert.are.same
+local eq = require("tests.assertions").eq
 
 describe("Spring Property Filepaths", function()
 	it("returs empty if base_dirs parameter is empty", function()

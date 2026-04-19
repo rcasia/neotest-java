@@ -21,29 +21,28 @@ local function ClasspathProvider(deps)
 			local bufnr = vim.tbl_keys(client.attached_buffers)[1]
 			local runtime = nio.control.future()
 			local test = nio.control.future()
-			vim.schedule(function()
-				client:request("workspace/executeCommand", {
-					command = "java.project.getClasspaths",
-					arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
-				}, function(err, result)
-					if err then
-						runtime.set_error(err)
-					else
-						runtime.set(result.classpaths)
-					end
-				end, bufnr)
 
-				client:request("workspace/executeCommand", {
-					command = "java.project.getClasspaths",
-					arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
-				}, function(err, result)
-					if err then
-						test.set_error(err)
-					else
-						test.set(result.classpaths)
-					end
-				end, bufnr)
-			end)
+			client:request("workspace/executeCommand", {
+				command = "java.project.getClasspaths",
+				arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
+			}, function(err, result)
+				if err then
+					runtime.set_error(err)
+				else
+					runtime.set(result.classpaths)
+				end
+			end, bufnr)
+
+			client:request("workspace/executeCommand", {
+				command = "java.project.getClasspaths",
+				arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
+			}, function(err, result)
+				if err then
+					test.set_error(err)
+				else
+					test.set(result.classpaths)
+				end
+			end, bufnr)
 
 			local additional_classpath_entries_strings = vim
 				--
