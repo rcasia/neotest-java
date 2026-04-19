@@ -38,6 +38,14 @@ repos:
         types_or: [lua]
         stages: [pre-commit]
 
+      - id: luacheck
+        name: Luacheck
+        entry: luacheck
+        language: system
+        pass_filenames: true
+        types_or: [lua]
+        stages: [pre-commit]
+
       - id: test
         name: Test
         entry: make test

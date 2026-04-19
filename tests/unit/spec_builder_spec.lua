@@ -24,9 +24,9 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			scan = function(base_dir, opts)
-				-- if base_dir ~= parent_path then
-				-- 	error("unexpected base_dir in scan: " .. base_dir:to_string())
+			scan = function(_base_dir, opts)
+				-- if _base_dir ~= parent_path then
+				-- 	error("unexpected base_dir in scan: " .. _base_dir:to_string())
 				-- end
 
 				opts = opts or {}
@@ -146,7 +146,7 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			scan = function(base_dir, opts)
+			scan = function(_base_dir, opts)
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
 					return { Path("additional1"), Path("additional2") }
@@ -502,7 +502,7 @@ describe("SpecBuilder", function()
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 			chdir = function() end,
-			scan = function(base_dir, opts)
+			scan = function(_base_dir, opts)
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
 					return { Path("additional1"), Path("additional2") }
