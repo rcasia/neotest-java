@@ -8,7 +8,6 @@ local Path = require("neotest-java.model.path")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
---- @field chdir fun(dir: neotest-java.Path)
 --- @field scan fun(base_dir: neotest-java.Path, opts?: { search_patterns?: string[] }): neotest-java.Path[]
 --- @field compile fun(cwd: neotest-java.Path, compile_mode: string)
 --- @field classpath_provider neotest-java.ClasspathProvider
@@ -50,18 +49,6 @@ local SpecBuilder = function(deps)
 				"project not detected correctly"
 			)
 
-			-- make sure we are in root_dir
-			deps.chdir(root)
-
-			-- make sure build directory is created to operate in it
-			local build_dir = build_tool.get_build_dirname(root)
-
-			deps.mkdir(build_dir)
-			deps.mkdir(build_dir:parent())
-
-			-- JAVA BIN
-			command:java_bin(deps.binaries.java(filepath:parent()))
-
 			local module =
 				--
 				project:is_multimodule()
@@ -71,6 +58,20 @@ local SpecBuilder = function(deps)
 						"module not found in multimodule project for filepath: " .. filepath:to_string()
 					)
 				or project:get_modules()[1]
+
+			-- make sure build directory is created to operate in it
+			local build_dir = build_tool.get_build_dirname(module.base_dir)
+
+			deps.mkdir(build_dir)
+			deps.mkdir(build_dir:parent())
+
+			-- JAVA BIN
+			-- Use module.base_dir (not filepath:parent()) so that the URI passed to
+			-- jdtls always points to a directory that belongs to a known project.
+			-- When position.type == "dir" and the position is the module root,
+			-- filepath:parent() would resolve to the repo root, which jdtls does
+			-- not own as a project and rejects with -32001.
+			command:java_bin(deps.binaries.java(module.base_dir))
 
 			command:basedir(module.base_dir)
 
@@ -128,7 +129,7 @@ local SpecBuilder = function(deps)
 			logger.info("junit command: ", command_string)
 			return {
 				command = command_string,
-				cwd = position.type == "dir" and root:to_string() or module.base_dir:to_string(),
+				cwd = module.base_dir:to_string(),
 				symbol = position.name,
 				context = { reports_dir = reports_dir },
 			}

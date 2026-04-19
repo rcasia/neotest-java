@@ -47,10 +47,6 @@ local mkdir = function(dir)
 	vim.uv.fs_mkdir(dir:to_string(), 493)
 end
 
-local chdir = function(dir)
-	nio.fn.chdir(dir:to_string())
-end
-
 --- @class neotest-java.Adapter : neotest.Adapter
 --- @field config neotest-java.ConfigOpts
 --- @field install fun()
@@ -171,7 +167,6 @@ local function NeotestJavaAdapter(config, deps)
 		classpath_provider = classpath_provider,
 		binaries = binaries,
 		mkdir = mkdir,
-		chdir = chdir,
 		scan = scan,
 		compile = function(base_dir, compile_mode)
 			compilers.lsp.compile({

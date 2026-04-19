@@ -23,7 +23,7 @@ describe("SpecBuilder", function()
 		-- when
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
-			chdir = function() end,
+
 			scan = function(_base_dir, opts)
 				-- if _base_dir ~= parent_path then
 				-- 	error("unexpected base_dir in scan: " .. _base_dir:to_string())
@@ -146,7 +146,7 @@ describe("SpecBuilder", function()
 		-- when
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
-			chdir = function() end,
+
 			scan = function(_base_dir, opts)
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
@@ -268,7 +268,7 @@ describe("SpecBuilder", function()
 		-- when
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
-			chdir = function() end,
+
 			scan = function()
 				return project_paths
 			end,
@@ -376,7 +376,7 @@ describe("SpecBuilder", function()
 		-- when
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
-			chdir = function() end,
+
 			scan = function()
 				return project_paths
 			end,
@@ -435,6 +435,74 @@ describe("SpecBuilder", function()
 			cwd = Path("/user/home/root/module-2"):to_string(),
 			symbol = "shouldNotFail",
 		}, actual)
+	end)
+
+	it("uses module.base_dir (not filepath:parent()) when resolving java binary for a dir position", function()
+		-- Regression test: when position.type == "dir" and position.path is the module
+		-- directory itself, filepath:parent() resolves to the repo root, which jdtls
+		-- does not own as a project and rejects with -32001.  The fix is to always
+		-- resolve the java binary using module.base_dir.
+		local module_dir = Path("/user/home/root/module-2")
+		local tree = Tree.from_list({
+			id = module_dir:to_string(),
+			name = module_dir:name(),
+			path = module_dir:to_string(),
+			type = "dir",
+		}, function(x)
+			return x
+		end)
+
+		local project_paths = {
+			Path("/user/home/root"),
+			Path("/user/home/root/pom.xml"),
+			Path("/user/home/root/module-1/pom.xml"),
+			Path("/user/home/root/module-1/src/test/java/com/example/ExampleTest.java"),
+			Path("/user/home/root/module-2/pom.xml"),
+			Path("/user/home/root/module-2/src/test/java/com/example/ExampleInSecondModuleTest.java"),
+		}
+
+		local captured_binaries_cwd = nil
+
+		local spec_builder_instance = SpecBuilder({
+			mkdir = function() end,
+
+			scan = function()
+				return project_paths
+			end,
+			compile = function() end,
+			classpath_provider = {
+				get_classpath = function()
+					return "classpath-file-argument"
+				end,
+			},
+			report_folder_name_gen = function()
+				return Path("report_folder")
+			end,
+			build_tool_getter = function()
+				return FakeBuildTool
+			end,
+			detect_project_type = function()
+				return "maven"
+			end,
+			binaries = {
+				java = function(cwd)
+					captured_binaries_cwd = cwd
+					return Path("java")
+				end,
+			},
+		})
+
+		-- The tree has no test children so build_spec will error at the selector
+		-- validation step — that's fine, we only care that binaries.java() was
+		-- called with the correct cwd before that point.
+		pcall(spec_builder_instance.build_spec, { tree = tree, strategy = "integration" }, config)
+
+		assert(captured_binaries_cwd ~= nil, "binaries.java() should have been called")
+		eq(
+			module_dir,
+			captured_binaries_cwd,
+			"binaries.java() should be called with module.base_dir, not filepath:parent() (which would be the repo root)"
+		)
 	end)
 
 	it("builds spec for debug test (dap strategy)", function()
@@ -505,7 +573,7 @@ describe("SpecBuilder", function()
 		-- when
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
-			chdir = function() end,
+
 			scan = function(_base_dir, opts)
 				opts = opts or {}
 				if opts.search_patterns and opts.search_patterns[1] == Path("test/resources$"):to_string() then
