@@ -33,6 +33,7 @@ local exists = require("neotest.lib.file").exists
 
 local DEFAULT_CONFIG = require("neotest-java.default_config")
 
+local client_provider = require("neotest-java.core.spec_builder.compiler.client_provider")
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 local CommandExecutor = require("neotest-java.command.command_executor")
@@ -161,10 +162,10 @@ local function NeotestJavaAdapter(config, deps)
 		patterns = config.test_classname_patterns,
 	})
 	local classpath_provider = ClasspathProvider({
-		client_provider = compilers.client_provider,
+		client_provider = client_provider,
 	})
 	local binaries = Binaries({
-		client_provider = compilers.client_provider,
+		client_provider = client_provider,
 	})
 	local spec_builder_instance = SpecBuilder({
 		classpath_provider = classpath_provider,
