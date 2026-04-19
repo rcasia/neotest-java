@@ -1,7 +1,6 @@
 ---@module "luassert"
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
-local async = require("nio").tests
-local nio = require("nio")
+local neotest_lib = require("neotest.lib")
 
 local assertions = require("tests.assertions")
 
@@ -26,23 +25,25 @@ local function remove_ref_field(tbl)
 	return result
 end
 
---- A non-blocking replacement for vim.wait inside nio tasks
--- @param timeout_ms number: Max time to wait
--- @param condition function: Returns true when ready
--- @param interval_ms number: (Optional) Check frequency, default 10ms
-local function nio_wait(timeout_ms, condition, interval_ms)
-	interval_ms = interval_ms or 10
-	local elapsed = 0
+-- Synchronous file reader injected in place of neotest.lib.file.read (which is async).
+-- Uses Lua's io.open so no coroutine yields are needed.
+local function sync_read_file(path)
+	local filepath = path:to_string()
+	local f = assert(io.open(filepath, "r"), "sync_read_file: cannot open " .. filepath)
+	local content = f:read("*a")
+	f:close()
+	return content
+end
 
-	while not condition() do
-		if elapsed >= timeout_ms then
-			return false, -1 -- Timed out
-		end
-		nio.sleep(interval_ms) -- Yields execution to allow other events to process
-		elapsed = elapsed + interval_ms
-	end
-
-	return true -- Success
+-- Synchronous parse_positions injected in place of neotest.lib.treesitter.parse_positions.
+-- Reads the file with io.open (no async) then delegates to parse_positions_from_string.
+-- opts already contains build_position and position_id as closures (injected by
+-- PositionsDiscoverer), so no subprocess serialisation is needed.
+local function sync_parse_positions(file_path, query, opts)
+	local f = assert(io.open(file_path, "r"), "sync_parse_positions: cannot open " .. file_path)
+	local content = f:read("*a")
+	f:close()
+	return neotest_lib.treesitter.parse_positions_from_string(file_path, content, query, opts)
 end
 
 describe("PositionsDiscoverer", function()
@@ -58,6 +59,9 @@ describe("PositionsDiscoverer", function()
 					return method_id
 				end,
 			},
+			-- Inject synchronous implementations so the tests need no async context.
+			parse_positions = sync_parse_positions,
+			read_file = sync_read_file,
 		})
 	end)
 
@@ -79,7 +83,7 @@ describe("PositionsDiscoverer", function()
 		return tmp_file
 	end
 
-	async.it("method FQN with inner classes", function()
+	it("method FQN with inner classes", function()
 		local file_path = create_tmp_javafile([[
     package com.example;
 
@@ -93,10 +97,6 @@ describe("PositionsDiscoverer", function()
 
 		--- @type neotest.Tree
 		local result = assert(positions_discoverer.discover_positions(file_path))
-
-		nio_wait(10, function()
-			return false
-		end)
 
 		eq({
 			{
@@ -136,7 +136,7 @@ describe("PositionsDiscoverer", function()
 		}, remove_ref_field(result:to_list()))
 	end)
 
-	async.it("should discover simple test method", function()
+	it("should discover simple test method", function()
 		-- given
 		local file_path = create_tmp_javafile([[
 class Test {
@@ -157,10 +157,6 @@ class Test {
 		--- @type neotest.Tree
 		local actual = assert(positions_discoverer.discover_positions(file_path))
 
-		nio_wait(10, function()
-			return false
-		end)
-
 		-- then
 		local actual_list = actual:to_list()
 
@@ -169,7 +165,7 @@ class Test {
 		eq(1, #actual:children()[1]:children())
 	end)
 
-	async.it("should discover two simple test method", function()
+	it("should discover two simple test method", function()
 		-- given
 		local file_path = create_tmp_javafile([[
 class Test {
@@ -190,10 +186,6 @@ class Test {
 		-- when
 		--- @type neotest.Tree
 		local actual = assert(positions_discoverer.discover_positions(file_path))
-
-		nio_wait(10, function()
-			return false
-		end)
 
 		-- then
 		local actual_list = actual:to_list()
@@ -236,7 +228,7 @@ class Test {
 		}, remove_ref_field(actual_list))
 	end)
 
-	async.it("should discover nested tests", function()
+	it("should discover nested tests", function()
 		local file_path = create_tmp_javafile([[
 public class SomeTest {
     public static class SomeNestedTest {
@@ -258,10 +250,6 @@ public class SomeTest {
 		-- when
 		--- @type neotest.Tree
 		local actual = assert(positions_discoverer.discover_positions(file_path))
-
-		nio_wait(10, function()
-			return false
-		end)
 
 		eq({
 			{

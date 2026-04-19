@@ -1,12 +1,14 @@
-local read_file = require("neotest-java.util.read_file")
+local read_file_default = require("neotest-java.util.read_file")
 
 ---Resolve the Java package name from a file.
 ---Returns "" if no package declaration is present.
 ---@param filename neotest-java.Path
+---@param read_file_fn? fun(path: neotest-java.Path): string  -- optional; defaults to neotest async reader
 ---@return string
-local function resolve_package_name(filename)
+local function resolve_package_name(filename, read_file_fn)
+	read_file_fn = read_file_fn or read_file_default
 	local ok, content = pcall(function()
-		return read_file(filename)
+		return read_file_fn(filename)
 	end)
 	if not ok then
 		error(string.format("file does not exist: %s", filename))

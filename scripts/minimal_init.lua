@@ -48,6 +48,61 @@ ensure_repo(DEPENDENCIES_DIR .. "/nvim-treesitter", "https://github.com/nvim-tre
 ensure_repo(DEPENDENCIES_DIR .. "/plenary.nvim", "https://github.com/nvim-lua/plenary.nvim")
 
 -- ─────────────────────────────────────────────────────────────
+-- Ensure the Java treesitter parser (.so) is compiled and present
+-- ─────────────────────────────────────────────────────────────
+-- The Java grammar is not bundled with Neovim, so it must be compiled
+-- once and placed in the nvim-treesitter parser directory on the runtimepath.
+local function ensure_java_parser()
+	local parser_dir = DEPENDENCIES_DIR .. "/nvim-treesitter/parser"
+	local java_so = parser_dir .. "/java.so"
+
+	if vim.fn.filereadable(java_so) == 1 then
+		return
+	end
+
+	-- Fast path: copy from old deps/ directory if it exists
+	local old_so = "deps/nvim-treesitter/parser/java.so"
+	if vim.fn.filereadable(old_so) == 1 then
+		vim.fn.mkdir(parser_dir, "p")
+		vim.fn.system({ "cp", old_so, java_so })
+		if vim.fn.filereadable(java_so) == 1 then
+			return
+		end
+	end
+
+	-- Fallback: clone tree-sitter-java and compile with cc
+	print("Installing Java treesitter parser (one-time setup)...")
+	local tmp_dir = vim.fn.tempname() .. "-ts-java"
+	vim.fn.system({
+		"git",
+		"clone",
+		"--depth=1",
+		"https://github.com/tree-sitter/tree-sitter-java",
+		tmp_dir,
+	})
+	vim.fn.mkdir(parser_dir, "p")
+	vim.fn.system({
+		"cc",
+		"-shared",
+		"-fPIC",
+		"-O2",
+		"-o",
+		java_so,
+		tmp_dir .. "/src/parser.c",
+		"-I" .. tmp_dir .. "/src",
+	})
+	vim.fn.system({ "rm", "-rf", tmp_dir })
+
+	assert(
+		vim.fn.filereadable(java_so) == 1,
+		"Failed to compile the Java treesitter parser.\n"
+			.. "Ensure 'cc' (a C compiler) and 'git' are available on PATH."
+	)
+end
+
+ensure_java_parser()
+
+-- ─────────────────────────────────────────────────────────────
 -- Runtime path setup (plugin roots, NOT /lua/ subdirectories)
 -- ─────────────────────────────────────────────────────────────
 vim.opt.runtimepath:append(".")

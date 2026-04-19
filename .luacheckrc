@@ -10,3 +10,7 @@ read_globals = {
 exclude_files = {
   "**/fun/**"
 }
+files["scripts/minimal_init.lua"] = {
+  -- minimal_init.lua must write vim.g and vim.opt to configure Neovim for tests
+  globals = { "vim" },
+}
