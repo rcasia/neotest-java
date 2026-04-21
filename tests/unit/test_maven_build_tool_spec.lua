@@ -5,7 +5,7 @@ local generate_spring_property_filepaths = require("neotest-java.util.spring_pro
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
-local it = require("nio").tests.it
+local async = require("tests.async_helpers").async
 
 describe("MavenBuildTool", function()
 	local maven = create_build_tool({
@@ -28,16 +28,22 @@ describe("MavenBuildTool", function()
 	})
 
 	describe("get_build_dirname", function()
-		it("returns default target when no build directory is specified", function()
-			local base_dir = Path("./tests/fixtures/maven-simple")
-			local result = maven.get_build_dirname(base_dir)
-			eq(Path("target"), result)
-		end)
+		it(
+			"returns default target when no build directory is specified",
+			async(function()
+				local base_dir = Path("./tests/fixtures/maven-simple")
+				local result = maven.get_build_dirname(base_dir)
+				eq(Path("target"), result)
+			end)
+		)
 
-		it("returns custom build directory from pom.xml", function()
-			local base_dir = Path("./tests/fixtures/maven-custom-build-dir")
-			local result = maven.get_build_dirname(base_dir)
-			eq(Path("custom-output/classes"), result)
-		end)
+		it(
+			"returns custom build directory from pom.xml",
+			async(function()
+				local base_dir = Path("./tests/fixtures/maven-custom-build-dir")
+				local result = maven.get_build_dirname(base_dir)
+				eq(Path("custom-output/classes"), result)
+			end)
+		)
 	end)
 end)

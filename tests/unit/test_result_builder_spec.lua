@@ -1,5 +1,4 @@
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
-local async = require("nio").tests
 local result_builder = require("neotest-java.core.result_builder")
 local tempname_fn = require("nio").fn.tempname
 local Path = require("neotest-java.model.path")
@@ -25,14 +24,14 @@ local DEFAULT_SPEC = {
 local tempfiles = {}
 
 describe("ResultBuilder", function()
-	async.before_each(function()
+	before_each(function()
 		-- mock the tempname function to return a fixed value
 		require("nio").fn.tempname = function()
 			return TEMPNAME
 		end
 	end)
 
-	async.after_each(function()
+	after_each(function()
 		require("nio").fn.tempname = tempname_fn
 
 		-- remove all temp files
@@ -41,7 +40,7 @@ describe("ResultBuilder", function()
 		end
 	end)
 
-	async.it("ignores report file when cannot be read", function()
+	it("ignores report file when cannot be read", function()
 		--given
 		local scan_dir = function(dir)
 			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
@@ -71,7 +70,7 @@ describe("ResultBuilder", function()
 		assert.are.same(expected, results)
 	end)
 
-	async.it("should build results from report", function()
+	it("should build results from report", function()
 		--given
 		local file_path = Path("MyTest.java")
 		local report_file = [[
@@ -115,7 +114,7 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 	end)
 
-	async.it("builds the results for a test that has an error at start", function()
+	it("builds the results for a test that has an error at start", function()
 		--given
 		local report_file = [[
 				<testsuite>
@@ -165,7 +164,7 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 	end)
 
-	async.it("builds results for parameterized test with @CsvSource", function()
+	it("builds results for parameterized test with @CsvSource", function()
 		--given
 		local report_file = [[
 				<testsuite>
@@ -229,7 +228,7 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 	end)
 
-	async.it("builds the results for parameterized with @EmptySource test", function()
+	it("builds the results for parameterized with @EmptySource test", function()
 		--given
 		local report_file = [[
 				<testsuite>
@@ -273,7 +272,7 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 	end)
 
-	async.it("should build results for nested tests", function()
+	it("should build results for nested tests", function()
 		local report_file = [[
 				<testsuite>
 					<testcase name="someTest()" classname="com.example.SomeTest$SomeNestedTest$AnotherNestedTest" time="0.004">
@@ -314,7 +313,7 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 	end)
 
-	async.it("should build results with multiple failures", function()
+	it("should build results with multiple failures", function()
 		local report_file = [[
 				<testsuite>
 					<testcase name="firstTestMethod()" classname="com.example.ExampleTest" time="0.003">
@@ -369,7 +368,7 @@ describe("ResultBuilder", function()
 		eq(expected, results)
 	end)
 
-	async.it("should remove report files after processing", function()
+	it("should remove report files after processing", function()
 		--given
 		local report_content = [[
 			<testsuite>
