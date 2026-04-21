@@ -75,8 +75,6 @@ end
 
 --- @class neotest-java.PositionsDiscoverer.Dependencies
 --- @field method_id_resolver neotest-java.MethodIdResolver
---- @field parse_positions? fun(file_path: string, query: string, opts: table): neotest.Tree
---- @field read_file? fun(path: neotest-java.Path): string
 
 local PositionsDiscoverer = {}
 
@@ -116,22 +114,6 @@ local function create_positions_discoverer(deps)
 
   ]]
 
-	-- Closure over deps.read_file so tests can inject a synchronous reader.
-	-- In production deps.read_file is nil, so resolve_package_name falls back
-	-- to its default async neotest reader — behaviour is unchanged.
-	local function _position_id(pos, parents)
-		if pos.type == "file" or pos.type == "dir" then
-			return pos.path
-		end
-		local package_name = resolve_package_name(Path(pos.path), deps.read_file)
-		if pos.type == "namespace" then
-			return namespace_id(pos, parents, package_name)
-		end
-		return test_method_id(pos, parents, package_name)
-	end
-
-	local _parse_positions_fn = deps.parse_positions
-
 	--- @type neotest-java.PositionsDiscoverer
 	return {
 
@@ -140,27 +122,12 @@ local function create_positions_discoverer(deps)
 		---@param file_path string Absolute file path
 		---@return neotest.Tree | nil
 		discover_positions = function(file_path)
-			local tree
-
-			if _parse_positions_fn then
-				-- Injected path (tests): caller provides a synchronous parse_positions;
-				-- position_id is passed as a function so the injected read_file is used.
-				tree = _parse_positions_fn(file_path, query, {
-					require_namespaces = true,
-					nested_tests = false,
-					build_position = build_position,
-					position_id = _position_id,
-				})
-			else
-				-- Production path: use neotest lib with string refs so subprocess
-				-- serialisation stays intact.
-				tree = lib.treesitter.parse_positions(file_path, query, {
-					require_namespaces = true,
-					nested_tests = false,
-					build_position = "require('neotest-java.core.positions_discoverer').build_position",
-					position_id = "require('neotest-java.core.positions_discoverer').position_id",
-				})
-			end
+			local tree = lib.treesitter.parse_positions(file_path, query, {
+				require_namespaces = true,
+				nested_tests = false,
+				build_position = "require('neotest-java.core.positions_discoverer').build_position",
+				position_id = "require('neotest-java.core.positions_discoverer').position_id",
+			})
 
 			vim
 				.iter(tree:iter())
