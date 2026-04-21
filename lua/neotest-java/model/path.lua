@@ -1,13 +1,17 @@
+--- @class neotest-java.PathOpts
+--- @field separator? fun(): string Function returning the path separator to use.
+
 --- @class neotest-java.Path
 --- @field raw_path string The original path string.
 --- @field is_absolute boolean Whether the path is absolute.
 --- @field separator string The path separator used (e.g., "/" or "\").
---- @field opts table Additional options for path handling.
-local NewPath = {}
+--- @field opts neotest-java.PathOpts Additional options for path handling.
+--- @overload fun(raw_path: string, opts?: neotest-java.PathOpts): neotest-java.Path
+local Path = {}
 
 local PATH_METATABLE = {
 
-	__index = NewPath,
+	__index = Path,
 	__tostring = function(path)
 		return path:to_string()
 	end,
@@ -47,7 +51,11 @@ local separator = function()
 end
 local SEPARATOR = separator()
 
-function NewPath.new(raw_path, opts)
+--- Create a new Path instance.
+--- @param raw_path string
+--- @param opts? neotest-java.PathOpts
+--- @return neotest-java.Path
+function Path.new(raw_path, opts)
 	local SEP = (opts and opts.separator) and opts.separator() or SEPARATOR
 
 	local first_char = raw_path:sub(1, 1)
@@ -69,35 +77,47 @@ function NewPath.new(raw_path, opts)
 	)
 end
 
+--- Return the last segment of the path (file or directory name).
 --- @return string
-function NewPath:name()
+function Path:name()
 	local slugs = self:slugs()
 	return slugs[#slugs] or ""
 end
 
-function NewPath:parent()
+--- Return the parent path.
+--- @return neotest-java.Path
+function Path:parent()
 	local slugs = self:slugs()
 	if self.is_absolute and #slugs == 2 then
-		return NewPath(self.separator, self.opts)
+		return Path(self.separator, self.opts)
 	end
-	return NewPath(vim.iter(slugs):take(#slugs - 1):join(self.separator), self.opts)
+	return Path(vim.iter(slugs):take(#slugs - 1):join(self.separator), self.opts)
 end
 
-function NewPath:append(other)
-	return NewPath(self.raw_path .. self.separator .. other, self.opts)
+--- Append a segment to the path.
+--- @param other string
+--- @return neotest-java.Path
+function Path:append(other)
+	return Path(self.raw_path .. self.separator .. other, self.opts)
 end
 
-function NewPath:make_relative(base_path)
+--- Make this path relative to a base path.
+--- @param base_path neotest-java.Path
+--- @return neotest-java.Path
+function Path:make_relative(base_path)
 	local this_string = self:to_string()
 	local base_path_string = base_path:to_string()
 
-	return NewPath(this_string:sub(#base_path_string + 2), self.opts)
+	return Path(this_string:sub(#base_path_string + 2), self.opts)
 end
 
-function NewPath:contains(slug_term)
+--- Whether the path contains the given slug sequence.
+--- @param slug_term string
+--- @return boolean
+function Path:contains(slug_term)
 	local this_slugs = self:slugs()
 
-	local other_slugs = NewPath(slug_term, self.opts):slugs()
+	local other_slugs = Path(slug_term, self.opts):slugs()
 
 	if #other_slugs == 0 or #other_slugs > #this_slugs then
 		return false
@@ -119,7 +139,9 @@ function NewPath:contains(slug_term)
 	return false
 end
 
-function NewPath:slugs()
+--- Split the path into its segments.
+--- @return string[]
+function Path:slugs()
 	local slugs = vim
 		--
 		.iter(vim.split(self.raw_path, WINDOWS_SEPARATOR))
@@ -145,7 +167,9 @@ function NewPath:slugs()
 	return slugs
 end
 
-function NewPath:to_string()
+--- Render the path back to a string.
+--- @return string
+function Path:to_string()
 	local slugs = self:slugs()
 	if self.is_absolute and #slugs == 1 then
 		return self.separator
@@ -157,8 +181,8 @@ function NewPath:to_string()
 	return vim.iter(slugs):join(self.separator)
 end
 
-return setmetatable(NewPath, {
+return setmetatable(Path --[[@as table]], {
 	__call = function(_, ...)
-		return NewPath.new(...)
+		return Path.new(...)
 	end,
 })
