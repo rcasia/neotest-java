@@ -1,9 +1,8 @@
 ---@module "luassert"
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
-local async = require("nio").tests
-local nio = require("nio")
 
 local assertions = require("tests.assertions")
+local async = require("tests.async_helpers").async
 
 local eq = assertions.eq
 local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
@@ -24,25 +23,6 @@ local function remove_ref_field(tbl)
 		end
 	end
 	return result
-end
-
---- A non-blocking replacement for vim.wait inside nio tasks
--- @param timeout_ms number: Max time to wait
--- @param condition function: Returns true when ready
--- @param interval_ms number: (Optional) Check frequency, default 10ms
-local function nio_wait(timeout_ms, condition, interval_ms)
-	interval_ms = interval_ms or 10
-	local elapsed = 0
-
-	while not condition() do
-		if elapsed >= timeout_ms then
-			return false, -1 -- Timed out
-		end
-		nio.sleep(interval_ms) -- Yields execution to allow other events to process
-		elapsed = elapsed + interval_ms
-	end
-
-	return true -- Success
 end
 
 describe("PositionsDiscoverer", function()
@@ -79,8 +59,10 @@ describe("PositionsDiscoverer", function()
 		return tmp_file
 	end
 
-	async.it("method FQN with inner classes", function()
-		local file_path = create_tmp_javafile([[
+	it(
+		"method FQN with inner classes",
+		async(function()
+			local file_path = create_tmp_javafile([[
     package com.example;
 
     class Outer {
@@ -91,54 +73,53 @@ describe("PositionsDiscoverer", function()
     }
   ]])
 
-		--- @type neotest.Tree
-		local result = assert(positions_discoverer.discover_positions(file_path))
+			--- @type neotest.Tree
+			local result = assert(positions_discoverer.discover_positions(file_path))
 
-		nio_wait(10, function()
-			return false
-		end)
-
-		eq({
-			{
-				id = file_path,
-				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
-				path = file_path,
-				range = { 0, 4, 8, 2 },
-				type = "file",
-			},
-			{
+			eq({
 				{
-					id = "com.example.Outer",
-					name = "Outer",
+					id = file_path,
+					name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
 					path = file_path,
-					range = { 2, 4, 7, 5 },
-					type = "namespace",
+					range = { 0, 4, 8, 2 },
+					type = "file",
 				},
 				{
 					{
-						id = "com.example.Outer$Inner",
-						name = "Inner",
+						id = "com.example.Outer",
+						name = "Outer",
 						path = file_path,
-						range = { 3, 6, 6, 7 },
+						range = { 2, 4, 7, 5 },
 						type = "namespace",
 					},
 					{
 						{
-							id = "com.example.Outer$Inner#simpleTestMethod()",
-							name = "simpleTestMethod",
+							id = "com.example.Outer$Inner",
+							name = "Inner",
 							path = file_path,
-							range = { 4, 8, 5, 34 },
-							type = "test",
+							range = { 3, 6, 6, 7 },
+							type = "namespace",
+						},
+						{
+							{
+								id = "com.example.Outer$Inner#simpleTestMethod()",
+								name = "simpleTestMethod",
+								path = file_path,
+								range = { 4, 8, 5, 34 },
+								type = "test",
+							},
 						},
 					},
 				},
-			},
-		}, remove_ref_field(result:to_list()))
-	end)
+			}, remove_ref_field(result:to_list()))
+		end)
+	)
 
-	async.it("should discover simple test method", function()
-		-- given
-		local file_path = create_tmp_javafile([[
+	it(
+		"should discover simple test method",
+		async(function()
+			-- given
+			local file_path = create_tmp_javafile([[
 class Test {
 
   @Test
@@ -153,25 +134,24 @@ class Test {
 }
 		]])
 
-		-- when
-		--- @type neotest.Tree
-		local actual = assert(positions_discoverer.discover_positions(file_path))
+			-- when
+			--- @type neotest.Tree
+			local actual = assert(positions_discoverer.discover_positions(file_path))
 
-		nio_wait(10, function()
-			return false
+			-- then
+			local actual_list = actual:to_list()
+
+			eq("simpleTestMethod", actual_list[2][2][1].name)
+
+			eq(1, #actual:children()[1]:children())
 		end)
+	)
 
-		-- then
-		local actual_list = actual:to_list()
-
-		eq("simpleTestMethod", actual_list[2][2][1].name)
-
-		eq(1, #actual:children()[1]:children())
-	end)
-
-	async.it("should discover two simple test method", function()
-		-- given
-		local file_path = create_tmp_javafile([[
+	it(
+		"should discover two simple test method",
+		async(function()
+			-- given
+			local file_path = create_tmp_javafile([[
 class Test {
 
   @Test
@@ -187,57 +167,56 @@ class Test {
 }
 		]])
 
-		-- when
-		--- @type neotest.Tree
-		local actual = assert(positions_discoverer.discover_positions(file_path))
+			-- when
+			--- @type neotest.Tree
+			local actual = assert(positions_discoverer.discover_positions(file_path))
 
-		nio_wait(10, function()
-			return false
-		end)
+			-- then
+			local actual_list = actual:to_list()
 
-		-- then
-		local actual_list = actual:to_list()
-
-		eq({
-			{
-				id = file_path,
-				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
-				path = file_path,
-				range = { 0, 0, 13, 2 },
-				type = "file",
-			},
-			{
+			eq({
 				{
-					id = "Test",
-					name = "Test",
+					id = file_path,
+					name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
 					path = file_path,
-					range = { 0, 0, 12, 1 },
-					type = "namespace",
+					range = { 0, 0, 13, 2 },
+					type = "file",
 				},
 				{
 					{
-						id = "Test#firstTestMethod()",
-						name = "firstTestMethod",
+						id = "Test",
+						name = "Test",
 						path = file_path,
-						range = { 2, 2, 5, 3 },
-						type = "test",
+						range = { 0, 0, 12, 1 },
+						type = "namespace",
 					},
-				},
-				{
 					{
-						id = "Test#secondTestMethod()",
-						name = "secondTestMethod",
-						path = file_path,
-						range = { 7, 2, 10, 3 },
-						type = "test",
+						{
+							id = "Test#firstTestMethod()",
+							name = "firstTestMethod",
+							path = file_path,
+							range = { 2, 2, 5, 3 },
+							type = "test",
+						},
+					},
+					{
+						{
+							id = "Test#secondTestMethod()",
+							name = "secondTestMethod",
+							path = file_path,
+							range = { 7, 2, 10, 3 },
+							type = "test",
+						},
 					},
 				},
-			},
-		}, remove_ref_field(actual_list))
-	end)
+			}, remove_ref_field(actual_list))
+		end)
+	)
 
-	async.it("should discover nested tests", function()
-		local file_path = create_tmp_javafile([[
+	it(
+		"should discover nested tests",
+		async(function()
+			local file_path = create_tmp_javafile([[
 public class SomeTest {
     public static class SomeNestedTest {
         public static class AnotherNestedTest {
@@ -255,67 +234,64 @@ public class SomeTest {
 }
 		]])
 
-		-- when
-		--- @type neotest.Tree
-		local actual = assert(positions_discoverer.discover_positions(file_path))
+			-- when
+			--- @type neotest.Tree
+			local actual = assert(positions_discoverer.discover_positions(file_path))
 
-		nio_wait(10, function()
-			return false
-		end)
-
-		eq({
-			{
-				id = file_path,
-				name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
-				path = file_path,
-				range = { 0, 0, 15, 2 },
-				type = "file",
-			},
-			{
+			eq({
 				{
-					id = "SomeTest",
-					name = "SomeTest",
+					id = file_path,
+					name = file_path:gsub(".*/", ""):gsub(".*\\", ""),
 					path = file_path,
-					range = { 0, 0, 14, 1 },
-					type = "namespace",
+					range = { 0, 0, 15, 2 },
+					type = "file",
 				},
 				{
 					{
-						id = "SomeTest$SomeNestedTest",
-						name = "SomeNestedTest",
+						id = "SomeTest",
+						name = "SomeTest",
 						path = file_path,
-						range = { 1, 4, 13, 5 },
+						range = { 0, 0, 14, 1 },
 						type = "namespace",
 					},
 					{
 						{
-							id = "SomeTest$SomeNestedTest$AnotherNestedTest",
-							name = "AnotherNestedTest",
+							id = "SomeTest$SomeNestedTest",
+							name = "SomeNestedTest",
 							path = file_path,
-							range = { 2, 8, 7, 9 },
+							range = { 1, 4, 13, 5 },
 							type = "namespace",
 						},
 						{
 							{
-								id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest()",
-								name = "someTest",
+								id = "SomeTest$SomeNestedTest$AnotherNestedTest",
+								name = "AnotherNestedTest",
 								path = file_path,
-								range = { 3, 12, 6, 13 },
+								range = { 2, 8, 7, 9 },
+								type = "namespace",
+							},
+							{
+								{
+									id = "SomeTest$SomeNestedTest$AnotherNestedTest#someTest()",
+									name = "someTest",
+									path = file_path,
+									range = { 3, 12, 6, 13 },
+									type = "test",
+								},
+							},
+						},
+						{
+							{
+								id = "SomeTest$SomeNestedTest#oneMoreOuterTest()",
+								name = "oneMoreOuterTest",
+								path = file_path,
+								range = { 9, 8, 12, 9 },
 								type = "test",
 							},
 						},
 					},
-					{
-						{
-							id = "SomeTest$SomeNestedTest#oneMoreOuterTest()",
-							name = "oneMoreOuterTest",
-							path = file_path,
-							range = { 9, 8, 12, 9 },
-							type = "test",
-						},
-					},
 				},
-			},
-		}, remove_ref_field(actual:to_list()))
-	end)
+			}, remove_ref_field(actual:to_list()))
+		end)
+	)
 end)

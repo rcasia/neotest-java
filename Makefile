@@ -15,7 +15,7 @@ test-e2e: install
 	@tests/e2e/run-all.sh
 
 
-install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
+install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio deps/plenary.nvim
 
 deps/plenary.nvim:
 	mkdir -p deps
@@ -27,7 +27,8 @@ deps/nvim-treesitter:
 
 deps/neotest:
 	mkdir -p deps
-	git clone --depth 1 https://github.com/nvim-neotest/neotest $@
+	git clone https://github.com/nvim-neotest/neotest $@
+	git -C $@ checkout 7bef09d1170f8fb33c41607ca54f963cbdbf708d
 
 deps/nvim-nio:
 	mkdir -p deps
