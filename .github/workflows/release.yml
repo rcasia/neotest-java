@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  schedule:
+    # Runs every day at 08:00 UTC
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  e2e-test:
+    uses: ./.github/workflows/e2e-test.yml
+
+  release:
+    needs: [test, e2e-test]
+    name: release
+    permissions:
+      contents: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bunx --bun -p @semantic-release/release-notes-generator -p conventional-changelog-conventionalcommits semantic-release
+
+  push-to-luarocks:
+    needs: release
+    uses: ./.github/workflows/luarocks.yml
+    secrets:
+      LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
