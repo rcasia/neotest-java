@@ -8,8 +8,9 @@ local LINE_SEPARATOR = "=================================\n"
 local NEW_LINE = "\n"
 
 ---@param data string | string[] | table
+---@param tempname? fun(): string
 ---@return string | nil filepath
-local function create_file_with_content(data)
+local function create_file_with_content(data, tempname)
 	if not data then
 		return nil
 	end
@@ -23,7 +24,7 @@ local function create_file_with_content(data)
 	end
 
 	-- Generate a unique temporary file name
-	local filepath = nio.fn.tempname()
+	local filepath = (tempname or nio.fn.tempname)()
 
 	nio.run(function()
 		-- Open the file in write mode
@@ -41,27 +42,35 @@ end
 
 ---@class neotest-java.JunitResult
 ---@field testcase table
+---@field tempname? fun(): string
 local JunitResult = {}
 
+---@param id string
+---@param tempname? fun(): string
 ---@return neotest.Result
-function JunitResult.SKIPPED(id)
+function JunitResult.SKIPPED(id, tempname)
 	return {
 		status = SKIPPED,
-		output = create_file_with_content({ id, "This test was not executed." }),
+		output = create_file_with_content({ id, "This test was not executed." }, tempname),
 	}
 end
 
+---@param id string
+---@param output? string
+---@param tempname? fun(): string
 ---@return neotest.Result
-function JunitResult.ERROR(id, output)
+function JunitResult.ERROR(id, output, tempname)
 	return {
 		status = "failed",
-		output = output or create_file_with_content({ id, "This test execution had an unexpected error." }),
+		output = output or create_file_with_content({ id, "This test execution had an unexpected error." }, tempname),
 	}
 end
 
-function JunitResult:new(testcase)
+---@param testcase table
+---@param tempname? fun(): string
+function JunitResult:new(testcase, tempname)
 	self.__index = self
-	return setmetatable({ testcase = testcase }, self)
+	return setmetatable({ testcase = testcase, tempname = tempname }, self)
 end
 
 function JunitResult:id()
@@ -195,7 +204,7 @@ function JunitResult:result()
 	if status == PASSED then
 		return {
 			status = status,
-			output = create_file_with_content(self:output()),
+			output = create_file_with_content(self:output(), self.tempname),
 		}
 	end
 
@@ -213,13 +222,15 @@ function JunitResult:result()
 		status = status,
 		short = failure_message,
 		errors = self:errors(),
-		output = create_file_with_content(self:output()),
+		output = create_file_with_content(self:output(), self.tempname),
 	}
 end
 
 ---@param results neotest-java.JunitResult[]
+---@param tempname? fun(): string
 ---@return neotest.Result
-function JunitResult.merge_results(results)
+function JunitResult.merge_results(results, tempname)
+	tempname = tempname or (results[1] and results[1].tempname)
 	table.sort(results, function(a, b)
 		return a:name() < b:name()
 	end)
@@ -236,7 +247,7 @@ function JunitResult.merge_results(results)
 		:totable()
 
 	if status == PASSED then
-		return { status = status, output = create_file_with_content(output) }
+		return { status = status, output = create_file_with_content(output, tempname) }
 	end
 
 	local errors = vim.iter(results)
@@ -274,7 +285,7 @@ function JunitResult.merge_results(results)
 			return a .. NEW_LINE .. b
 		end)
 
-	return { status = status, errors = errors, short = short, output = create_file_with_content(output) }
+	return { status = status, errors = errors, short = short, output = create_file_with_content(output, tempname) }
 end
 
 return JunitResult
