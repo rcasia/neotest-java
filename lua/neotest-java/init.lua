@@ -5,7 +5,7 @@ local root_finder = require("neotest-java.core.root_finder")
 local dir_filter = require("neotest-java.core.dir_filter")
 local PositionDiscoverer = require("neotest-java.core.positions_discoverer")
 local SpecBuilder = require("neotest-java.core.spec_builder")
-local result_builder = require("neotest-java.core.result_builder")
+local ResultBuilder = require("neotest-java.core.result_builder")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.model.path")
@@ -229,7 +229,18 @@ local function NeotestJavaAdapter(config, deps)
 				binaries = binaries,
 			}),
 		}).discover_positions,
-		results = result_builder.build_results,
+		results = ResultBuilder({
+			scan_dir = require("neotest-java.util.dir_scan"),
+			read_file = require("neotest-java.util.read_file"),
+			remove_file = function(filepath)
+				local ok, err = pcall(os.remove, filepath)
+				if not ok then
+					return false, tostring(err)
+				end
+				return true
+			end,
+			tempname_fn = require("nio").fn.tempname,
+		}).build_results,
 		root = function(dir)
 			return _root_finder.find_root(dir)
 		end,

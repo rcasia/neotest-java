@@ -1,6 +1,5 @@
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
-local result_builder = require("neotest-java.core.result_builder")
-local tempname_fn = require("nio").fn.tempname
+local ResultBuilder = require("neotest-java.core.result_builder")
 local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 local TREES = require("tests.trees")
@@ -24,16 +23,11 @@ local DEFAULT_SPEC = {
 local tempfiles = {}
 
 describe("ResultBuilder", function()
-	before_each(function()
-		-- mock the tempname function to return a fixed value
-		require("nio").fn.tempname = function()
-			return TEMPNAME
-		end
-	end)
-
+	local fake_tempname = function()
+		return TEMPNAME
+	end
+	local remove_file = function() end
 	after_each(function()
-		require("nio").fn.tempname = tempname_fn
-
 		-- remove all temp files
 		for _, path in ipairs(tempfiles) do
 			os.remove(path)
@@ -53,21 +47,18 @@ describe("ResultBuilder", function()
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = TREES.TWO_TESTS_IN_FILE(Path(file_path))
 
-		local expected = {
-			-- ["com.example.ExampleTest#firstTestMethod()"] = {
-			-- 	status = "skipped",
-			-- 	output = TEMPNAME,
-			-- },
-			-- ["com.example.ExampleTest#secondTestMethod()"] = {
-			-- 	status = "skipped",
-			-- 	output = TEMPNAME,
-			-- },
-		}
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
+		local expected = {}
 
 		-- then
-		assert.are.same(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("should build results from report", function()
@@ -95,7 +86,6 @@ describe("ResultBuilder", function()
 
 		local expected = {
 			["com.example.ExampleTest#firstTestMethod()"] = {
-				-- errors = { { line = 13, message = "expected: <true> but was: <false>" } },
 				errors = { { message = "expected: <true> but was: <false>" } },
 				short = "expected: <true> but was: <false>",
 				status = "failed",
@@ -107,11 +97,16 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
-
 		--then
-		eq(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("builds the results for a test that has an error at start", function()
@@ -157,11 +152,16 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
-
 		--then
-		eq(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("builds results for parameterized test with @CsvSource", function()
@@ -201,11 +201,9 @@ describe("ResultBuilder", function()
 			["com.example.ParameterizedMethodTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
 				errors = {
 					{
-						-- line = 27,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <true> but was: <false>",
 					},
 					{
-						-- line = 27,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[2] -> expected: <true> but was: <false>",
 					},
 				},
@@ -221,11 +219,17 @@ describe("ResultBuilder", function()
 				output = TEMPNAME,
 			},
 		}
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
-		eq(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("builds the results for parameterized with @EmptySource test", function()
@@ -256,7 +260,6 @@ describe("ResultBuilder", function()
 			["com.example.ExampleTest#parameterizedMethodShouldFail(java.lang.Integer, java.lang.Integer)"] = {
 				errors = {
 					{
-						-- line = 22,
 						message = "parameterizedMethodShouldFail(Integer, Integer)[1] -> expected: <false> but was: <true>",
 					},
 				},
@@ -265,11 +268,17 @@ describe("ResultBuilder", function()
 				output = TEMPNAME,
 			},
 		}
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
 
 		--then
-		eq(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("should build results for nested tests", function()
@@ -306,11 +315,16 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
-
 		--then
-		eq(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("should build results with multiple failures", function()
@@ -361,11 +375,16 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results = result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file)
-
 		--then
-		eq(expected, results)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
 	end)
 
 	it("should remove report files after processing", function()
@@ -384,7 +403,7 @@ describe("ResultBuilder", function()
 		local report_file = Path("/tmp/TEST-ExampleTest.xml")
 
 		local removed_files = {}
-		local remove_file = function(filepath)
+		local tracking_remove_file = function(filepath)
 			table.insert(removed_files, filepath)
 			return true
 		end
@@ -414,14 +433,16 @@ describe("ResultBuilder", function()
 			},
 		}
 
-		--when
-		local results =
-			result_builder.build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree, scan_dir, read_file, remove_file)
-
 		--then
-		eq(expected, results)
-
-		-- Verify remove_file was called with the correct file path
-		assert.are.same({ report_file:to_string() }, removed_files)
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = tracking_remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
+		eq({ report_file:to_string() }, removed_files)
 	end)
 end)
