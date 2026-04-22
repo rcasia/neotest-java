@@ -24,16 +24,16 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
-          bun-version: latest
+          node-version: "24"
       - name: Install semantic-release
-        run: bun add --global semantic-release @semantic-release/release-notes-generator conventional-changelog-conventionalcommits
+        run: npm install --no-save semantic-release @semantic-release/release-notes-generator conventional-changelog-conventionalcommits
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bunx --bun semantic-release
+        run: npx semantic-release
 
   push-to-luarocks:
     needs: release
