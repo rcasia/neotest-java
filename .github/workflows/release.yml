@@ -31,7 +31,7 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bunx --bun -p @semantic-release/release-notes-generator -p conventional-changelog-conventionalcommits semantic-release
+        run: bunx --bun -p semantic-release -p @semantic-release/release-notes-generator -p conventional-changelog-conventionalcommits semantic-release
 
   push-to-luarocks:
     needs: release
