@@ -239,7 +239,9 @@ local function NeotestJavaAdapter(config, deps)
 				end
 				return true
 			end,
-			tempname_fn = require("nio").fn.tempname,
+			tempname_fn = function()
+				return require("nio").fn.tempname()
+			end,
 		}).build_results,
 		root = function(dir)
 			return _root_finder.find_root(dir)
