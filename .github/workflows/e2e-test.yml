@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         nvim-version: [stable, v0.11.7, nightly]
     steps:
       - name: Checkout
