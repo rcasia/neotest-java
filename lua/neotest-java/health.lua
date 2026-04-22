@@ -7,7 +7,7 @@ local function java_parser_installed()
 	if ok and type(parsers.has_parser) == "function" then
 		return parsers.has_parser("java")
 	end
-	local lang_ok = pcall(vim.treesitter.language.require_language, "java", nil, true)
+	local lang_ok = pcall(vim.treesitter.language.add, "java")
 	return lang_ok
 end
 
