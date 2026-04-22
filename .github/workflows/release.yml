@@ -28,10 +28,12 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - name: Install semantic-release
+        run: bun add --global semantic-release @semantic-release/release-notes-generator conventional-changelog-conventionalcommits
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bunx --bun -p semantic-release -p @semantic-release/release-notes-generator -p conventional-changelog-conventionalcommits semantic-release
+        run: bunx --bun semantic-release
 
   push-to-luarocks:
     needs: release
