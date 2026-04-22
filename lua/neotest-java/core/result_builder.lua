@@ -86,6 +86,10 @@ local ResultBuilder = function(deps)
 	assert(deps.remove_file, "remove_file should not be nil")
 	assert(deps.tempname_fn, "tempname_fn should not be nil")
 
+	local find_report_files = function(dir)
+		return deps.scan_dir(dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } })
+	end
+
 	return {
 		--- @param spec neotest.RunSpec
 		--- @param result neotest.StrategyResult
@@ -101,8 +105,7 @@ local ResultBuilder = function(deps)
 				spec.context.terminated_command_event.wait()
 			end
 
-			local report_files =
-				deps.scan_dir(spec.context.reports_dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } })
+			local report_files = find_report_files(spec.context.reports_dir)
 			local testcases = load_all_testcases(report_files, deps.read_file, deps.tempname_fn)
 			local groups = group_by_method_base(testcases)
 
