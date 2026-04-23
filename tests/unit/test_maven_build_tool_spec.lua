@@ -13,7 +13,7 @@ describe("MavenBuildTool", function()
 		get_build_dirname = function(base_dir, deps)
 			local pom_path = base_dir:append("pom.xml"):to_string()
 			local build_dir = deps.read_xml_tag(pom_path, "project.build.directory")
-			return Path(build_dir or "target")
+			return build_dir or "target"
 		end,
 		get_artifact_id = function(base_dir, deps)
 			local pom_path = base_dir:append("pom.xml"):to_string()

@@ -1,6 +1,8 @@
+local Path = require("neotest-java.model.path")
+
 ---@class neotest-java.BuildToolConfig
 ---@field project_filename string
----@field get_build_dirname fun(base_dir: neotest-java.Path, deps: table): neotest-java.Path
+---@field get_build_dirname fun(base_dir: neotest-java.Path, deps: table): string
 ---@field get_artifact_id fun(base_dir: neotest-java.Path, deps: table): string
 ---@field get_spring_subdirs fun(root: neotest-java.Path): neotest-java.Path[]
 
@@ -16,7 +18,7 @@ local function create_build_tool(config, deps)
 	---@type neotest-java.BuildTool
 	return {
 		get_build_dirname = function(base_dir)
-			return config.get_build_dirname(base_dir, deps)
+			return Path(config.get_build_dirname(base_dir, deps))
 		end,
 
 		get_project_filename = function()
@@ -28,7 +30,10 @@ local function create_build_tool(config, deps)
 		end,
 
 		get_spring_property_filepaths = function(roots)
-			local base_dirs = vim.iter(roots):map(config.get_spring_subdirs):flatten():totable()
+			local base_dirs = vim.iter(roots):map(
+                function(root)
+                    return root:append(config.get_build_dirname(root, deps))
+                end):map(config.get_spring_subdirs):flatten():totable()
 			return deps.generate_spring_property_filepaths(base_dirs)
 		end,
 	}
