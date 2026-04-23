@@ -117,10 +117,19 @@ local function compare_json_files(file1, file2)
 		local result2 = execute(string.format("jq -S . %s", vim.fn.shellescape(file2)))
 		return result1 == result2, result1, result2
 	else
+		log_info("no jq installed falling back to vim.deep_equal")
 		-- Fallback: compare files directly
-		local content1 = read_file(file1)
-		local content2 = read_file(file2)
-		return content1 == content2, content1, content2
+        local content1 = read_file(file1)
+        if not content1 then
+            return false, nil, nil
+        end
+
+        local content2 = read_file(file2)
+        if not content2 then
+            return false, nil, nil
+        end
+
+        return vim.deep_equal(vim.json.decode(content1), vim.json.decode(content2)), content1, content2
 	end
 end
 
