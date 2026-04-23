@@ -30,10 +30,13 @@ local function create_build_tool(config, deps)
 		end,
 
 		get_spring_property_filepaths = function(roots)
-			local base_dirs = vim.iter(roots):map(
-                function(root)
-                    return root:append(config.get_build_dirname(root, deps))
-                end):map(config.get_spring_subdirs):flatten():totable()
+			local base_dirs = vim.iter(roots)
+				:map(function(root)
+					return root:append(config.get_build_dirname(root, deps))
+				end)
+				:map(config.get_spring_subdirs)
+				:flatten()
+				:totable()
 			return deps.generate_spring_property_filepaths(base_dirs)
 		end,
 	}
