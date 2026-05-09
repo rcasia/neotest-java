@@ -1,5 +1,4 @@
 local create_build_tool = require("neotest-java.build_tool.build_tool")
-local Path = require("neotest-java.model.path")
 local read_xml_tag = require("neotest-java.util.read_xml_tag")
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 
@@ -36,7 +35,7 @@ local build_tools = {
 	gradle = create_build_tool({
 		project_filename = "%.gradle",
 		get_build_dirname = function(_base_dir, _d)
-			return Path("bin")
+			return "bin"
 		end,
 		get_artifact_id = function(base_dir, _d)
 			return base_dir:name()
