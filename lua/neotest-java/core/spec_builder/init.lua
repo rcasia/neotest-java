@@ -43,7 +43,10 @@ local SpecBuilder = function(deps)
 			local project_type = deps.detect_project_type(root)
 			--- @type neotest-java.BuildTool
 			local build_tool = deps.build_tool_getter(project_type)
-			local command = CommandBuilder.new():junit_jar(config.junit_jar):jvm_args(config.jvm_args)
+			local command = CommandBuilder.new()
+				:junit_jar(config.junit_jar)
+				:jvm_args(config.jvm_args)
+				:test_classname_patterns(config.test_classname_patterns)
 			local project = assert(
 				Project.from_dirs_and_project_file(deps.scan(root), build_tool.get_project_filename(), build_tool),
 				"project not detected correctly"

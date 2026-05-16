@@ -79,4 +79,27 @@ describe("JUnitCommandBuilder", function()
 			"expected --exclude-engine=archunit in command args"
 		)
 	end)
+
+	it("adds include classname filters", function()
+		local tree = {
+			data = function()
+				return { type = "namespace", id = "com.example.ExampleIT" }
+			end,
+			iter = function()
+				return ipairs({})
+			end,
+		}
+
+		local command = base_builder()
+			:test_classname_patterns({ "^.*Tests?$", "^.*IT$" })
+			:add_test_references_from_tree(tree)
+			:build_to_table()
+
+		assert(vim.iter(command.args):any(function(arg)
+			return arg == "--include-classname='^.*Tests?$'"
+		end))
+		assert(vim.iter(command.args):any(function(arg)
+			return arg == "--include-classname='^.*IT$'"
+		end))
+	end)
 end)
