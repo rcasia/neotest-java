@@ -45,6 +45,43 @@ end
 ---@field tempname? fun(): string
 local JunitResult = {}
 
+local function failure_message_from_output(output, fallback)
+	if type(output) ~= "string" then
+		return fallback or "<unknown failure>"
+	end
+
+	local first_line = output:match("^%s*([^\n]+)")
+	if not first_line then
+		return fallback or "<unknown failure>"
+	end
+
+	return first_line:match("^[%w%._$]+:%s*(.+)$") or first_line
+end
+
+local function failure_from_node(node)
+	if type(node) ~= "table" then
+		local output = tostring(node)
+		return {
+			failure_message = failure_message_from_output(output),
+			failure_output = output,
+		}
+	end
+
+	if node._attr then
+		return {
+			failure_message = node._attr.message or node._attr.type or "<unknown failure>",
+			failure_output = node[1],
+		}
+	end
+
+	local output = type(node[#node]) == "string" and node[#node] or nil
+	local fallback = type(node[1]) == "string" and node[1]:match('type="([^"]+)"') or nil
+	return {
+		failure_message = failure_message_from_output(output, fallback),
+		failure_output = output,
+	}
+end
+
 ---@param id string
 ---@param tempname? fun(): string
 ---@return neotest.Result
@@ -101,19 +138,16 @@ function JunitResult:status()
 	if failed and not failed._attr then
 		local failures = {}
 		for i, fail in ipairs(failed) do
-			failures[i] = {
-				failure_message = fail._attr.message or fail._attr.type or "<unknown failure>",
-				failure_output = fail[1],
-			}
+			if type(fail) ~= "table" then
+				return FAILED, { failure_from_node(failed) }
+			end
+
+			failures[i] = failure_from_node(fail)
 		end
 		return FAILED, failures
 	end
 	if failed and failed._attr then
-		local fail = {
-			failure_message = failed._attr.message or failed._attr.type or "<unknown failure>",
-			failure_output = failed[1],
-		}
-		return FAILED, { fail }
+		return FAILED, { failure_from_node(failed) }
 	end
 	return PASSED
 end
