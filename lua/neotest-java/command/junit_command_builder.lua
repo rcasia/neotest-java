@@ -9,6 +9,7 @@
 --- @field _port number?
 --- @field _reports_dir neotest-java.Path
 --- @field _test_references neotest-java.TestReference[]
+--- @field _test_classname_patterns string[]
 --- @field _basedir neotest-java.Path
 --- @field _classpath_file_arg string
 --- @field _spring_property_filepaths neotest-java.Path[]
@@ -20,6 +21,7 @@ function CommandBuilder.new()
 	local fields = {
 		_jvm_args = {},
 		_test_references = {},
+		_test_classname_patterns = {},
 	}
 	return setmetatable(fields, CommandBuilder)
 end
@@ -63,6 +65,13 @@ function CommandBuilder:add_test_class(qualified_name)
 		qualified_name = qualified_name,
 		type = "class",
 	}
+	return self
+end
+
+--- @param patterns string[] | nil
+--- @return neotest-java.CommandBuilder
+function CommandBuilder:test_classname_patterns(patterns)
+	self._test_classname_patterns = patterns or {}
 	return self
 end
 
@@ -150,6 +159,12 @@ CommandBuilder.build_to_table = function(self)
 	end
 	assert(#selectors ~= 0, "junit command has to have a selector")
 
+	local include_classname_args = vim.iter(self._test_classname_patterns)
+		:map(function(pattern)
+			return "--include-classname=" .. quote_selector(pattern, is_debug_mode)
+		end)
+		:totable()
+
 	local additional_location_arg = vim
 		.iter(self._spring_property_filepaths)
 		--- @param path neotest-java.Path
@@ -174,6 +189,7 @@ CommandBuilder.build_to_table = function(self)
 			"-jar",
 			self._junit_jar:to_string(),
 			"execute",
+			include_classname_args,
 			"--classpath=" .. self._classpath_file_arg,
 			"--reports-dir=" .. self._reports_dir:to_string(),
 			"--fail-if-no-tests",
