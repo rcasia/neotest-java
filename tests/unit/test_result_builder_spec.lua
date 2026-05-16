@@ -109,6 +109,49 @@ describe("ResultBuilder", function()
 		)
 	end)
 
+	it("builds failed results when assertion message contains a greater-than character", function()
+		--given
+		local file_path = Path("MyTest.java")
+		local report_file = [=[
+				<testsuite>
+					<testcase name="firstTestMethod()" classname="com.example.ExampleTest" time="0.001">
+						<failure message="expected: &lt;0.2> but was: &lt;0.3>" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: expected: <0.2> but was: <0.3>
+	at com.example.ExampleTest.firstTestMethod(ExampleTest.java:42)
+]]></failure>
+					</testcase>
+				</testsuite>
+		]=]
+
+		local tree = TREES.TWO_TESTS_IN_FILE(file_path)
+		local scan_dir = function(dir)
+			assert(dir == DEFAULT_SPEC.context.reports_dir, "should scan in spec.context.reports_dir")
+			return { file_path }
+		end
+		local read_file = function()
+			return report_file
+		end
+
+		local expected = {
+			["com.example.ExampleTest#firstTestMethod()"] = {
+				errors = { { message = "expected: <0.2> but was: <0.3>", line = 41 } },
+				short = "expected: <0.2> but was: <0.3>",
+				status = "failed",
+				output = TEMPNAME,
+			},
+		}
+
+		--then
+		eq(
+			expected,
+			ResultBuilder({
+				scan_dir = scan_dir,
+				read_file = read_file,
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
+	end)
+
 	it("builds the results for a test that has an error at start", function()
 		--given
 		local report_file = [[
