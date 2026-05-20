@@ -23,7 +23,11 @@ local client_provider = ClientProvider({
 	end,
 })
 
----@type table<string, NeotestJavaCompiler>
+---@class neotest-java.Compilers
+---@field lsp NeotestJavaCompiler
+---@field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
+
+---@type neotest-java.Compilers
 local compilers = {
 	lsp = LspCompiler({ client_provider = client_provider }),
 	client_provider = client_provider,
