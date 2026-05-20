@@ -52,9 +52,7 @@ local default_config = {
 		"^.*IT$",
 		"^.*Spec$",
 	},
+	get_supported_versions = get_supported_versions,
 }
-
--- Export getter function for supported versions
-default_config.get_supported_versions = get_supported_versions
 
 return default_config
