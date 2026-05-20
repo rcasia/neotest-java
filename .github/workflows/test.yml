@@ -33,7 +33,7 @@ jobs:
 
       - name: Make install
         run: make install
-        timeout-minutes: 1
+        timeout-minutes: 3
 
       - name: Run tests
         run: make test
