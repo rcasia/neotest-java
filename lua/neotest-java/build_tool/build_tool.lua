@@ -1,8 +1,6 @@
-local Path = require("neotest-java.model.path")
-
 ---@class neotest-java.BuildToolConfig
 ---@field project_filename string
----@field get_build_dirname fun(base_dir: neotest-java.Path, deps: table): string
+---@field get_build_dirname fun(base_dir: neotest-java.Path, deps: table): neotest-java.Path
 ---@field get_artifact_id fun(base_dir: neotest-java.Path, deps: table): string
 ---@field get_spring_subdirs fun(root: neotest-java.Path): neotest-java.Path[]
 
@@ -18,7 +16,7 @@ local function create_build_tool(config, deps)
 	---@type neotest-java.BuildTool
 	return {
 		get_build_dirname = function(base_dir)
-			return Path(config.get_build_dirname(base_dir, deps))
+			return config.get_build_dirname(base_dir, deps)
 		end,
 
 		get_project_filename = function()
