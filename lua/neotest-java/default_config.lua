@@ -37,6 +37,7 @@ end
 ---@field default_junit_jar_version neotest-java.JunitVersion
 ---@field test_classname_patterns string[] | nil
 ---@field disable_update_notifications boolean | nil
+---@field get_supported_versions fun(): table[]
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
