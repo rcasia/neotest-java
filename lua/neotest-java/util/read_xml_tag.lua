@@ -2,11 +2,10 @@ local memo = require("neotest.lib.func_util.memoize")
 local file = require("neotest.lib.file")
 local xml = require("neotest.lib.xml")
 
----@param filepath string
----@param selector string ex: project.build.sourceDirectory
----@return string | nil
-local cache = {}
-local read_xml_tag = memo(function(filepath, selector)
+--- @param filepath string
+--- @param selector string ex: project.build.sourceDirectory
+--- @return string | nil
+local function _read_xml_tag(filepath, selector)
 	local content = file.read(filepath)
 	local parsed = xml.parse(content)
 
@@ -22,6 +21,8 @@ local read_xml_tag = memo(function(filepath, selector)
 	end
 
 	return parsed
-end, cache)
+end
+
+local read_xml_tag = memo(_read_xml_tag)
 
 return read_xml_tag
