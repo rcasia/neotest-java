@@ -181,8 +181,11 @@ function Path:to_string()
 	return vim.iter(slugs):join(self.separator)
 end
 
-return setmetatable(Path --[[@as table]], {
+--- @type neotest-java.Path
+local PathStruct = setmetatable(Path --[[@as table]], {
 	__call = function(_, ...)
 		return Path.new(...)
 	end,
 })
+
+return PathStruct
