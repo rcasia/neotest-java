@@ -7,6 +7,7 @@
 ---@field type "test" | "namespace" | "dir" | "file"
 ---@field path string
 ---@field range integer[]
+---@field ref fun(): string
 
 ---@class neotest.Tree
 ---@field data fun(): neotest.Position
