@@ -91,7 +91,7 @@ function CommandBuilder:add_test_references_from_tree(tree)
 
 	local position = tree:data()
 	if position.type == "test" then
-		self:add_test_method(position.ref())
+		self:add_test_method(position.id)
 	elseif position.type == "namespace" then
 		self:add_test_class(position.id)
 	else
