@@ -1,4 +1,5 @@
 local run_sync = require("tests.async_helpers").run_sync
+---@diagnostic disable: undefined-field
 local async = require("tests.async_helpers").async
 
 describe("async_helpers.run_sync", function()

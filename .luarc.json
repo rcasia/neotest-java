@@ -5,6 +5,14 @@
         "it",
         "assert",
         "before_each",
-        "after_each"
-    ]
+        "after_each",
+        "jit",
+        "_G",
+        "_NEOTEST_IS_CHILD",
+        "unpack"
+    ],
+    "diagnostics.neededFileStatus": {
+        "undefined-field": "none",
+        "deprecated": "none"
+    }
 }

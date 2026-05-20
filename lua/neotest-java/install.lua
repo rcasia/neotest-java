@@ -21,18 +21,17 @@ local version_detector = JunitVersionDetector({
 ---@field exists fun(filepath: string): boolean
 ---@field checksum fun(file_path: neotest-java.Path): string
 ---@field download fun(url: string, output: string): { code: number, stderr: string }
----@field delete_file fun(filepath: string): void
----@field ask_user_consent fun(message: string, choices: string[], callback: fun(choice: string | nil)): void
----@field notify fun(message: string, level?: string): void
+---@field delete_file fun(filepath: string)
+---@field ask_user_consent fun(message: string, choices: string[], callback: fun(choice: string | nil))
+---@field notify fun(message: string, level?: string)
 ---@field detect_existing_version fun(): neotest-java.JunitVersion | nil, neotest-java.Path | nil
 
 ---@class neotest-java.Installer
----@field install fun(config: neotest-java.ConfigOpts): void
+---@field install fun(config: neotest-java.ConfigOpts)
 
 --- @param deps neotest-java.InstallDeps
 --- @return neotest-java.Installer
 local Installer = function(deps)
-	--- @type neotest-java.InstallDeps
 	local exists_fn = deps.exists
 	local checksum_fn = deps.checksum
 	local delete_file_fn = deps.delete_file

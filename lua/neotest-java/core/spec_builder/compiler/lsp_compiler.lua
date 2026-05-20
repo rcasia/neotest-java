@@ -1,5 +1,6 @@
 local logger = require("neotest-java.logger")
 
+--- @diagnostic disable-next-line: undefined-doc-name
 --- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
 --- @return NeotestJavaCompiler
 local function LspCompiler(deps)
@@ -10,6 +11,7 @@ local function LspCompiler(deps)
 			logger.debug(("compilation in %s mode"):format(args.compile_mode))
 
 			vim.schedule(function()
+				--- @diagnostic disable-next-line: undefined-field
 				client:request(
 					"java/buildWorkspace",
 					{ forceRebuild = args.compile_mode == "full" },

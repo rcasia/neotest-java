@@ -37,6 +37,7 @@ end
 ---@field default_junit_jar_version neotest-java.JunitVersion
 ---@field test_classname_patterns string[] | nil
 ---@field disable_update_notifications boolean | nil
+---@field get_supported_versions fun(): table[]
 
 ---@type neotest-java.ConfigOpts
 local default_config = {
@@ -51,9 +52,7 @@ local default_config = {
 		"^.*IT$",
 		"^.*Spec$",
 	},
+	get_supported_versions = get_supported_versions,
 }
-
--- Export getter function for supported versions
-default_config.get_supported_versions = get_supported_versions
 
 return default_config

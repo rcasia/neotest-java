@@ -6,6 +6,8 @@ local loggers = {}
 local log_date_format = "%FT%H:%M:%SZ%z"
 
 ---@class neotest.Logger
+---@field _level number
+---@field _filename string
 ---@field trace function
 ---@field debug function
 ---@field info function
@@ -73,6 +75,7 @@ function Logger.new(filename, opts)
 			local parts = {
 				table.concat({ level, "|", os.date(log_date_format), "|", fileinfo, "|" }, " "),
 			}
+			---@diagnostic disable-next-line: undefined-field
 			if _G._NEOTEST_IS_CHILD then
 				table.insert(parts, "CHILD |")
 			end

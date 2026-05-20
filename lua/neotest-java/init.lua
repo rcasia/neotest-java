@@ -211,6 +211,7 @@ local function NeotestJavaAdapter(config, deps)
 						prompt = msg,
 					}, function(choice)
 						cb(choice)
+						return nil
 					end)
 				end,
 				notify = lib.notify,

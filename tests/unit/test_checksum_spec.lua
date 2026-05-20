@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 local checksum = require("neotest-java.util.checksum")
 
 local eq = require("tests.assertions").eq
@@ -10,7 +11,7 @@ describe("Checksum", function()
 			local test_content = "Hello, World!\n"
 
 			-- Write test content in binary mode to avoid line ending conversion on Windows
-			local f = io.open(tmp_file, "wb")
+			local f = assert(io.open(tmp_file, "wb"), "failed to open temp file")
 			f:write(test_content)
 			f:close()
 
@@ -30,7 +31,7 @@ describe("Checksum", function()
 			eq(64, #hash, "SHA256 hash should be 64 characters (hex)")
 			eq(hash, hash2, "Checksum should be consistent")
 			-- Verify it's a valid hex string
-			local is_hex = hash:match("^[a-f0-9]+$") ~= nil
+			local is_hex = hash and hash:match("^[a-f0-9]+$") ~= nil
 			assert.is_true(is_hex, "Hash should be lowercase hex: " .. hash)
 		end)
 
@@ -39,7 +40,7 @@ describe("Checksum", function()
 			local tmp_file = vim.fn.tempname()
 
 			-- Write binary data (including null bytes which cause vim.fn.sha256 to fail)
-			local f = io.open(tmp_file, "wb")
+			local f = assert(io.open(tmp_file, "wb"), "failed to open temp file")
 			f:write(string.char(0x00, 0x01, 0x02, 0x03, 0x00, 0xFF))
 			f:close()
 
@@ -62,7 +63,10 @@ describe("Checksum", function()
 
 			assert.is_nil(hash, "Expected hash to be nil")
 			assert.is_not_nil(err, "Expected error message")
-			assert.is_true(err:match("Failed to compute checksum") ~= nil, "Error should mention checksum failure")
+			assert.is_true(
+				err and err:match("Failed to compute checksum") ~= nil,
+				"Error should mention checksum failure"
+			)
 		end)
 
 		it("works cross-platform (unix and windows)", function()
@@ -72,7 +76,7 @@ describe("Checksum", function()
 			local test_content = "cross-platform test"
 
 			-- Write test content
-			local f = io.open(tmp_file, "w")
+			local f = assert(io.open(tmp_file, "w"), "failed to open temp file")
 			f:write(test_content)
 			f:close()
 
@@ -88,7 +92,7 @@ describe("Checksum", function()
 			eq(64, #hash, "SHA256 hash should be 64 characters (hex)")
 
 			-- Verify it's a valid hex string
-			local is_hex = hash:match("^[a-f0-9]+$") ~= nil
+			local is_hex = hash and hash:match("^[a-f0-9]+$") ~= nil
 			assert.is_true(is_hex, "Hash should be lowercase hex: " .. hash)
 		end)
 	end)

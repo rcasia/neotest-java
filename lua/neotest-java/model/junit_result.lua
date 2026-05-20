@@ -19,8 +19,7 @@ local function create_file_with_content(data, tempname)
 		if #data == 0 then
 			return nil
 		end
-		data = vim.iter(vim.tbl_values(data)):flatten(math.huge):totable()
-		data = table.concat(data, LINE_SEPARATOR)
+		data = table.concat(vim.iter(vim.tbl_values(data)):flatten(math.huge):totable(), LINE_SEPARATOR)
 	end
 
 	-- Generate a unique temporary file name
@@ -115,7 +114,7 @@ function JunitResult:status()
 		}
 		return FAILED, { fail }
 	end
-	return PASSED
+	return PASSED, {}
 end
 
 ---@param with_name_prefix? boolean

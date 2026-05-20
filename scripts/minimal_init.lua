@@ -1,5 +1,6 @@
 -- scripts/minimal_init.lua
 -- Headless testing with mini.test, no user config loaded.
+---@diagnostic disable: deprecated
 
 local DEPENDENCIES_DIR = "./.dependencies"
 

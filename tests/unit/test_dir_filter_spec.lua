@@ -1,4 +1,5 @@
 local plugin = require("neotest-java")
+---@diagnostic disable: undefined-field
 
 describe("DirFilter", function()
 	it("should filter out excluded directories", function()

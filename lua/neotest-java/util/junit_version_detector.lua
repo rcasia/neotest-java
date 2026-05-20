@@ -28,7 +28,7 @@ end
 ---@field exists fun(filepath: neotest-java.Path): boolean
 ---@field checksum fun(file_path: neotest-java.Path): string
 ---@field scan fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
----@field stdpath_data fun(): string
+---@field stdpath_data fun(name: string): string
 
 ---@class neotest-java.JunitVersionDetector
 ---@field detect_existing_version fun(): neotest-java.JunitVersion | nil, neotest-java.Path | nil
@@ -104,9 +104,6 @@ local JunitVersionDetector = function(deps)
 		--- @return table[]
 		get_supported_versions = get_supported_versions,
 
-		--- @param file_path neotest-java.Path
-		--- @param file_reader? fun(path: string): string
-		--- @return string hash
 		_checksum = checksum, -- Exposed for testing
 	}
 end

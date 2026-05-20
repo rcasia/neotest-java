@@ -1,6 +1,16 @@
 local Path = require("neotest-java.model.path")
 
---- @param deps { get_clients: fun(opts: table): vim.lsp.Client[], globpath: fun(dir: string, pattern: string, nosuf: boolean, list: boolean): string[], bufadd: fun(path: string): number, bufload: fun(path: string), sleep: fun(ms: number), hrtime: fun(): number }
+--- @class neotest-java.ClientProviderDeps
+---@diagnostic disable-next-line: undefined-doc-name
+--- @field get_clients fun(opts: table): vim.lsp.Client[]
+--- @field globpath fun(dir: string, pattern: string, nosuf: boolean, list: boolean): string[]
+--- @field bufadd fun(path: string): number
+--- @field bufload fun(path: string)
+--- @field sleep fun(ms: number)
+--- @field hrtime fun(): number
+
+--- @param deps neotest-java.ClientProviderDeps
+---@diagnostic disable-next-line: undefined-doc-name
 --- @return fun(cwd: neotest-java.Path): vim.lsp.Client
 local function ClientProvider(deps)
 	local client
@@ -41,6 +51,7 @@ local function ClientProvider(deps)
 	end
 
 	--- @param cwd neotest-java.Path
+	---@diagnostic disable-next-line: undefined-doc-name
 	--- @return vim.lsp.Client
 	return function(cwd)
 		if client and client.initialized then
@@ -56,6 +67,7 @@ local function ClientProvider(deps)
 			assert(
 				wait(10000, function()
 					client = deps.get_clients({ name = "jdtls", bufnr = bufnr })[1]
+					---@diagnostic disable-next-line: undefined-field
 					return not not client and not not client.initialized
 				end, 1000),
 				"jdtls client not started in time"
