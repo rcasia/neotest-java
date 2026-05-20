@@ -39,3 +39,22 @@ jobs:
           version: latest # NOTE: we recommend pinning to a specific version in case of formatting changes
           # CLI arguments
           args: --check .
+
+  lua-language-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Cache lua-language-server
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/lua-language-server
+          key: lua-language-server-3.18.2
+      - name: Install lua-language-server
+        run: |
+          if ! [ -x ~/.local/lua-language-server/bin/lua-language-server ]; then
+            mkdir -p ~/.local/lua-language-server
+            curl -fsSL https://github.com/LuaLS/lua-language-server/releases/download/3.18.2/lua-language-server-3.18.2-linux-x64.tar.gz | tar -xz -C ~/.local/lua-language-server
+          fi
+      - name: Run luacheck via lua-language-server
+        run: ~/.local/lua-language-server/bin/lua-language-server --check .
