@@ -35,11 +35,16 @@ deps/nvim-nio:
 	git clone --depth 1 https://github.com/nvim-neotest/nvim-nio $@
 
 deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
-	nvim --headless -u tests/testrc.vim -c "TSInstallSync java" +q
+	@if [ ! -d deps/tree-sitter-java ]; then \
+		git clone https://github.com/tree-sitter/tree-sitter-java deps/tree-sitter-java; \
+	fi
+	cd deps/tree-sitter-java && cc -o parser.so -I./src src/parser.c -Os -std=c11 -shared
+	mkdir -p $$(dirname $@)
+	cp deps/tree-sitter-java/parser.so $@
 
 
 clean:
-	rm -rf deps/nvim-treesitter deps/neotest
+	rm -rf deps/nvim-treesitter deps/neotest deps/tree-sitter-java
 
 validate:
 	stylua --check .
