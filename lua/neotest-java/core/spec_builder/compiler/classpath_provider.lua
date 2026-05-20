@@ -8,9 +8,14 @@ local nio = require("nio")
 --- @field modulepaths string []
 --- @field projectRoot string
 
---- @param deps { client_provider: fun(cwd: neotest-java.Path): vim.lsp.Client }
+--- @class neotest-java.ClasspathProviderDeps
+--- @field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
+--- @field schedule? fun(fn: fun()) Defaults to vim.schedule. Inject a synchronous pass-through in tests.
+--- @param deps neotest-java.ClasspathProviderDeps
 --- @return neotest-java.ClasspathProvider
+
 local function ClasspathProvider(deps)
+	local schedule = deps.schedule or vim.schedule
 	return {
 		get_classpath = function(base_dir, additional_classpath_entries)
 			additional_classpath_entries = additional_classpath_entries or {}
@@ -22,27 +27,33 @@ local function ClasspathProvider(deps)
 			local runtime = nio.control.future()
 			local test = nio.control.future()
 
-			client:request("workspace/executeCommand", {
-				command = "java.project.getClasspaths",
-				arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
-			}, function(err, result)
-				if err then
-					runtime.set_error(err)
-				else
-					runtime.set(result.classpaths)
-				end
-			end, bufnr)
+			-- vim.schedule moves the LSP request out of any fast-event context
+			-- (nio coroutines run as libuv callbacks) so nvim_buf_is_valid,
+			-- called internally by client:request, is safe to invoke. Mirrors
+			-- the fix applied to command/binaries.lua in 7cdd189.
+			schedule(function()
+				client:request("workspace/executeCommand", {
+					command = "java.project.getClasspaths",
+					arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
+				}, function(err, result)
+					if err then
+						runtime.set_error(err)
+					else
+						runtime.set(result.classpaths)
+					end
+				end, bufnr)
 
-			client:request("workspace/executeCommand", {
-				command = "java.project.getClasspaths",
-				arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
-			}, function(err, result)
-				if err then
-					test.set_error(err)
-				else
-					test.set(result.classpaths)
-				end
-			end, bufnr)
+				client:request("workspace/executeCommand", {
+					command = "java.project.getClasspaths",
+					arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },
+				}, function(err, result)
+					if err then
+						test.set_error(err)
+					else
+						test.set(result.classpaths)
+					end
+				end, bufnr)
+			end)
 
 			local additional_classpath_entries_strings = vim
 				--

@@ -7,11 +7,15 @@ local async = require("tests.async_helpers").async
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
 
 describe("Classpath Provider", function()
+	local sync_schedule = function(fn)
+		fn()
+	end
 	it(
 		"works",
 		async(function()
 			local base_dir = Path("some")
 			local classpath_provider = ClasspathProvider({
+				schedule = sync_schedule,
 				client_provider = function(base_dir_arg)
 					eq(base_dir, base_dir_arg)
 
