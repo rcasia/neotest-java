@@ -91,7 +91,8 @@ function CommandBuilder:add_test_references_from_tree(tree)
 
 	local position = tree:data()
 	if position.type == "test" then
-		self:add_test_method(position.id)
+		---@diagnostic disable-next-line: undefined-field
+		self:add_test_method(position.ref())
 	elseif position.type == "namespace" then
 		self:add_test_class(position.id)
 	else
