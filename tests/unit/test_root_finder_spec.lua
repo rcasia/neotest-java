@@ -1,4 +1,5 @@
 local root_finder = require("neotest-java.core.root_finder")
+---@diagnostic disable: undefined-field
 
 describe("RootFinder", function()
 	it("should find the root when matcher matches", function()

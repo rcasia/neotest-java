@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 local FileChecker = require("neotest-java.core.file_checker")
 local Path = require("neotest-java.model.path")
 
@@ -85,6 +86,7 @@ describe("file_checker", function()
 		local file_checker = FileChecker({
 			patterns = patterns,
 			root_getter = function()
+				---@diagnostic disable-next-line: return-type-mismatch
 				return nil
 			end,
 		})

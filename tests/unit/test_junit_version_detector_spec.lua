@@ -42,6 +42,8 @@ describe("JUnit Version Detector", function()
 			local version, path = detector.detect_existing_version()
 
 			-- Should detect by filename first without scanning
+			eq(true, version ~= nil, "version should not be nil")
+			---@diagnostic disable-next-line: need-check-nil
 			eq(JUNIT_VERSIONS.v1_10_1.version, version.version)
 			eq(expected_path, path)
 
@@ -83,6 +85,8 @@ describe("JUnit Version Detector", function()
 			local version, path = detector.detect_existing_version()
 
 			-- Should detect version by checksum despite non-standard filename
+			eq(true, version ~= nil, "version should not be nil")
+			---@diagnostic disable-next-line: need-check-nil
 			eq(JUNIT_VERSIONS.v1_10_1.version, version.version)
 			eq(custom_jar, path)
 

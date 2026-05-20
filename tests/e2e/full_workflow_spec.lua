@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-field
 -- E2E test: Full Neotest workflow with Java tests
 -- This test verifies that neotest-java correctly executes tests and reports results
 
@@ -49,6 +50,7 @@ describe("E2E: neotest-java full workflow", function()
 
 			-- Verify we got results
 			assert.is_not_nil(results, "Should have test results")
+			---@diagnostic disable-next-line: param-type-mismatch
 			assert.is_true(next(results) ~= nil, "Results should not be empty")
 
 			-- Count pass/fail
@@ -56,6 +58,7 @@ describe("E2E: neotest-java full workflow", function()
 			local failed = 0
 			local total = 0
 
+			---@diagnostic disable-next-line: param-type-mismatch
 			for test_id, result in pairs(results) do
 				if test_id:match("Test") then -- Only count actual tests, not file/namespace nodes
 					total = total + 1

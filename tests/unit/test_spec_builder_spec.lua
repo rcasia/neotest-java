@@ -22,6 +22,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
+		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 
@@ -66,6 +67,7 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			---@diagnostic disable-next-line: missing-fields
 			binaries = {
 				java = function()
 					return Path("java")
@@ -147,6 +149,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
+		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 
@@ -187,6 +190,7 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			---@diagnostic disable-next-line: missing-fields
 			binaries = {
 				java = function()
 					return Path("java")
@@ -269,6 +273,7 @@ describe("SpecBuilder", function()
 		}
 
 		-- when
+		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 
@@ -291,6 +296,7 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			---@diagnostic disable-next-line: missing-fields
 			binaries = {
 				java = function()
 					return Path("java")
@@ -377,6 +383,7 @@ describe("SpecBuilder", function()
 		local expected_base_dir = Path("/user/home/root/module-2")
 
 		-- when
+		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 
@@ -405,6 +412,7 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			---@diagnostic disable-next-line: missing-fields
 			binaries = {
 				java = function()
 					return Path("java")
@@ -466,6 +474,7 @@ describe("SpecBuilder", function()
 
 		local captured_binaries_cwd = nil
 
+		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 
@@ -487,6 +496,7 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			---@diagnostic disable-next-line: missing-fields
 			binaries = {
 				java = function(cwd)
 					captured_binaries_cwd = cwd
@@ -574,6 +584,7 @@ describe("SpecBuilder", function()
 		end
 
 		-- when
+		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
 
@@ -613,6 +624,7 @@ describe("SpecBuilder", function()
 			detect_project_type = function()
 				return "maven"
 			end,
+			---@diagnostic disable-next-line: missing-fields
 			binaries = {
 				java = function()
 					return Path("java")
@@ -641,17 +653,29 @@ describe("SpecBuilder", function()
 			"launch_debug_test should be called with -Xdebug argument"
 		)
 
-		assert(actual.strategy ~= nil, "result should have strategy field")
+		---@diagnostic disable-next-line: need-check-nil
+		eq(true, actual.strategy ~= nil)
+		---@diagnostic disable-next-line: need-check-nil
 		eq("java", actual.strategy.type)
+		---@diagnostic disable-next-line: need-check-nil
 		eq("attach", actual.strategy.request)
+		---@diagnostic disable-next-line: need-check-nil
 		eq("localhost", actual.strategy.host)
+		---@diagnostic disable-next-line: need-check-nil
 		eq(captured_port, actual.strategy.port)
+		---@diagnostic disable-next-line: need-check-nil
 		eq(("neotest-java (on port %s)"):format(captured_port), actual.strategy.name)
+		---@diagnostic disable-next-line: need-check-nil
 		eq(Path("."):name(), actual.strategy.projectName)
+		---@diagnostic disable-next-line: need-check-nil
 		eq(Path("."):to_string(), actual.cwd)
+		---@diagnostic disable-next-line: need-check-nil, undefined-field
 		eq("shouldNotFail", actual.symbol)
+		---@diagnostic disable-next-line: need-check-nil
 		eq("dap", actual.context.strategy)
+		---@diagnostic disable-next-line: need-check-nil
 		eq(Path("report_folder"), actual.context.reports_dir)
+		---@diagnostic disable-next-line: need-check-nil
 		eq(mock_terminated_event, actual.context.terminated_command_event)
 	end)
 end)

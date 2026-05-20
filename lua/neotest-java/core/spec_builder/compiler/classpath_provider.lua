@@ -9,11 +9,12 @@ local nio = require("nio")
 --- @field projectRoot string
 
 --- @class neotest-java.ClasspathProviderDeps
+---@diagnostic disable-next-line: undefined-doc-name
 --- @field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
 --- @field schedule? fun(fn: fun()) Defaults to vim.schedule. Inject a synchronous pass-through in tests.
+
 --- @param deps neotest-java.ClasspathProviderDeps
 --- @return neotest-java.ClasspathProvider
-
 local function ClasspathProvider(deps)
 	local schedule = deps.schedule or vim.schedule
 	return {
