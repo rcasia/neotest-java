@@ -6,6 +6,8 @@ local loggers = {}
 local log_date_format = "%FT%H:%M:%SZ%z"
 
 ---@class neotest.Logger
+---@field _level number
+---@field _filename string
 ---@field trace function
 ---@field debug function
 ---@field info function
