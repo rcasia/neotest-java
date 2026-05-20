@@ -1,6 +1,14 @@
 local Path = require("neotest-java.model.path")
 
---- @param deps { get_clients: fun(opts: table): vim.lsp.Client[], globpath: fun(dir: string, pattern: string, nosuf: boolean, list: boolean): string[], bufadd: fun(path: string): number, bufload: fun(path: string), sleep: fun(ms: number), hrtime: fun(): number }
+--- @class neotest-java.ClientProviderDeps
+--- @field get_clients fun(opts: table): vim.lsp.Client[]
+--- @field globpath fun(dir: string, pattern: string, nosuf: boolean, list: boolean): string[]
+--- @field bufadd fun(path: string): number
+--- @field bufload fun(path: string)
+--- @field sleep fun(ms: number)
+--- @field hrtime fun(): number
+
+--- @param deps neotest-java.ClientProviderDeps
 --- @return fun(cwd: neotest-java.Path): vim.lsp.Client
 local function ClientProvider(deps)
 	local client
