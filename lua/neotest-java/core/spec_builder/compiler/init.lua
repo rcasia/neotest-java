@@ -25,6 +25,7 @@ local client_provider = ClientProvider({
 
 ---@class neotest-java.Compilers
 ---@field lsp NeotestJavaCompiler
+---@diagnostic disable-next-line: undefined-doc-name
 ---@field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
 
 ---@type neotest-java.Compilers

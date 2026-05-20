@@ -51,13 +51,6 @@
 ---@field results fun(spec: neotest.RunSpec, strategy_result: neotest.StrategyResult): table<string, neotest.Result>
 ---@field filter_dir fun(name: string): boolean
 
----@class vim.lsp.Client
----@field name string
----@field initialized boolean
----@field attached_buffers integer[]
----@field request fun(method: string, params: table, handler: fun(err: any, method: string, result: any, client_id: integer, bufnr: integer, config: table), bufnr: integer?): integer
----@field config table
-
 ---@class nio.control.Event
 ---@field wait fun()
 ---@field set fun()

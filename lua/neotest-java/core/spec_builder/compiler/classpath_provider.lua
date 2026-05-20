@@ -23,6 +23,7 @@ local function ClasspathProvider(deps)
 			local base_dir_uri = vim.uri_from_fname(base_dir:to_string())
 			local client = deps.client_provider(base_dir)
 
+			---@diagnostic disable-next-line: undefined-field
 			local bufnr = vim.tbl_keys(client.attached_buffers)[1]
 			local runtime = nio.control.future()
 			local test = nio.control.future()
@@ -32,6 +33,7 @@ local function ClasspathProvider(deps)
 			-- called internally by client:request, is safe to invoke. Mirrors
 			-- the fix applied to command/binaries.lua in 7cdd189.
 			schedule(function()
+				---@diagnostic disable-next-line: undefined-field
 				client:request("workspace/executeCommand", {
 					command = "java.project.getClasspaths",
 					arguments = { base_dir_uri, vim.json.encode({ scope = "runtime" }) },
@@ -43,6 +45,7 @@ local function ClasspathProvider(deps)
 					end
 				end, bufnr)
 
+				---@diagnostic disable-next-line: undefined-field
 				client:request("workspace/executeCommand", {
 					command = "java.project.getClasspaths",
 					arguments = { base_dir_uri, vim.json.encode({ scope = "test" }) },

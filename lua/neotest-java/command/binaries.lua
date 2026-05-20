@@ -7,6 +7,7 @@ local nio = require("nio")
 --- @field java fun(cwd: neotest-java.Path): neotest-java.Path
 --- @field javap fun(cwd: neotest-java.Path): neotest-java.Path
 
+---@diagnostic disable: undefined-doc-name
 --- @class neotest-java.BinariesDeps
 --- @field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
 --- @field is_windows? boolean
@@ -43,6 +44,7 @@ local Binaries = function(deps)
 		}
 		local result_future = nio.control.future()
 		schedule(function()
+			---@diagnostic disable-next-line: undefined-field
 			client:request("workspace/executeCommand", cmd, function(err, res)
 				assert(not err, "Error while getting Java home from lsp server: " .. vim.inspect(err))
 				assert(not res.err, "Error while getting Java home from lsp server: " .. vim.inspect(res.err))

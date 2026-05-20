@@ -75,6 +75,7 @@ function Logger.new(filename, opts)
 			local parts = {
 				table.concat({ level, "|", os.date(log_date_format), "|", fileinfo, "|" }, " "),
 			}
+			---@diagnostic disable-next-line: undefined-field
 			if _G._NEOTEST_IS_CHILD then
 				table.insert(parts, "CHILD |")
 			end
