@@ -32,7 +32,6 @@ local version_detector = JunitVersionDetector({
 --- @param deps neotest-java.InstallDeps
 --- @return neotest-java.Installer
 local Installer = function(deps)
-	--- @type neotest-java.InstallDeps
 	local exists_fn = deps.exists
 	local checksum_fn = deps.checksum
 	local delete_file_fn = deps.delete_file
