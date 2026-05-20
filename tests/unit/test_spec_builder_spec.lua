@@ -10,6 +10,7 @@ local eq = assertions.eq
 describe("SpecBuilder", function()
 	local config = {
 		junit_jar = Path("my-junit-jar.jar"),
+		test_classname_patterns = { "^.*Tests?$", "^.*IT$" },
 	}
 	it("builds a spec for two test methods", function()
 		local path = Path("/user/home/root/src/test/java/com/example/Test.java")
@@ -83,6 +84,8 @@ describe("SpecBuilder", function()
 				"-jar",
 				"my-junit-jar.jar",
 				"execute",
+				"--include-classname='^.*Tests?$'",
+				"--include-classname='^.*IT$'",
 				"--classpath=classpath-file-argument",
 				"--reports-dir=report_folder",
 				"--fail-if-no-tests",
