@@ -55,7 +55,7 @@
 ---@field name string
 ---@field initialized boolean
 ---@field attached_buffers integer[]
----@field request fun(method: string, params: table, callback: fun(err: any, result: any)?, bufnr: integer?)
+---@field request fun(method: string, params: table, handler: fun(err: any, method: string, result: any, client_id: integer, bufnr: integer, config: table), bufnr: integer?): integer
 ---@field config table
 
 ---@class nio.control.Event
