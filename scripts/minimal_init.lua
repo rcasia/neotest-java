@@ -103,6 +103,61 @@ end
 
 ensure_java_parser()
 
+local function ensure_groovy_parser()
+	local parser_dir = DEPENDENCIES_DIR .. "/nvim-treesitter/parser"
+	local groovy_so = parser_dir .. "/groovy.so"
+
+	if vim.fn.filereadable(groovy_so) == 1 then
+		return
+	end
+
+	-- Fast path: copy from old deps/ directory if it exists
+	local old_so = "deps/nvim-treesitter/parser/groovy.so"
+	if vim.fn.filereadable(old_so) == 1 then
+		vim.fn.mkdir(parser_dir, "p")
+		vim.fn.system({ "cp", old_so, groovy_so })
+		if vim.fn.filereadable(groovy_so) == 1 then
+			return
+		end
+	end
+
+	-- Fallback: clone tree-sitter-groovy and compile with cc
+	print("Installing Groovy treesitter parser (one-time setup)...")
+	local tmp_dir = vim.fn.tempname() .. "-ts-groovy"
+	vim.fn.system({
+		"git",
+		"clone",
+		"--depth=1",
+		"https://github.com/tree-sitter/tree-sitter-groovy",
+		tmp_dir,
+	})
+	vim.fn.mkdir(parser_dir, "p")
+
+	-- Check if scanner.c exists (some grammars need it)
+	local scanner_path = tmp_dir .. "/src/scanner.c"
+	local compile_cmd = {
+		"cc",
+		"-shared",
+		"-fPIC",
+		"-O2",
+		"-o",
+		groovy_so,
+		tmp_dir .. "/src/parser.c",
+		"-I" .. tmp_dir .. "/src",
+	}
+	if vim.fn.filereadable(scanner_path) == 1 then
+		table.insert(compile_cmd, scanner_path)
+	end
+	vim.fn.system(compile_cmd)
+	vim.fn.system({ "rm", "-rf", tmp_dir })
+
+	if vim.fn.filereadable(groovy_so) ~= 1 then
+		print("Warning: Failed to compile Groovy treesitter parser. Groovy position discovery will be unavailable.")
+	end
+end
+
+ensure_groovy_parser()
+
 -- ─────────────────────────────────────────────────────────────
 -- Runtime path setup (plugin roots, NOT /lua/ subdirectories)
 -- ─────────────────────────────────────────────────────────────
