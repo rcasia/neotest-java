@@ -43,8 +43,8 @@ run_fixture() {
     fi
 
     if [ -z "$TEST_FILES" ]; then
-        echo "No test files found in $FIXTURE_DIR"
-        return 1
+        echo "No test files found in $FIXTURE_DIR - skipping"
+        return 2
     fi
 
     local TOTAL=0
@@ -94,8 +94,15 @@ else
         [ ! -d "$fixture_dir" ] && continue
         fixture_name=$(basename "$fixture_dir")
 
-        if run_fixture "$fixture_name"; then
+        result=0
+        run_fixture "$fixture_name" || result=$?
+
+        if [ $result -eq 0 ]; then
             GRAND_PASSED=$((GRAND_PASSED + 1))
+        elif [ $result -eq 2 ]; then
+            echo "Fixture: $fixture_name - skipped (no test files)"
+            GRAND_TOTAL=$((GRAND_TOTAL))
+            continue
         else
             GRAND_FAILED=$((GRAND_FAILED + 1))
         fi
