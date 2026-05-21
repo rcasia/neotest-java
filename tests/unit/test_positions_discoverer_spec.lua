@@ -59,6 +59,17 @@ describe("PositionsDiscoverer", function()
 		return tmp_file
 	end
 
+	---@param content string
+	---@return string filename
+	local function create_tmp_groovyfile(content)
+		local tmp_file = os.tmpname() .. ".groovy"
+		table.insert(tmp_files, tmp_file)
+		local file = assert(io.open(tmp_file, "w"))
+		file:write(content)
+		file:close()
+		return tmp_file
+	end
+
 	it(
 		"method FQN with inner classes",
 		async(function()
@@ -292,6 +303,108 @@ public class SomeTest {
 					},
 				},
 			}, remove_ref_field(actual:to_list()))
+		end)
+	)
+
+	it(
+		"should discover Spock feature methods with string literal names",
+		async(function()
+			-- Skip if Groovy parser is not available
+			local parser_dir = "./.dependencies/nvim-treesitter/parser"
+			local groovy_so = parser_dir .. "/groovy.so"
+			if vim.fn.filereadable(groovy_so) ~= 1 then
+				print("Skipping: Groovy treesitter parser not available")
+				return
+			end
+
+			local file_path = create_tmp_groovyfile([[
+package com.example
+
+import spock.lang.Specification
+
+class CalculatorSpec extends Specification {
+
+    def "addition of two positive numbers"() {
+        expect:
+        2 + 3 == 5
+    }
+
+    def "subtraction returns correct result"() {
+        expect:
+        10 - 4 == 6
+    }
+}
+]])
+
+			local result = assert(positions_discoverer.discover_positions(file_path))
+			local actual_list = result:to_list()
+
+			-- Should have file -> namespace (CalculatorSpec) -> tests
+			local namespace = actual_list[2][1]
+			eq("namespace", namespace.type)
+			eq("CalculatorSpec", namespace.name)
+
+			-- Should have 2 test methods
+			local test_count = 0
+			for _, child in ipairs(actual_list[2]) do
+				if #child > 0 then
+					for _, test in ipairs(child) do
+						if test.type == "test" then
+							test_count = test_count + 1
+						end
+					end
+				end
+			end
+			eq(2, test_count, "Should discover 2 Spock feature methods")
+		end)
+	)
+
+	it(
+		"should discover JUnit-style annotated methods in Groovy",
+		async(function()
+			-- Skip if Groovy parser is not available
+			local parser_dir = "./.dependencies/nvim-treesitter/parser"
+			local groovy_so = parser_dir .. "/groovy.so"
+			if vim.fn.filereadable(groovy_so) ~= 1 then
+				print("Skipping: Groovy treesitter parser not available")
+				return
+			end
+
+			local file_path = create_tmp_groovyfile([[
+package com.example
+
+import org.junit.jupiter.api.Test
+import static org.junit.jupiter.api.Assertions.*
+
+class UserServiceTest {
+
+    @Test
+    void "should create user with valid name"() {
+        assertNotNull(user)
+    }
+
+    @Test
+    void shouldReturnUserCount() {
+        assertEquals(2, userCount)
+    }
+}
+]])
+
+			local result = assert(positions_discoverer.discover_positions(file_path))
+			local actual_list = result:to_list()
+
+			-- Should have 2 test methods
+			local test_count = 0
+			for _, child in ipairs(actual_list[2]) do
+				if #child > 0 then
+					for _, test in ipairs(child) do
+						if test.type == "test" then
+							test_count = test_count + 1
+						end
+					end
+				end
+			end
+			eq(2, test_count, "Should discover 2 JUnit-style Groovy tests")
 		end)
 	)
 end)
