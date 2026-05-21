@@ -1,5 +1,6 @@
 -- scripts/minimal_init.lua
 -- Headless testing with mini.test, no user config loaded.
+---@diagnostic disable: deprecated
 
 local DEPENDENCIES_DIR = "./.dependencies"
 
@@ -123,7 +124,9 @@ require("mini.test").setup({
 	collect = {
 		emulate_busted = true,
 		find_files = function()
-			return vim.fn.globpath("tests/unit", "**/*_spec.lua", true, true)
+			local unit_files = vim.fn.globpath("tests/unit", "**/*_spec.lua", true, true)
+			local e2e_files = vim.fn.globpath("tests/e2e", "**/*_spec.lua", true, true)
+			return vim.list_extend(unit_files, e2e_files)
 		end,
 	},
 	execute = {
