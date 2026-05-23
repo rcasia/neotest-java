@@ -84,6 +84,17 @@ function Path:name()
 	return slugs[#slugs] or ""
 end
 
+--- Return the last segment of the path without its extension.
+--- @return string
+function Path:stem()
+	local name = self:name()
+	local idx = name:find("%.")
+	if idx then
+		return name:sub(1, idx - 1)
+	end
+	return name
+end
+
 --- Return the parent path.
 --- @return neotest-java.Path
 function Path:parent()
