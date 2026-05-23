@@ -4,10 +4,12 @@ Manual testing of neotest-java features currently requires a developer to open N
 
 ## What Changes
 
-- Add a Neovim MCP server configuration to `opencode.json`
-- Create a dedicated OpenCode subagent (`neotest-java-tester`) that uses the MCP server to interact with Neovim
-- Define manual test scenarios (test discovery, test execution, result reporting, debugging)
-- Author a test runner script that the agent can invoke to set up and clean up test fixtures
+- Build a Docker image with Neovim + neotest-java + JDK + Maven/Gradle — hermetic, reproducible test environment
+- Create a container lifecycle manager script (`scripts/mcp-test-runner.sh`) that spins up a Docker container for each test scenario and tears it down after
+- Configure the Neovim MCP server to connect to the containerized Neovim instance
+- Create a dedicated OpenCode subagent (`neotest-java-tester`) that uses the MCP server to interact with containerized Neovim
+- Define manual test scenarios (test discovery, test execution, result reporting, debugging) as scenario files the agent loads as context
+- Support multiple parallel test containers for concurrent scenario execution
 - Document how to run manual tests via the agent
 
 ## Capabilities

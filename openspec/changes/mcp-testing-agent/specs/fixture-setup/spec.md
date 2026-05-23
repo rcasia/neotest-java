@@ -1,23 +1,37 @@
 ## ADDED Requirements
 
-### Requirement: Setup script exists
+### Requirement: Docker image with pre-compiled fixtures
 
-The system SHALL provide a `scripts/mcp-test-setup.sh` script that accepts a fixture name as an argument, compiles the fixture, resolves its classpath, and reports success or failure.
+The system SHALL provide a Dockerfile that builds an image containing Neovim, JDK, Maven, all test fixtures (pre-compiled), and neotest-java.
 
-#### Scenario: Compile maven-simple fixture
+#### Scenario: Docker image builds
 
-- **WHEN** the script is invoked as `scripts/mcp-test-setup.sh maven-simple`
-- **THEN** it SHALL run `./mvnw clean test-compile` in the fixture directory and exit with code 0
+- **WHEN** `make docker-test-image` is run
+- **THEN** it SHALL build a `neotest-java-tester` Docker image with all dependencies
 
-#### Scenario: Fixture not found
+#### Scenario: Fixtures compiled at build time
 
-- **WHEN** the script is invoked with a non-existent fixture name
-- **THEN** it SHALL print an error listing available fixtures and exit with code 1
+- **WHEN** the Docker image is built
+- **THEN** all test fixtures SHALL be compiled so containers start with ready-to-use class files
+
+### Requirement: Container runner script
+
+The system SHALL provide a `scripts/mcp-test-runner.sh` script that manages container lifecycle: start a container for a given fixture/scenario, assign a unique port, return connection details, and stop the container.
+
+#### Scenario: Start container
+
+- **WHEN** invoked as `scripts/mcp-test-runner.sh --fixture maven-simple --port 9876`
+- **THEN** it SHALL start a Docker container with Neovim, mount the fixture, and print the connection details as JSON
+
+#### Scenario: Stop container
+
+- **WHEN** invoked as `scripts/mcp-test-runner.sh --stop <container-id>`
+- **THEN** it SHALL stop and remove the specified container
 
 #### Scenario: Prerequisites check
 
 - **WHEN** the script starts
-- **THEN** it SHALL verify that `$JAVA_HOME` is set and `java` is available before attempting compilation
+- **THEN** it SHALL verify that Docker is installed and the `neotest-java-tester` image exists before attempting to start a container
 
 ### Requirement: Fixture registry
 

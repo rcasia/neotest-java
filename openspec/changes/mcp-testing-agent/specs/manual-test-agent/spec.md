@@ -26,16 +26,39 @@ The agent SHALL follow a structured "plan-act-report" loop: plan which test scen
 - **WHEN** a test step fails (e.g., test count mismatch, error in Neovim output)
 - **THEN** the agent SHALL report the failure, the actual vs expected values, and any error messages from Neovim
 
+### Requirement: Agent manages container lifecycle
+
+The agent SHALL use `scripts/mcp-test-runner.sh` to start a Docker container for each test scenario, wait for it to be ready, and tear it down after the scenario completes.
+
+#### Scenario: Start container for scenario
+
+- **WHEN** the user asks to test a specific feature
+- **THEN** the agent SHALL run `scripts/mcp-test-runner.sh --scenario <name>` to start a container
+
+#### Scenario: Container teardown after scenario
+
+- **WHEN** a test scenario completes (pass or fail)
+- **THEN** the agent SHALL tear down the container by running `scripts/mcp-test-runner.sh --stop <container-id>`
+
 ### Requirement: Agent checks prerequisites before running
 
-The agent SHALL verify that the Neovim MCP server is running and the required fixture is set up before attempting any test scenario.
+The agent SHALL verify that Docker is available and the `neotest-java-tester` Docker image exists before attempting to run any scenario.
 
-#### Scenario: Prerequisites not met
+#### Scenario: Docker not available
 
-- **WHEN** the Neovim MCP server is not available
-- **THEN** the agent SHALL report the missing prerequisite and guide the user on how to start it
+- **WHEN** Docker is not installed or the daemon is not running
+- **THEN** the agent SHALL report the missing prerequisite and guide the user on how to install/start Docker
 
-#### Scenario: Fixture not compiled
+#### Scenario: Docker image not found
 
-- **WHEN** the test fixture is not yet compiled
-- **THEN** the agent SHALL run `scripts/mcp-test-setup.sh` to compile it before proceeding
+- **WHEN** the `neotest-java-tester` image is not present locally
+- **THEN** the agent SHALL run `make docker-test-image` to build it, or guide the user to do so
+
+### Requirement: Agent supports parallel scenarios
+
+The agent SHALL be able to run multiple scenarios concurrently by starting separate containers for each.
+
+#### Scenario: Concurrent scenario execution
+
+- **WHEN** the user requests two different test scenarios
+- **THEN** the agent SHALL start two separate containers, each running a Neovim instance, and execute both scenarios independently

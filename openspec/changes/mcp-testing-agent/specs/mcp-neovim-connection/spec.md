@@ -2,28 +2,37 @@
 
 ### Requirement: Neovim MCP server configuration
 
-The system SHALL configure the Neovim MCP server in `.opencode/opencode.json` with a transport type and a command to launch a Neovim instance suitable for testing neotest-java.
+The system SHALL configure the Neovim MCP server in `.opencode/opencode.json` with a transport type that connects to a Docker container running Neovim.
 
 #### Scenario: MCP server is configured
 
 - **WHEN** the user inspects `.opencode/opencode.json`
-- **THEN** it SHALL contain an `mcpServers` entry for Neovim with a valid `command` and `args`
+- **THEN** it SHALL contain an `mcpServers` entry for Neovim with a `command` and `args` that connect to the containerized Neovim
 
-#### Scenario: MCP server launches Neovim
+#### Scenario: MCP server connects to container
 
-- **WHEN** OpenCode starts and the MCP server configuration is valid
-- **THEN** the Neovim MCP server SHALL launch a Neovim process that can receive MCP commands
+- **WHEN** a Docker container is running with Neovim and the MCP server config points to it
+- **THEN** the MCP server SHALL successfully establish a connection to Neovim inside the container
 
-### Requirement: Neovim instance is configured for neotest-java testing
+### Requirement: Connection per container
 
-The launched Neovim instance SHALL load neotest-java and its dependencies so the agent can interact with the plugin.
+Each test scenario container SHALL expose the Neovim MCP on a unique host port so multiple containers can run in parallel without port conflicts.
 
-#### Scenario: Neovim loads neotest-java
+#### Scenario: Parallel containers on different ports
 
-- **WHEN** the agent sends a health check command to the Neovim MCP server
+- **WHEN** two containers are started for two different test scenarios
+- **THEN** each SHALL use a different host port and both SHALL be reachable via the MCP server simultaneously
+
+### Requirement: Containerized Neovim loads neotest-java
+
+The Docker image SHALL have neotest-java and its dependencies pre-installed so the containerized Neovim loads the plugin on startup.
+
+#### Scenario: Health check on containerized Neovim
+
+- **WHEN** the agent sends a health check command to the containerized Neovim via the MCP server
 - **THEN** the response SHALL indicate that neotest-java is loaded and available
 
 #### Scenario: Neovim opens a test fixture project
 
-- **WHEN** the agent instructs Neovim to open a file from a test fixture
+- **WHEN** the agent instructs containerized Neovim to open a file from a test fixture
 - **THEN** Neovim SHALL open the file and neotest-java SHALL recognize it as a test file (if applicable)
