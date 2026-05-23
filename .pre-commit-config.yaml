@@ -21,6 +21,16 @@ repos:
       - id: check-merge-conflict
       - id: end-of-file-fixer
       - id: mixed-line-ending
+      - id: check-added-large-files
+      - id: detect-private-key
+      - id: check-json
+      - id: check-yaml
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.44.0
+    hooks:
+      - id: markdownlint
+        args: ["--fix"]
 
   - repo: https://github.com/sirosen/check-jsonschema
     rev: 0.36.0
