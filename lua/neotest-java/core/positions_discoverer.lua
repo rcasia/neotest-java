@@ -45,10 +45,16 @@ local function build_position(file_path, source, captured_nodes)
 		return nil
 	end
 
+	local name = vim.treesitter.get_node_text(name_node, source)
+
+	if name_node:type() == "string" or name_node:type() == "string_literal" then
+		name = name:gsub("^[\"']", ""):gsub("[\"']$", "")
+	end
+
 	return {
 		type = match_type,
 		path = file_path,
-		name = vim.treesitter.get_node_text(name_node, source),
+		name = name,
 		range = { definition_node:range() },
 	}
 end
@@ -78,9 +84,7 @@ end
 
 local PositionsDiscoverer = {}
 
---- @param deps neotest-java.PositionsDiscoverer.Dependencies
---- @return neotest-java.PositionsDiscoverer
-local function create_positions_discoverer(deps)
+local function get_java_query()
 	local annotations = { "Test", "ParameterizedTest", "TestFactory", "CartesianTest" }
 	local a = vim.iter(annotations)
 		:map(function(v)
@@ -88,7 +92,7 @@ local function create_positions_discoverer(deps)
 		end)
 		:join(" ")
 
-	local query = [[
+	return [[
 
     ;; Test class
     (class_declaration
@@ -113,7 +117,55 @@ local function create_positions_discoverer(deps)
     ) @test.definition
 
   ]]
+end
 
+local function get_groovy_query()
+	local annotations = { "Test", "ParameterizedTest", "TestFactory", "CartesianTest" }
+	local a = vim.iter(annotations)
+		:map(function(v)
+			return string.format([["%s"]], v)
+		end)
+		:join(" ")
+
+	return [[
+
+    ;; Test class (Spock specs extend Specification)
+    (class_declaration
+      name: (identifier) @namespace.name
+    ) @namespace.definition
+
+    ;; JUnit-style annotated methods in Groovy
+    (method_declaration
+      (modifiers
+        [
+          (marker_annotation
+            name: (identifier) @annotation
+            (#any-of? @annotation ]] .. a .. [[)
+          )
+          (annotation
+            name: (identifier) @annotation
+            (#any-of? @annotation ]] .. a .. [[)
+          )
+        ]
+      )
+      name: [
+        (identifier) @test.name
+        (string) @test.name
+      ]
+    ) @test.definition
+
+    ;; Spock feature methods: def "test name"()
+    ;; String literal method names are unique to Spock-style tests
+    (method_declaration
+      name: (string) @test.name
+    ) @test.definition
+
+  ]]
+end
+
+--- @param deps neotest-java.PositionsDiscoverer.Dependencies
+--- @return neotest-java.PositionsDiscoverer
+local function create_positions_discoverer(deps)
 	--- @type neotest-java.PositionsDiscoverer
 	return {
 
@@ -122,6 +174,9 @@ local function create_positions_discoverer(deps)
 		---@param file_path string Absolute file path
 		---@return neotest.Tree | nil
 		discover_positions = function(file_path)
+			local is_groovy = file_path:match("%.groovy$")
+			local query = is_groovy and get_groovy_query() or get_java_query()
+
 			local tree = lib.treesitter.parse_positions(file_path, query, {
 				require_namespaces = true,
 				nested_tests = false,

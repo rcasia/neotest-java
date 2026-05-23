@@ -16,6 +16,9 @@ test-e2e: install
 
 
 install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio deps/plenary.nvim
+	@-$(MAKE) _install_groovy_parser 2>/dev/null || echo "Note: Groovy parser not compiled (optional for Java-only development)"
+
+_install_groovy_parser: deps/nvim-treesitter/parser/groovy.so
 
 deps/plenary.nvim:
 	mkdir -p deps
@@ -42,9 +45,17 @@ deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 	mkdir -p $$(dirname $@)
 	cp deps/tree-sitter-java/parser.so $@
 
+deps/nvim-treesitter/parser/groovy.so: deps/nvim-treesitter
+	@if [ ! -d deps/tree-sitter-groovy ]; then \
+		git clone https://github.com/tree-sitter/tree-sitter-groovy deps/tree-sitter-groovy; \
+	fi
+	cd deps/tree-sitter-groovy && cc -o parser.so -I./src src/parser.c src/scanner.c -Os -std=c11 -shared
+	mkdir -p $$(dirname $@)
+	cp deps/tree-sitter-groovy/parser.so $@
+
 
 clean:
-	rm -rf deps/nvim-treesitter deps/neotest deps/tree-sitter-java
+	rm -rf deps/nvim-treesitter deps/neotest deps/tree-sitter-java deps/tree-sitter-groovy
 
 validate:
 	stylua --check .

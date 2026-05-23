@@ -93,4 +93,37 @@ describe("file_checker", function()
 
 		assert.is_false(file_checker.is_test_file("/any/path/Test.java"))
 	end)
+
+	it("should return true for Groovy test files", function()
+		local groovy_test_files = {
+			base_path:append("src/test/groovy/neotest/UserServiceSpec.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/OrderServiceTest.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/PaymentIT.groovy"):to_string(),
+			base_path:append("src/test/groovy/neotest/domain/OrderTests.groovy"):to_string(),
+		}
+
+		for _, file_path in ipairs(groovy_test_files) do
+			assert.is_true(file_checker_undertest.is_test_file(file_path), file_path)
+		end
+	end)
+
+	it("should return false for Groovy non-test files", function()
+		local non_test_groovy_files = {
+			"src/test/groovy/neotest/UserService.groovy",
+			"src/test/groovy/neotest/Configuration.groovy",
+			"src/main/groovy/neotest/DomainService.groovy",
+		}
+		for _, file_path in ipairs(non_test_groovy_files) do
+			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
+		end
+	end)
+
+	it("should return false for Groovy files inside main folder", function()
+		local main_groovy_files = {
+			"/home/user/repo/src/main/groovy/neotest/UserServiceSpec.groovy",
+		}
+		for _, file_path in ipairs(main_groovy_files) do
+			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
+		end
+	end)
 end)

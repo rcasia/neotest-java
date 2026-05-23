@@ -342,8 +342,8 @@ vim.schedule(function()
 
     -- Extract expected class name from test file path
     -- e.g., /path/to/SampleTest.java or C:\path\to\SampleTest.java -> SampleTest
-    -- Handle both Unix (/) and Windows (\) path separators
-    local expected_class = test_file:match("([^/\\]+)%.java$")
+    -- Handle both Unix (/) and Windows (\) path separators and both .java and .groovy
+    local expected_class = test_file:match("([^/\\]+)%.java$") or test_file:match("([^/\\]+)%.groovy$")
 
     -- Collect test method names and IDs from positions tree
     -- ONLY include tests from the specific test file we're running
@@ -451,7 +451,8 @@ end, 30000)
 
 	-- Derive snapshot file name from test file
 	-- e.g., /path/to/SampleTest.java -> /path/to/SampleTest.snapshot.json
-	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json")
+	--       /path/to/CalculatorSpec.groovy -> /path/to/CalculatorSpec.snapshot.json
+	local snapshot_file = test_file:gsub("%.java$", ".snapshot.json"):gsub("%.groovy$", ".snapshot.json")
 	if snapshot_file == test_file then
 		log_error("Could not derive snapshot file name from: " .. test_file)
 		os.exit(1)
