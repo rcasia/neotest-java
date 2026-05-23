@@ -43,6 +43,9 @@ deps/nvim-treesitter/parser/java.so: deps/nvim-treesitter
 	cp deps/tree-sitter-java/parser.so $@
 
 
+docker-test-image:
+	docker build -f Dockerfile.test -t neotest-java-tester:latest .
+
 clean:
 	rm -rf deps/nvim-treesitter deps/neotest deps/tree-sitter-java
 

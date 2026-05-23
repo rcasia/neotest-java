@@ -1,0 +1,14 @@
+{
+  "maven-simple": {
+    "path": "tests/fixtures/maven-simple",
+    "description": "Single-module Maven project with JUnit 5 tests (pass + fail cases)"
+  },
+  "maven-groovy": {
+    "path": "tests/fixtures/maven-groovy",
+    "description": "Maven project with Groovy/Spock test files"
+  },
+  "maven-custom-build-dir": {
+    "path": "tests/fixtures/maven-custom-build-dir",
+    "description": "Maven project with a custom build output directory"
+  }
+}

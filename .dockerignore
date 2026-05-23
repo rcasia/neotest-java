@@ -1,0 +1,18 @@
+# Exclude bulky dev dependencies — not needed in the Docker image
+deps/
+pack/
+.git/
+node_modules/
+.vscode/
+.idea/
+*.md
+
+# Exclude OpenCode config
+.opencode/
+
+# Exclude openspec
+openspec/
+
+# Exclude test artifacts
+tests/fixtures/*/target/
+tests/fixtures/*/bin/

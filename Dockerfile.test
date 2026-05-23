@@ -1,0 +1,102 @@
+# =============================================================================
+# Stage 1: Base — install system dependencies
+# =============================================================================
+FROM ubuntu:22.04 AS base
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    git \
+    openjdk-11-jdk-headless \
+    lua5.1 \
+    luarocks \
+    && rm -rf /var/lib/apt/lists/*
+
+# Detect JAVA_HOME dynamically (path differs on arm64 vs amd64)
+RUN JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java)))) && \
+    echo "JAVA_HOME=$JAVA_HOME" && \
+    echo "export JAVA_HOME=$JAVA_HOME" >> /etc/profile.d/java.sh
+
+# =============================================================================
+# Stage 2: Install Neovim
+# =============================================================================
+FROM base AS neovim
+
+# Detect architecture and download correct Neovim binary
+RUN ARCH=$(uname -m) && \
+    case "$ARCH" in \
+        aarch64|arm64) NVIM_ARCH="arm64" ;; \
+        x86_64|amd64)  NVIM_ARCH="x86_64" ;; \
+        *) echo "Unsupported architecture: $ARCH"; exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-${NVIM_ARCH}.tar.gz" \
+    | tar xzf - -C /opt && \
+    ln -s /opt/nvim-linux-${NVIM_ARCH}/bin/nvim /usr/local/bin/nvim
+
+# =============================================================================
+# Stage 3: Clone neotest-java dependencies
+# =============================================================================
+FROM neovim AS project-deps
+
+WORKDIR /project/deps
+
+RUN git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git plenary.nvim && \
+    git clone --depth 1 https://github.com/nvim-neotest/nvim-nio.git nvim-nio && \
+    git clone https://github.com/nvim-neotest/neotest.git neotest && \
+    cd neotest && git checkout 7bef09d1170f8fb33c41607ca54f963cbdbf708d && cd ..
+
+# =============================================================================
+# Stage 4: Compile test fixtures
+# =============================================================================
+FROM project-deps AS builder
+
+WORKDIR /project
+
+# Copy neotest-java source and test fixtures
+COPY lua ./lua
+COPY tests/fixtures ./tests/fixtures
+
+# Make mvnw files executable and compile fixtures
+RUN JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java)))) && \
+    export JAVA_HOME && \
+    find tests/fixtures -name 'mvnw' -exec chmod +x {} \; && \
+    for fixture in tests/fixtures/*/; do \
+        if [ -f "$fixture/mvnw" ]; then \
+            echo ">>> Compiling fixture: $fixture"; \
+            (cd "$fixture" && ./mvnw -q clean test-compile 2>/dev/null) || echo "Warning: compilation failed for $fixture"; \
+        fi; \
+    done && \
+    echo ">>> All fixtures compiled"
+
+# =============================================================================
+# Stage 5: Final image
+# =============================================================================
+FROM neovim AS final
+
+# Install entrypoint that sets JAVA_HOME dynamically
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose Neovim RPC listener port for MCP server connections
+EXPOSE 18901
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Create Neovim config directory
+RUN mkdir -p /root/.config/nvim
+
+# Copy Neovim config
+COPY docker/init.lua /root/.config/nvim/init.lua
+
+# Copy deps
+COPY --from=project-deps /project/deps /project/deps
+
+# Copy project source and compiled fixtures
+COPY --from=builder /project /project
+
+WORKDIR /project
+
+# Default: start headless Neovim with neotest-java loaded
+CMD ["nvim", "--headless", "-c", "lua vim.api.nvim_exec_autocmds('UIEnter', {})"]
