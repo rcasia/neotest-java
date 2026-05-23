@@ -16,17 +16,27 @@ Manual testing of neotest-java features currently requires a developer to open N
 
 ### New Capabilities
 
-- `mcp-neovim-connection`: Configure the Neovim MCP server in opencode.json, enabling OpenCode to send commands to and receive responses from a running Neovim instance
-- `manual-test-agent`: Define the `neotest-java-tester` subagent with a prompt that instructs it how to manually test neotest-java features by driving Neovim through the MCP
-- `test-scenario-library`: Catalog of manual test scenarios (test discovery, run pass/fail, parameterized tests, nested tests, debugging, multi-module projects) with step-by-step instructions the agent can follow
-- `fixture-setup`: Test fixtures (currently in `tests/fixtures/`) organized so the agent can quickly set up the right project type for a given scenario
+- `docker-test-image`: Provides `Dockerfile.test` and `docker/init.lua` — a hermetic, reproducible Docker image with Neovim, JDK, Maven, and pre-compiled test fixtures
+- `container-runner`: Provides `scripts/mcp-test-runner.sh` — manages container lifecycle (start, stop, list) with unique ports per container for parallel execution
+- `mcp-connection`: Configures the Neovim MCP server in `.opencode/opencode.json` to connect to containerized Neovim instances on dynamically assigned ports
+- `testing-agent`: Defines the `neotest-java-tester` OpenCode subagent with a plan-act-report prompt that drives container lifecycle and test scenarios
+- `scenario-files`: Provides `tests/manual-scenarios/*.md` — step-by-step manual test scenarios (test discovery, execution, parameterized tests, debugging, multi-module)
+- `fixture-registry`: Provides `tests/fixtures/fixtures.json` — a machine-readable registry mapping fixture names to paths
 
 ### Modified Capabilities
 <!-- No existing specs are changing — this is purely additive -->
 
 ## Impact
 
-- `.opencode/opencode.json`: Add MCP server configuration for Neovim and the new subagent definition
-- `.opencode/agents/`: New directory with the `neotest-java-tester` agent definition
-- `tests/fixtures/`: May need additional fixtures or documentation for agent-driven testing
-- Documentation: New guide on how to use the agent for manual testing
+### Deliverables Created
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile.test` | Multi-stage Docker image with Neovim, JDK, Maven, fixtures |
+| `.dockerignore` | Excludes build artifacts from Docker context |
+| `docker/init.lua` | Minimal Neovim config for containerized neotest-java |
+| `scripts/mcp-test-runner.sh` | Container lifecycle manager |
+| `.opencode/opencode.json` | MCP server config + `neotest-java-tester` subagent (updated) |
+| `tests/manual-scenarios/*.md` | 5 scenario files (discovery, execution, parameterized, debug, multi-module) |
+| `tests/fixtures/fixtures.json` | Machine-readable fixture registry |
+| `Makefile` | New `docker-test-image` target (updated) |

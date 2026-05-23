@@ -80,4 +80,28 @@ Currently, neotest-java has:
 - **Docker image size**: Including JDK, Maven, Neovim, and all fixtures creates a large image → Mitigation: Use a slim base image (e.g., `alpine`); build multi-stage to keep the final image lean.
 - **Container startup latency**: Docker start takes 1-3 seconds → Mitigation: Acceptable for manual testing; fixtures are pre-compiled so no additional wait.
 - **Multiple containers resource usage**: Each container uses memory for Neovim + JVM → Mitigation: Containers are short-lived (seconds to minutes); limit to 4 concurrent containers via runner script.
-- **Fixture environment drift**: Test fixtures must be recompiled when the Docker image is rebuilt → Mitigation: Add a Makefile target for `make docker-test-image` that is run before testing sessions.
+- **Fixture environment drift**: Test fixtures must be recompiled when the Docker image is rebuilt → Mitigation: Add `docker-test-image` target to `Makefile` that is run before testing sessions.
+
+### Deliverable Directory Structure
+
+```
+neotest-java/
+├── Dockerfile.test              # Multi-stage Docker image build
+├── .dockerignore                # Excludes deps/, pack/, .git/, node_modules/
+├── docker/
+│   └── init.lua                 # Minimal Neovim config for containers
+├── scripts/
+│   └── mcp-test-runner.sh       # Container lifecycle: --start, --stop, --list
+├── .opencode/
+│   └── opencode.json            # mcpServers + agent config (updated)
+├── tests/
+│   ├── manual-scenarios/
+│   │   ├── test-discovery.md
+│   │   ├── test-execution.md
+│   │   ├── parameterized-test.md
+│   │   ├── debug-test.md
+│   │   └── multi-module.md
+│   └── fixtures/
+│       └── fixtures.json        # Fixture registry
+└── Makefile                     # +docker-test-image target
+```
