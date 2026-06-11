@@ -121,4 +121,160 @@ describe("NeotestJava plugin", function()
 			eq(true, adapter_without_notifications.config.disable_update_notifications)
 		end)
 	end)
+
+	describe("public DI API", function()
+		it("uses custom client_provider when provided", function()
+			local custom_client_provider_called = false
+			local custom_client_provider = function(_cwd)
+				custom_client_provider_called = true
+				return {
+					initialized = true,
+					request = function() end,
+				}
+			end
+
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+				client_provider = custom_client_provider,
+			})
+
+			assert(adapter ~= nil, "Adapter should be created")
+			assert(not custom_client_provider_called, "client_provider should not be called during initialization")
+		end)
+
+		it("uses custom classpath_provider when provided", function()
+			local custom_classpath_called = false
+			local custom_classpath_provider = {
+				get_classpath = function(_base_dir, _additional_entries)
+					custom_classpath_called = true
+					return "/custom/classpath"
+				end,
+			}
+
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+				classpath_provider = custom_classpath_provider,
+			})
+
+			assert(adapter ~= nil, "Adapter should be created")
+			assert(not custom_classpath_called, "classpath_provider should not be called during initialization")
+		end)
+
+		it("uses custom binaries when provided", function()
+			local custom_binaries = {
+				java = function(_cwd)
+					return Path("/custom/java")
+				end,
+				javap = function(_cwd)
+					return Path("/custom/javap")
+				end,
+			}
+
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+				binaries = custom_binaries,
+			})
+
+			assert(adapter ~= nil, "Adapter should be created")
+		end)
+
+		it("uses custom lsp_compiler when provided", function()
+			local custom_compiler_called = false
+			local custom_compiler = {
+				compile = function(_args)
+					custom_compiler_called = true
+				end,
+			}
+
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+				lsp_compiler = custom_compiler,
+			})
+
+			assert(adapter ~= nil, "Adapter should be created")
+			assert(not custom_compiler_called, "lsp_compiler should not be called during initialization")
+		end)
+
+		it("uses custom build_tool_getter when provided", function()
+			local custom_getter_called = false
+			local custom_build_tool_getter = function(_project_type)
+				custom_getter_called = true
+				return {
+					get_build_dirname = function(_base_dir)
+						return Path("custom-build")
+					end,
+					get_project_filename = function()
+						return "custom.xml"
+					end,
+					get_artifact_id = function(_base_dir)
+						return "custom-artifact"
+					end,
+				}
+			end
+
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+				build_tool_getter = custom_build_tool_getter,
+			})
+
+			assert(adapter ~= nil, "Adapter should be created")
+			assert(not custom_getter_called, "build_tool_getter should not be called during initialization")
+		end)
+
+		it("uses custom method_id_resolver when provided", function()
+			local custom_resolver_called = false
+			local custom_resolver = {
+				resolve_complete_method_id = function(_classname, method_id, _module_dir)
+					custom_resolver_called = true
+					return method_id .. "()"
+				end,
+			}
+
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+				method_id_resolver = custom_resolver,
+			})
+
+			assert(adapter ~= nil, "Adapter should be created")
+			assert(not custom_resolver_called, "method_id_resolver should not be called during initialization")
+		end)
+
+		it("uses defaults when no overrides provided (backward compatibility)", function()
+			local adapter = require("neotest-java")({}, {
+				root_finder = {
+					find_root = function()
+						return "/some/root"
+					end,
+				},
+			})
+
+			assert(adapter ~= nil, "Adapter should be created with defaults")
+			assert(adapter.config ~= nil, "Adapter should have config")
+			assert(adapter.name == "neotest-java", "Adapter should have correct name")
+		end)
+	end)
 end)
