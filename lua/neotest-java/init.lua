@@ -6,6 +6,8 @@ local dir_filter = require("neotest-java.core.dir_filter")
 local PositionDiscoverer = require("neotest-java.core.positions_discoverer")
 local SpecBuilder = require("neotest-java.core.spec_builder")
 local ResultBuilder = require("neotest-java.core.result_builder")
+local JunitResultReader = require("neotest-java.core.junit_result_reader")
+local XmlReader = require("neotest-java.util.xml_reader")
 local log = require("neotest-java.logger")
 local ch = require("neotest-java.context_holder")
 local Path = require("neotest-java.model.path")
@@ -232,7 +234,11 @@ local function NeotestJavaAdapter(config, deps)
 		}).discover_positions,
 		results = ResultBuilder({
 			scan_dir = require("neotest-java.util.dir_scan"),
-			read_file = require("neotest-java.util.read_file"),
+			junit_result_reader = JunitResultReader({
+				xml_reader = XmlReader.new({
+					read_file = require("neotest-java.util.read_file"),
+				}),
+			}),
 			remove_file = function(filepath)
 				local ok, err = pcall(os.remove, filepath)
 				if not ok then
