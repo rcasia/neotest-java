@@ -1,7 +1,5 @@
-local flat_map = require("neotest-java.util.flat_map")
 local log = require("neotest-java.logger")
 local JunitResult = require("neotest-java.model.junit_result")
-local XmlReader = require("neotest-java.util.xml_reader").new
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 
@@ -9,53 +7,10 @@ local clean_id = function(str)
 	return str:gsub("%(.*", "")
 end
 
--- -----------------------------------------------------------------------------
--- XML loading
--- -----------------------------------------------------------------------------
-
---- @param read_file fun(path: neotest-java.Path): string
---- @param paths string[]
---- @param tempname? fun(): string
-local function load_all_testcases(paths, read_file, tempname)
-	log.debug("Found report files: ", paths)
-	if #paths == 0 then
-		return {}
-	end
-
-	local reader = XmlReader({ read_file = read_file })
-
-	return flat_map(function(filepath)
-		local parsed = reader.parse(filepath)
-		if parsed.error then
-			log.warn("Skipping report (parse error): " .. tostring(filepath) .. " - " .. parsed.error)
-			return {}
-		end
-
-		local suite = parsed.tree.testsuite
-		if not suite then
-			return {}
-		end
-
-		local tcs = suite.testcase
-		if not tcs then
-			return {}
-		end
-		if not vim.isarray(tcs) then
-			tcs = { tcs }
-		end
-		return vim.iter(tcs)
-			:map(function(tc)
-				return { tc = tc, tempname = tempname }
-			end)
-			:totable()
-	end, paths)
-end
-
 --- @return table <string, neotest-java.JunitResult[]>
 local function group_by_method_base(testcases)
 	local groups = {}
-	for _, entry in ipairs(testcases) do
-		local jres = JunitResult:new(entry.tc, entry.tempname)
+	for _, jres in ipairs(testcases) do
 		local key = jres:id()
 		groups[key] = groups[key] or {}
 		table.insert(groups[key], jres)
@@ -72,7 +27,7 @@ end
 
 --- @class neotest-java.ResultBuilderDeps
 --- @field scan_dir fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
---- @field read_file fun(path: neotest-java.Path): string
+--- @field junit_result_reader { read_all: fun(paths: neotest-java.Path[]): neotest-java.JunitResult[] }
 --- @field remove_file fun(filepath: string): boolean, string?
 --- @field tempname_fn fun(): string
 
@@ -81,7 +36,7 @@ end
 local ResultBuilder = function(deps)
 	deps = deps or {}
 	assert(deps.scan_dir, "scan_dir should not be nil")
-	assert(deps.read_file, "read_file should not be nil")
+	assert(deps.junit_result_reader, "junit_result_reader should not be nil")
 	assert(deps.remove_file, "remove_file should not be nil")
 	assert(deps.tempname_fn, "tempname_fn should not be nil")
 
@@ -105,7 +60,7 @@ local ResultBuilder = function(deps)
 			end
 
 			local report_files = find_report_files(spec.context.reports_dir)
-			local testcases = load_all_testcases(report_files, deps.read_file, deps.tempname_fn)
+			local testcases = deps.junit_result_reader.read_all(report_files)
 			local groups = group_by_method_base(testcases)
 
 			local results = {}
