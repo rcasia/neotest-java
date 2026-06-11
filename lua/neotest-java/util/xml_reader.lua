@@ -1,6 +1,6 @@
 --- @class neotest-java.XmlReaderDeps
---- @field read_file fun(filepath: string): string
---- @field xml_parse fun(xml_data: string): table
+--- @field read_file? fun(filepath: string): string
+--- @field xml_parse? fun(xml_data: string): table
 
 --- @class neotest-java.XmlReader
 --- @field parse fun(filepath: string): neotest-java.ParseResult
