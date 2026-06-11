@@ -151,6 +151,58 @@ describe("XmlReader", function()
 		end)
 	end)
 
+	describe("parse with stub dependencies", function()
+		it("returns the full parsed tree on success", function()
+			-- given
+			local deps = stub_deps()
+			local reader = xml_reader.new({ read_file = deps.read_file, xml_parse = deps.xml_parse })
+
+			-- when
+			local result = reader.parse("/fake/pom.xml")
+
+			-- then
+			eq(nil, result.error)
+			eq("my-app", result.tree.project.artifactId)
+			eq("target", result.tree.project.build.directory)
+		end)
+
+		it("surfaces file read errors", function()
+			-- given
+			local deps = stub_deps({
+				read_file = function()
+					error("cannot stat file")
+				end,
+			})
+			local reader = xml_reader.new({ read_file = deps.read_file, xml_parse = deps.xml_parse })
+
+			-- when
+			local result = reader.parse("/fake/pom.xml")
+
+			-- then
+			eq(nil, result.tree)
+			assert.is_not_nil(result.error)
+			assert.is_truthy(result.error:find("cannot stat file"))
+		end)
+
+		it("surfaces XML parse errors", function()
+			-- given
+			local deps = stub_deps({
+				xml_parse = function()
+					error("malformed XML")
+				end,
+			})
+			local reader = xml_reader.new({ read_file = deps.read_file, xml_parse = deps.xml_parse })
+
+			-- when
+			local result = reader.parse("/fake/pom.xml")
+
+			-- then
+			eq(nil, result.tree)
+			assert.is_not_nil(result.error)
+			assert.is_truthy(result.error:find("malformed XML"))
+		end)
+	end)
+
 	describe("read_tag with default (real) dependencies", function()
 		it("reads and parses a real XML file from disk", function()
 			async(function()

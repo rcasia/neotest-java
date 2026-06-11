@@ -3,11 +3,16 @@
 --- @field xml_parse fun(xml_data: string): table
 
 --- @class neotest-java.XmlReader
---- @field read_tag fun(self: neotest-java.XmlReader, filepath: string, selector: string): neotest-java.ReadResult
+--- @field parse fun(filepath: string): neotest-java.ParseResult
+--- @field read_tag fun(filepath: string, selector: string): neotest-java.ReadResult
 
 --- @class neotest-java.ReadResult
 --- @field value string | nil
 --- @field found boolean
+--- @field error string | nil
+
+--- @class neotest-java.ParseResult
+--- @field tree table | nil
 --- @field error string | nil
 
 local NEOTEST_FILE = "neotest.lib.file"
@@ -41,48 +46,66 @@ end
 local XmlReader = function(deps)
 	deps = deps or default_deps()
 
-	return {
-		--- Resolve a dotted-path selector against an XML file.
-		--- Returns `{ value, found, error }` so callers can tell apart
-		--- "tag missing" from "value is a complex node" from "I/O or parse error".
-		--- @param filepath string
-		--- @param selector string
-		--- @return neotest-java.ReadResult
-		read_tag = function(filepath, selector)
-			local read_ok, content = pcall(deps.read_file, filepath)
-			if not read_ok then
-				return { value = nil, found = false, error = tostring(content) }
-			end
-			if type(content) ~= "string" then
-				return { value = nil, found = false, error = "read_file did not return a string" }
-			end
+	local instance = {}
 
-			local parse_ok, parsed = pcall(deps.xml_parse, content)
-			if not parse_ok then
-				return { value = nil, found = false, error = tostring(parsed) }
-			end
+	--- Read and parse an XML file, returning the full parsed tree
+	--- (or an error). Use this when callers need to walk the tree
+	--- themselves (arrays of testcases, etc.) rather than resolve
+	--- a single scalar at a dotted-path.
+	--- @param filepath string
+	--- @return neotest-java.ParseResult
+	function instance.parse(filepath)
+		local read_ok, content = pcall(deps.read_file, filepath)
+		if not read_ok then
+			return { tree = nil, error = tostring(content) }
+		end
+		if type(content) ~= "string" then
+			return { tree = nil, error = "read_file did not return a string" }
+		end
+
+		local parse_ok, parsed = pcall(deps.xml_parse, content)
+		if not parse_ok then
+			return { tree = nil, error = tostring(parsed) }
+		end
+		if type(parsed) ~= "table" then
+			return { tree = nil, error = "xml_parse did not return a table" }
+		end
+
+		return { tree = parsed, error = nil }
+	end
+
+	--- Resolve a dotted-path selector against an XML file.
+	--- Returns `{ value, found, error }` so callers can tell apart
+	--- "tag missing" from "value is a complex node" from "I/O or parse error".
+	--- @param filepath string
+	--- @param selector string
+	--- @return neotest-java.ReadResult
+	function instance.read_tag(filepath, selector)
+		local parsed_result = instance.parse(filepath)
+		if parsed_result.error then
+			return { value = nil, found = false, error = parsed_result.error }
+		end
+
+		local parsed = parsed_result.tree
+		for _, tag in ipairs(split_selector(selector)) do
 			if type(parsed) ~= "table" then
-				return { value = nil, found = false, error = "xml_parse did not return a table" }
-			end
-
-			for _, tag in ipairs(split_selector(selector)) do
-				if type(parsed) ~= "table" then
-					return { value = nil, found = false, error = nil }
-				end
-				local next_node = parsed[tag]
-				if next_node == nil then
-					return { value = nil, found = false, error = nil }
-				end
-				parsed = next_node
-			end
-
-			if type(parsed) == "table" then
 				return { value = nil, found = false, error = nil }
 			end
+			local next_node = parsed[tag]
+			if next_node == nil then
+				return { value = nil, found = false, error = nil }
+			end
+			parsed = next_node
+		end
 
-			return { value = parsed, found = true, error = nil }
-		end,
-	}
+		if type(parsed) == "table" then
+			return { value = nil, found = false, error = nil }
+		end
+
+		return { value = parsed, found = true, error = nil }
+	end
+
+	return instance
 end
 
 local default_reader = XmlReader()

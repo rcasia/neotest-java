@@ -14,12 +14,14 @@ The codebase already uses dependency injection as the dominant pattern (see `Res
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Provide a single XML reader that can be unit-tested without touching the filesystem or the real `neotest.lib.xml` parser
 - Return a structured result that lets callers distinguish "tag not found" from "value is a complex node" from "error"
 - Keep the existing `read_xml_tag(filepath, selector) -> string | nil` API stable so `build_tool/init.lua` and its tests don't change
 - Make `result_builder.lua` resilient to malformed JUnit reports
 
 **Non-Goals:**
+
 - Re-implementing or replacing the underlying `neotest.lib.xml` parser
 - Changing the dotted-path selector semantics
 - Adding XPath, namespaces, or streaming support
@@ -48,6 +50,7 @@ end
 Callers instantiate with `local reader = XmlReader(deps)` and call `reader.read_tag(...)`. No class, no `new` method, no metatables — just a function returning a table. This matches `lua/neotest-java/core/result_builder.lua:82`, `lua/neotest-java/core/file_checker.lua:12`, and `lua/neotest-java/core/spec_builder/init.lua`.
 
 Alternatives considered:
+
 - **Class-style with `XmlReader.new(deps)` and `__index`** — slightly more "OO" but adds a metatable layer that the rest of the codebase doesn't use. Rejected for stylistic consistency.
 - **Module-level functions** — matches the current `read_xml_tag.lua` style but blocks test injection. Rejected.
 - **Global mutable state for injection** — works but is fragile and breaks in concurrent tests. Rejected.
@@ -55,6 +58,7 @@ Alternatives considered:
 ### Decision 2: Structured `ReadResult` return value from `read_tag`
 
 The instance's `read_tag` returns a table `{ value, found, error }`:
+
 - `value`: the resolved value (string, number, or any scalar)
 - `found`: `true` if a scalar value was resolved; `false` otherwise
 - `error`: `string` describing I/O or parse failure, or `nil`
@@ -62,6 +66,7 @@ The instance's `read_tag` returns a table `{ value, found, error }`:
 The **module's default export** at the bottom of `xml_reader.lua` is a convenience that returns a plain `string | nil` for callers that do not need structured results — see Decision 5.
 
 Alternatives considered:
+
 - **Throw on error, return nil on missing** — keeps API simple but loses the distinction and forces `pcall` at every call site. Rejected.
 - **Return `value, err` as multiple values** — Lua-idiomatic but easy to misread. Rejected in favor of a single structured value.
 
@@ -73,7 +78,7 @@ This means `build_tool/init.lua`, `test_maven_build_tool_spec.lua`, and any othe
 
 ### Decision 4: `result_builder` uses the new reader with error tolerance
 
-Replace `xml.parse(data)` at `core/result_builder.lua:34` with a call into a reader instantiated with the same `read_file` and `tempname` deps it already has. On `error` (malformed XML), log a warning via `log.warn` and skip the report file — matching the existing behavior for `read_file` failures on line 27-32.
+Replace `xml.parse(data)` at `core/result_builder.lua:34` with a call to `reader.parse(filepath)`. The reader's `parse` method returns the full parsed tree on success or an error description, so `result_builder` can walk `tree.testsuite.testcase` as before without calling `xml.parse` directly. On `result.error` (malformed XML or read failure), log a warning via `log.warn` and skip the report file — matching the existing behavior for `read_file` failures on line 27-32.
 
 We do **not** memoize JUnit report reads — each run produces fresh reports, and the existing code already deletes them at line 140-146.
 
@@ -91,6 +96,12 @@ return {
 ```
 
 The convenience function returns the scalar value, or `nil` if the tag is missing, the value is complex, or an error occurred. `util/read_xml_tag.lua` will use `XmlReader.new()` (with its own deps setup) rather than this convenience export, because it needs explicit control over the memoized instance.
+
+### Decision 6: Expose `parse(filepath)` for full-tree callers
+
+The reader exposes a `parse(filepath) -> { tree, error }` method alongside `read_tag`. This exists because some call sites (`result_builder.lua`) need to walk the full parsed tree rather than resolve a single scalar — and we want all XML parsing to flow through the same module so error handling stays consistent.
+
+`read_tag` is implemented on top of `parse`: it parses, then walks the selector. This keeps the read/parse logic in one place.
 
 ## Risks / Trade-offs
 
