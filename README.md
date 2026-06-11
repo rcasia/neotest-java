@@ -1,45 +1,42 @@
+# neotest-java
 
-<section align="center">
+[Neotest](https://github.com/rcarriga/neotest) adapter for Java,
+using [JUnit](https://github.com/junit-team/junit5).
 
-  <h1>neotest-java</h1>
-  <p> <a href="https://github.com/rcarriga/neotest">Neotest</a> adapter for Java, using <a href="https://github.com/junit-team/junit5">JUnit</a>.</p>
-
-  <a href="https://github.com/rcasia/neotest-java/actions/workflows/ci-pipeline.yml">
-    <img src="https://github.com/rcasia/neotest-java/actions/workflows/ci-pipeline.yml/badge.svg">
-  </a>
-  <a href="https://luarocks.org/modules/rcasia/neotest-java">
-    <img alt="LuaRocks" src="https://img.shields.io/luarocks/v/rcasia/neotest-java">
-  </a>
-
-  <a href="https://github.com/rcasia/neotest-java">
-    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rcasia/neotest-java">
-  </a>
-</section>
+[![CI](https://github.com/rcasia/neotest-java/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/rcasia/neotest-java/actions/workflows/ci-pipeline.yml)
+[![LuaRocks](https://img.shields.io/luarocks/v/rcasia/neotest-java)](https://luarocks.org/modules/rcasia/neotest-java)
+[![Stars](https://img.shields.io/github/stars/rcasia/neotest-java)](https://github.com/rcasia/neotest-java)
 
 ![image](https://github.com/user-attachments/assets/d1d77980-faab-4110-9b7c-ae6911a3d42c)
 
-## ⭐ Features
+## Features
 
-- ✅ **Maven & Gradle** - Full support for both build systems (Groovy & Kotlin DSL)
-- ✅ **Multi-module projects** - Automatic detection and per-module test execution
-- ✅ **JUnit 5 (Jupiter)** - Support for `@Test`, `@ParameterizedTest`, `@TestFactory`, nested tests
-- ✅ **JUnit Platform 1.10.x & 6.x** - Compatible with both legacy and latest versions
-- ✅ **Spring Framework** - Auto-loads `application.yml`, `application-test.yml`, and `.properties` files
-- ✅ **Debugging with nvim-dap** - Full integration with breakpoints, JDWP, and DAP REPL output
-- ✅ **Incremental compilation** - Smart compilation of only changed files via nvim-jdtls
-- ✅ **Automatic classpath management** - Retrieves runtime and test classpaths from LSP
-- ✅ **JUnit JAR management** - Automatic installation, version detection, and upgrade prompts
-- ✅ **Health check** - Comprehensive diagnostics with `:checkhealth neotest-java`
+- Maven & Gradle support (Groovy & Kotlin DSL)
+- Multi-module projects with automatic detection
+- JUnit 5 (Jupiter): `@Test`, `@ParameterizedTest`,
+  `@TestFactory`, nested tests
+- JUnit Platform 1.10.x & 6.x
+- Spring Framework: auto-loads `application.yml`,
+  `application-test.yml`, `.properties`
+- Debugging with nvim-dap (breakpoints, JDWP, DAP REPL)
+- Incremental compilation via nvim-jdtls
+- Automatic classpath management from LSP
+- JUnit JAR management with version detection
+- Health check via `:checkhealth neotest-java`
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
-## 📦 Installation
+## Installation
 
 ### Prerequisites
 
 - **Neovim 0.10.4+**
 - **nvim-treesitter** with Java parser: `:TSInstall java`
-- **A JDTLS-based Java LSP** — either [nvim-jdtls](https://github.com/mfussenegger/nvim-jdtls) or [nvim-java](https://github.com/nvim-java/nvim-java) (both are compatible)
+- **A JDTLS-based Java LSP** — either
+  [nvim-jdtls](https://github.com/mfussenegger/nvim-jdtls)
+  or
+  [nvim-java](https://github.com/nvim-java/nvim-java)
+  (both are compatible)
 - **nvim-dap** - For debugging support (optional)
 
 ### Setup with [lazy.nvim](https://github.com/folke/lazy.nvim)
@@ -80,7 +77,10 @@ return {
 
 #### Using nvim-java
 
-[nvim-java](https://github.com/nvim-java/nvim-java) is fully compatible — neotest-java communicates with the LSP through the standard `vim.lsp.Client` API and does not depend directly on nvim-jdtls.
+[nvim-java](https://github.com/nvim-java/nvim-java) is
+fully compatible — neotest-java communicates with the LSP
+through the standard `vim.lsp.Client` API and does not
+depend directly on nvim-jdtls.
 
 ```lua
 return {
@@ -121,14 +121,18 @@ After setting up the plugin, run:
 :NeotestJava setup
 ```
 
-This will automatically download and verify the JUnit Platform Console Standalone JAR from [Maven Central](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone) with SHA-256 checksum verification.
+This will automatically download and verify the JUnit
+Platform Console Standalone JAR from
+[Maven Central](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone)
+with SHA-256 checksum verification.
 
-> [!TIP]
-> The plugin will detect if you have an older JUnit version installed and prompt you to upgrade to the latest version.
+> The plugin will detect if you have an older JUnit version
+> installed and prompt you to upgrade.
 
-## ⚙️ Configuration
+## Configuration
 
-All configuration options are optional. Pass them to `require("neotest-java")({})`:
+All configuration options are optional.
+Pass them to `require("neotest-java")({})`:
 
 ```lua
 require("neotest").setup({
@@ -136,9 +140,11 @@ require("neotest").setup({
     require("neotest-java")({
       junit_jar = nil, -- default: auto-detected
       jvm_args = { "-Xmx512m" }, -- custom JVM arguments
-      incremental_build = true, -- recompile only changed files
-      disable_update_notifications = false, -- show JUnit update prompts
-      test_classname_patterns = { "^.*Tests?$", "^.*IT$", "^.*Spec$" },
+      incremental_build = true, -- recompile changed files
+      disable_update_notifications = false,
+      test_classname_patterns = {
+        "^.*Tests?$", "^.*IT$", "^.*Spec$"
+      },
     }),
   },
 })
@@ -146,27 +152,36 @@ require("neotest").setup({
 
 ### Options
 
-| Option                        | Type       | Default                                                    | Description                                                                 |
-|-------------------------------|------------|------------------------------------------------------------|-----------------------------------------------------------------------------|
-| `junit_jar`                   | `string?`  | `stdpath("data")/neotest-java/junit-*.jar`                | Path to JUnit Platform Console Standalone JAR                               |
-| `jvm_args`                    | `string[]` | `{}`                                                       | Additional JVM arguments for test execution                                 |
-| `incremental_build`           | `boolean`  | `true`                                                     | Enable incremental compilation (recompile only changed files)               |
-| `disable_update_notifications`| `boolean`  | `false`                                                    | Disable notifications about available JUnit updates                         |
-| `test_classname_patterns`     | `string[]` | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}`                    | Regex patterns for test class names (classes must match at least one pattern)|
+- **`junit_jar`** (`string?`) — default:
+  `stdpath("data")/neotest-java/junit-*.jar`
+  Path to JUnit Platform Console Standalone JAR
+- **`jvm_args`** (`string[]`) — default: `{}`
+  Additional JVM arguments for test execution
+- **`incremental_build`** (`boolean`) — default: `true`
+  Enable incremental compilation (recompile changed files)
+- **`disable_update_notifications`** (`boolean`) —
+  default: `false`
+  Disable JUnit update notifications
+- **`test_classname_patterns`** (`string[]`) —
+  default: `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}`
+  Regex patterns for test class names
 
-## 🔧 Advanced: Dependency Injection API
+## Advanced: Dependency Injection API
 
-neotest-java exposes a public dependency injection API that allows you to override core adapter components. This is useful for:
+neotest-java exposes a public dependency injection API
+that allows you to override core adapter components.
+This is useful for:
 
 - Using custom LSP clients (e.g., coc.nvim)
-- Custom classpath resolution (e.g., Bazel, custom Gradle plugins)
+- Custom classpath resolution (e.g., Bazel)
 - Custom build tools (e.g., Ant, Bazel)
-- Custom compilation strategies (e.g., shell commands, skip compilation)
+- Custom compilation strategies
 - Testing downstream plugins/configs
 
 ### Usage
 
-Pass a second argument to the adapter constructor with your overrides:
+Pass a second argument to the adapter constructor
+with your overrides:
 
 ```lua
 require("neotest").setup({
@@ -193,7 +208,8 @@ local custom_client_provider = function(cwd)
   -- Get coc.nvim's Java client
   local clients = vim.lsp.get_clients({ name = "coc" })
   for _, client in ipairs(clients) do
-    if client.config.filetypes and vim.tbl_contains(client.config.filetypes, "java") then
+    local fts = client.config.filetypes or {}
+    if vim.tbl_contains(fts, "java") then
       return client
     end
   end
@@ -216,7 +232,8 @@ local custom_classpath_provider = {
   get_classpath = function(base_dir, additional_entries)
     -- Your custom classpath resolution logic
     local result = vim.system({
-      "bazel", "query", "classpath", tostring(base_dir)
+      "bazel", "query", "classpath",
+      tostring(base_dir)
     }):wait()
     return result.stdout
   end,
@@ -233,121 +250,123 @@ require("neotest").setup({
 
 ### Type Reference
 
-See the `neotest-java.Dependencies` type annotation in [`lua/neotest-java/init.lua`](lua/neotest-java/init.lua) for the full API reference with type signatures.
+See the `neotest-java.Dependencies` type annotation in
+[`lua/neotest-java/init.lua`](lua/neotest-java/init.lua)
+for the full API reference with type signatures.
 
-## ⚠️ Troubleshooting
+## Troubleshooting
 
-### Multi-module projects: "Given URI does not belong to any Java project" (-32001)
+### Multi-module: "URI does not belong to any Java project"
 
-Tests in one module pass but tests in another module fail with an error like:
+Tests in one module pass but tests in another fail with:
 
+```text
+Error -32001: Given URI does not belong to any
+Java project.
 ```
-Error -32001: Given URI does not belong to any Java project.
-```
 
-**Cause:** eclipse.jdt.ls (jdtls) is started once per module instead of once per
-workspace. When neotest-java runs tests for module B, it ends up talking to
-module A's jdtls instance, which rejects URIs it doesn't own.
+**Cause:** eclipse.jdt.ls (jdtls) is started once per
+module instead of once per workspace. When neotest-java
+runs tests for module B, it talks to module A's jdtls
+instance, which rejects URIs it doesn't own.
 
-This happens when `pom.xml` or `build.gradle` is used as a root marker in the
-jdtls configuration. Because every module directory contains its own build file,
-jdtls resolves `root_dir` to the nearest module root rather than the repository
-root, and a separate server process is started for each module you open.
+This happens when `pom.xml` or `build.gradle` is used as
+a root marker in the jdtls configuration. Because every
+module directory contains its own build file, jdtls
+resolves `root_dir` to the nearest module root rather
+than the repository root.
 
-**Solution:** Remove `pom.xml` and `build.gradle` from the `root_dir` markers
-and keep only the repo-level markers (`.git`, `mvnw`, `gradlew`). These files
-only exist at the workspace root, so jdtls resolves a single `root_dir` for the
-entire monorepo.
+**Solution:** Remove `pom.xml` and `build.gradle` from
+the `root_dir` markers and keep only the repo-level
+markers (`.git`, `mvnw`, `gradlew`).
 
 With **nvim-jdtls** (`ftplugin/java.lua` style):
 
 ```lua
 -- Before (broken for multimodule):
-root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew", "pom.xml" })
+root_dir = require("jdtls.setup").find_root({
+  ".git", "mvnw", "gradlew", "pom.xml"
+})
 
 -- After (correct):
-root_dir = require("jdtls.setup").find_root({ ".git", "mvnw", "gradlew" })
+root_dir = require("jdtls.setup").find_root({
+  ".git", "mvnw", "gradlew"
+})
 ```
 
-With the newer `vim.lsp.config` / `vim.fs.root` API (Neovim 0.11+):
+With the newer `vim.lsp.config` / `vim.fs.root` API
+(Neovim 0.11+):
 
 ```lua
 -- Before (broken for multimodule):
-root_dir = vim.fs.root(0, { ".git", "mvnw", "gradlew", "pom.xml" })
+root_dir = vim.fs.root(0, {
+  ".git", "mvnw", "gradlew", "pom.xml"
+})
 
 -- After (correct):
-root_dir = vim.fs.root(0, { ".git", "mvnw", "gradlew" })
+root_dir = vim.fs.root(0, {
+  ".git", "mvnw", "gradlew"
+})
 ```
 
-With this change a single jdtls instance starts at the repository root and
-handles all modules. eclipse.jdt.ls natively understands Maven and Gradle
-multimodule projects, so no further configuration is needed.
+With this change a single jdtls instance starts at the
+repository root and handles all modules. eclipse.jdt.ls
+natively understands Maven and Gradle multimodule
+projects, so no further configuration is needed.
 
-> [!NOTE]
-> The first time you open a Java file after this change, jdtls will reindex the
-> whole workspace from a new `-data` directory. This can take a couple of minutes
+> The first time you open a Java file after this change,
+> jdtls will reindex the whole workspace from a new
+> `-data` directory. This can take a couple of minutes
 > for large projects.
 
-### Spring Tests Failing with "parameter name information not available"
+### Spring Tests: "parameter name information not available"
 
-If you're running Spring tests that use reflection (e.g., `@MockBean`, `@WebMvcTest`) and encounter errors like:
+If you're running Spring tests that use reflection
+(e.g., `@MockBean`, `@WebMvcTest`) and encounter
+errors like:
 
-```
-java.lang.IllegalArgumentException: Name for argument of type [int] not specified,
-and parameter name information not available via reflection.
+```text
+java.lang.IllegalArgumentException: Name for argument
+of type [int] not specified, and parameter name
+information not available via reflection.
 Ensure that the compiler uses the '-parameters' flag.
 ```
 
-**Solution:** Configure the JDTLS compiler to preserve parameter names in bytecode by adding the following to your project's `.settings/org.eclipse.jdt.core.prefs` file:
+**Solution:** Configure the JDTLS compiler to preserve
+parameter names in bytecode by adding the following to
+your project's
+`.settings/org.eclipse.jdt.core.prefs` file:
 
 ```properties
 org.eclipse.jdt.core.compiler.codegen.methodParameters=generate
 ```
 
-If the `.settings` directory doesn't exist, create it in your project root:
+If the `.settings` directory doesn't exist, create it
+in your project root:
 
 ```bash
 mkdir -p .settings
-echo "org.eclipse.jdt.core.compiler.codegen.methodParameters=generate" > .settings/org.eclipse.jdt.core.prefs
+echo "org.eclipse.jdt.core.compiler.codegen.methodParameters=generate" \
+  > .settings/org.eclipse.jdt.core.prefs
 ```
 
-After adding this setting, restart your LSP server (`:LspRestart`) and run your tests again.
+After adding this setting, restart your LSP server
+(`:LspRestart`) and run your tests again.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to:
 
-- 🐛 Report bugs and issues
-- 💡 Suggest new features or improvements
-- 🔧 Submit pull requests
+- Report bugs and issues
+- Suggest new features or improvements
+- Submit pull requests
 
-See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
+for guidelines.
 
-### Running Tests
+## Acknowledgements
 
-The project includes both unit tests and end-to-end (E2E) tests:
-
-```bash
-# Run unit tests
-make test
-
-# Run E2E tests (requires Java and JAVA_HOME)
-make test-e2e
-
-# Run all tests
-make test && make test-e2e
-```
-
-**E2E Test Requirements:**
-
-- Java JDK (11 or higher)
-- `JAVA_HOME` environment variable set
-- Maven wrapper is included in the test fixture
-
-See [tests/e2e/README.md](tests/e2e/README.md) for detailed E2E test documentation.
-
-## ✨ Acknowledgements
-
-Thanks to all contributors who have helped improve this project!
+Thanks to all contributors who have helped improve
+this project!
 
 [![Contributors](https://contrib.rocks/image?repo=rcasia/neotest-java)](https://github.com/rcasia/neotest-java/graphs/contributors)
