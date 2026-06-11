@@ -18,12 +18,12 @@
 
 ## 4. Wire `result_builder` through the new reader
 
-- [ ] 4.1 Replace the direct `xml.parse(data)` call at `lua/neotest-java/core/result_builder.lua:34` with a call into a reader instance built from the existing `deps.read_file`
-- [ ] 4.2 On `result.error`, log a warning via `log.warn` and skip the report file (return `{}`), matching the existing `read_file` failure behavior on lines 27-32
-- [ ] 4.3 Run `tests/unit/test_result_builder_spec.lua` and confirm the malformed-XML test (or add one if missing) passes
+- [x] 4.1 Replace the direct `xml.parse(data)` call at `lua/neotest-java/core/result_builder.lua:34` with a call into a reader instance built from the existing `deps.read_file`
+- [x] 4.2 On `result.error`, log a warning via `log.warn` and skip the report file (return `{}`), matching the existing `read_file` failure behavior on lines 27-32
+- [x] 4.3 Run `tests/unit/test_result_builder_spec.lua` and confirm the malformed-XML test (or add one if missing) passes
 
 ## 5. Verify
 
-- [ ] 5.1 Run the full unit test suite — all existing tests pass, new tests pass
-- [ ] 5.2 Run `luacheck` on the new and modified files to confirm no lint regressions
-- [ ] 5.3 Confirm `xml.parse` is no longer called outside `xml_reader.lua` (only `read_xml_tag.lua`'s defaults and `result_builder.lua`'s migrated call should reference it, and the latter should be removed)
+- [x] 5.1 Run the full unit test suite — all existing tests pass, new tests pass
+- [x] 5.2 Run `luacheck` on the new and modified files to confirm no lint regressions
+- [x] 5.3 Confirm `xml.parse` is no longer called outside `xml_reader.lua` (only `read_xml_tag.lua`'s defaults and `result_builder.lua`'s migrated call should reference it, and the latter should be removed)
