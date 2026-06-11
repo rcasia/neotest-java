@@ -9,24 +9,24 @@ using [JUnit](https://github.com/junit-team/junit5).
 
 ![image](https://github.com/user-attachments/assets/d1d77980-faab-4110-9b7c-ae6911a3d42c)
 
-## Features
+## ⭐ Features
 
-- Maven & Gradle support (Groovy & Kotlin DSL)
-- Multi-module projects with automatic detection
-- JUnit 5 (Jupiter): `@Test`, `@ParameterizedTest`,
+- ✅ Maven & Gradle support (Groovy & Kotlin DSL)
+- ✅ Multi-module projects with automatic detection
+- ✅ JUnit 5 (Jupiter): `@Test`, `@ParameterizedTest`,
   `@TestFactory`, nested tests
-- JUnit Platform 1.10.x & 6.x
-- Spring Framework: auto-loads `application.yml`,
+- ✅ JUnit Platform 1.10.x & 6.x
+- ✅ Spring Framework: auto-loads `application.yml`,
   `application-test.yml`, `.properties`
-- Debugging with nvim-dap (breakpoints, JDWP, DAP REPL)
-- Incremental compilation via nvim-jdtls
-- Automatic classpath management from LSP
-- JUnit JAR management with version detection
-- Health check via `:checkhealth neotest-java`
+- ✅ Debugging with nvim-dap (breakpoints, JDWP, DAP REPL)
+- ✅ Incremental compilation via nvim-jdtls
+- ✅ Automatic classpath management from LSP
+- ✅ JUnit JAR management with version detection
+- ✅ Health check via `:checkhealth neotest-java`
 
 > Check [ROADMAP.md](./ROADMAP.md) to see what's coming!
 
-## Installation
+## 📦 Installation
 
 ### Prerequisites
 
@@ -129,7 +129,7 @@ with SHA-256 checksum verification.
 > The plugin will detect if you have an older JUnit version
 > installed and prompt you to upgrade.
 
-## Configuration
+## ⚙️ Configuration
 
 All configuration options are optional.
 Pass them to `require("neotest-java")({})`:
@@ -166,7 +166,7 @@ require("neotest").setup({
   default: `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}`
   Regex patterns for test class names
 
-## Advanced: Dependency Injection API
+## 🔧 Advanced: Dependency Injection API
 
 neotest-java exposes a public dependency injection API
 that allows you to override core adapter components.
@@ -254,7 +254,7 @@ See the `neotest-java.Dependencies` type annotation in
 [`lua/neotest-java/init.lua`](lua/neotest-java/init.lua)
 for the full API reference with type signatures.
 
-## Troubleshooting
+## ⚠️ Troubleshooting
 
 ### Multi-module: "URI does not belong to any Java project"
 
@@ -353,18 +353,18 @@ echo "org.eclipse.jdt.core.compiler.codegen.methodParameters=generate" \
 After adding this setting, restart your LSP server
 (`:LspRestart`) and run your tests again.
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to:
 
-- Report bugs and issues
-- Suggest new features or improvements
-- Submit pull requests
+- 🐛 Report bugs and issues
+- 💡 Suggest new features or improvements
+- 🔧 Submit pull requests
 
 See [CONTRIBUTING.md](https://github.com/rcasia/neotest-java/blob/main/CONTRIBUTING.md)
 for guidelines.
 
-## Acknowledgements
+## ✨ Acknowledgements
 
 Thanks to all contributors who have helped improve
 this project!
