@@ -1,26 +1,16 @@
 local memo = require("neotest.lib.func_util.memoize")
-local file = require("neotest.lib.file")
-local xml = require("neotest.lib.xml")
+local XmlReader = require("neotest-java.util.xml_reader").new
 
 --- @param filepath string
 --- @param selector string ex: project.build.sourceDirectory
 --- @return string | nil
 local function _read_xml_tag(filepath, selector)
-	local content = file.read(filepath)
-	local parsed = xml.parse(content)
-
-	for tag in string.gmatch(selector, "[^%.]+") do
-		if not parsed[tag] then
-			return nil
-		end
-		parsed = parsed[tag]
+	local reader = XmlReader()
+	local result = reader.read_tag(filepath, selector)
+	if result.found then
+		return result.value
 	end
-
-	if type(parsed) == "table" then
-		return nil
-	end
-
-	return parsed
+	return nil
 end
 
 local read_xml_tag = memo(_read_xml_tag)
