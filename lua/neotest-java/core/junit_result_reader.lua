@@ -25,9 +25,9 @@
 --- exercised without touching the filesystem or async context.
 
 --- @class neotest-java.JunitResultReaderDeps
---- @field xml_reader? neotest-java.XmlReader
+--- @field xml_reader? neotest-java.XmlReader | { parse: fun(filepath: neotest-java.Path | string): { tree: table, error: string } }
 --- @field tempname_fn? fun(): string
---- @field log? neotest.Logger
+--- @field log? neotest.Logger | { debug: fun(...), warn: fun(...) }
 
 --- @class neotest-java.JunitResultReader
 --- @field read_all fun(paths: neotest-java.Path[]): neotest-java.JunitResult[]
@@ -71,7 +71,7 @@ local JunitResultReader = function(deps)
 								tcs = { tcs }
 							end
 							for _, tc in ipairs(tcs) do
-								table.insert(results, JunitResult:new(tc, deps.tempname_fn()))
+								table.insert(results, JunitResult:new(tc, deps.tempname_fn))
 							end
 						end
 					end

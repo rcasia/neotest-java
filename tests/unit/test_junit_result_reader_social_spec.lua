@@ -8,11 +8,14 @@ local eq = require("tests.assertions").eq
 -- layer — we exercise the JUnit walk against realistic tree shapes without
 -- touching XML strings.
 
-local P1 = "/fake/TEST-A.xml"
-local P2 = "/fake/TEST-B.xml"
+-- Use Path objects throughout so the test is cross-platform.
+local P1 = Path("/fake/TEST-A.xml")
+local P2 = Path("/fake/TEST-B.xml")
+local K1 = tostring(P1)
+local K2 = tostring(P2)
 
---- Build a reader with a stub xml_reader keyed by filepath, plus a known tempname.
---- Records warns in `warned` if provided.
+--- Build a reader with a stub xml_reader keyed by stringified filepath, plus
+--- a known tempname. Records warns in `warned` if provided.
 local function reader_with(trees, warned)
 	local function parse(filepath)
 		local key = tostring(filepath)
@@ -71,10 +74,10 @@ describe("JunitResultReader (social)", function()
 				),
 			},
 		}
-		local reader = reader_with({ [P1] = { tree = tree, error = nil } })
+		local reader = reader_with({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq(1, #results)
@@ -99,10 +102,10 @@ describe("JunitResultReader (social)", function()
 				},
 			},
 		}
-		local reader = reader_with({ [P1] = { tree = tree, error = nil } })
+		local reader = reader_with({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq(3, #results)
@@ -126,10 +129,10 @@ describe("JunitResultReader (social)", function()
 				},
 			},
 		}
-		local reader = reader_with({ [P1] = { tree = tree, error = nil } })
+		local reader = reader_with({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq(1, #results)
@@ -157,10 +160,10 @@ describe("JunitResultReader (social)", function()
 				},
 			},
 		}
-		local reader = reader_with({ [P1] = { tree = tree, error = nil } })
+		local reader = reader_with({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then — the result_builder groups these by id; here we just want the
 		-- JunitResult to be constructed without crashing, with a failed status
@@ -183,12 +186,12 @@ describe("JunitResultReader (social)", function()
 			},
 		}
 		local reader = reader_with({
-			[P1] = { tree = tree_a, error = nil },
-			[P2] = { tree = tree_b, error = nil },
+			[K1] = { tree = tree_a, error = nil },
+			[K2] = { tree = tree_b, error = nil },
 		})
 
 		-- when
-		local results = reader.read_all({ Path(P1), Path(P2) })
+		local results = reader.read_all({ P1, P2 })
 
 		-- then
 		eq(3, #results)
@@ -205,12 +208,12 @@ describe("JunitResultReader (social)", function()
 		}
 		local warned = {}
 		local reader = reader_with({
-			[P1] = { tree = nil, error = "parse failed" },
-			[P2] = { tree = tree, error = nil },
+			[K1] = { tree = nil, error = "parse failed" },
+			[K2] = { tree = tree, error = nil },
 		}, warned)
 
 		-- when
-		local results = reader.read_all({ Path(P1), Path(P2) })
+		local results = reader.read_all({ P1, P2 })
 
 		-- then
 		eq(1, #results)

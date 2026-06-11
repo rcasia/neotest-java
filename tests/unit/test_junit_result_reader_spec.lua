@@ -3,8 +3,21 @@ local JunitResultReader = require("neotest-java.core.junit_result_reader")
 local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 
---- Build a stub XmlReader whose `parse` returns trees keyed by filepath.
---- Any filepath not present in `trees` returns an error.
+-- Use Path objects throughout so the test is cross-platform. The reader
+-- uses filepath as the stub lookup key directly, and Path's __eq
+-- compares by stringified path, so a Path constructed on Windows
+-- (with backslashes) matches the same Path here.
+-- Use Path objects for cross-platform correctness; the stub keys use
+-- the stringified form.
+local P1 = Path("/fake/TEST-A.xml")
+local P2 = Path("/fake/TEST-B.xml")
+local K1 = tostring(P1)
+local K2 = tostring(P2)
+
+--- Build a stub XmlReader whose `parse` returns trees keyed by the stringified
+--- filepath. Using tostring as the key (rather than the Path object itself)
+--- sidesteps Lua's raw-equality table indexing — two distinct Path objects
+--- with the same path would not match as keys, even though `__eq` is defined.
 --- @param trees table<string, { tree: table, error: string | nil }>
 local function stub_xml_reader(trees)
 	local function parse(filepath)
@@ -19,10 +32,10 @@ end
 
 --- Build a JunitResultReader with the given trees and a known tempname.
 --- Records warn calls in `warned`.
-local function make_reader(trees, warned)
+local function make_reader(trees, warned, tempname_fn)
 	local xml_reader = stub_xml_reader(trees)
 	warned = warned or {}
-	local tempname_fn = function()
+	tempname_fn = tempname_fn or function()
 		return "/tmp/test-output.txt"
 	end
 	local log = {
@@ -37,9 +50,6 @@ local function make_reader(trees, warned)
 		log = log,
 	})
 end
-
-local P1 = "/fake/TEST-A.xml"
-local P2 = "/fake/TEST-B.xml"
 
 local TC = function(name, classname)
 	return {
@@ -68,18 +78,20 @@ describe("JunitResultReader", function()
 				testcase = { TC("a()"), TC("b()"), TC("c()") },
 			},
 		}
-		local reader = make_reader({ [P1] = { tree = tree, error = nil } })
+		local reader = make_reader({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then — three JunitResult objects, each carrying the right testcase
 		eq(3, #results)
 		eq("com.example.ExampleTest#a()", results[1]:id())
 		eq("com.example.ExampleTest#b()", results[2]:id())
 		eq("com.example.ExampleTest#c()", results[3]:id())
-		-- and they were constructed with the stubbed tempname
-		eq("/tmp/test-output.txt", results[1].tempname)
+		-- and each was constructed with the injected tempname function
+		for _, jres in ipairs(results) do
+			eq("function", type(jres.tempname))
+		end
 		-- and the testcase payload is preserved
 		eq("a()", results[1].testcase._attr.name)
 	end)
@@ -89,12 +101,12 @@ describe("JunitResultReader", function()
 		local tree1 = { _attr = {}, testsuite = { _attr = {}, testcase = { TC("a()") } } }
 		local tree2 = { _attr = {}, testsuite = { _attr = {}, testcase = { TC("b()"), TC("c()") } } }
 		local reader = make_reader({
-			[P1] = { tree = tree1, error = nil },
-			[P2] = { tree = tree2, error = nil },
+			[K1] = { tree = tree1, error = nil },
+			[K2] = { tree = tree2, error = nil },
 		})
 
 		-- when
-		local results = reader.read_all({ Path(P1), Path(P2) })
+		local results = reader.read_all({ P1, P2 })
 
 		-- then
 		eq(3, #results)
@@ -106,10 +118,10 @@ describe("JunitResultReader", function()
 	it("contributes zero results when a file has no testsuite", function()
 		-- given
 		local tree = { _attr = {}, not_a_testsuite = "nope" }
-		local reader = make_reader({ [P1] = { tree = tree, error = nil } })
+		local reader = make_reader({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq({}, results)
@@ -118,10 +130,10 @@ describe("JunitResultReader", function()
 	it("contributes zero results when testsuite has no testcase", function()
 		-- given
 		local tree = { _attr = {}, testsuite = { _attr = {} } }
-		local reader = make_reader({ [P1] = { tree = tree, error = nil } })
+		local reader = make_reader({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq({}, results)
@@ -136,10 +148,10 @@ describe("JunitResultReader", function()
 				testcase = TC("only()"),
 			},
 		}
-		local reader = make_reader({ [P1] = { tree = tree, error = nil } })
+		local reader = make_reader({ [K1] = { tree = tree, error = nil } })
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq(1, #results)
@@ -149,10 +161,10 @@ describe("JunitResultReader", function()
 	it("skips a file that produces a parse error and warns", function()
 		-- given
 		local warned = {}
-		local reader = make_reader({ [P1] = { tree = nil, error = "malformed XML" } }, warned)
+		local reader = make_reader({ [K1] = { tree = nil, error = "malformed XML" } }, warned)
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
 		-- then
 		eq({}, results)
@@ -165,18 +177,19 @@ describe("JunitResultReader", function()
 		local tree2 = { _attr = {}, testsuite = { _attr = {}, testcase = { TC("b()") } } }
 		local warned = {}
 		local reader = make_reader({
-			[P1] = { tree = nil, error = "boom" },
-			[P2] = { tree = tree2, error = nil },
+			[K1] = { tree = nil, error = "boom" },
+			[K2] = { tree = tree2, error = nil },
 		}, warned)
 		-- a second reader to also exercise a path that's not in the first reader's stubs
-		local extra = "/fake/TEST-extra.xml"
+		local extra = Path("/fake/TEST-extra.xml")
+		local extra_key = tostring(extra)
 		local reader2 = make_reader({
-			[extra] = { tree = tree1, error = nil },
+			[extra_key] = { tree = tree1, error = nil },
 		}, warned)
 
 		-- when
-		local results = reader.read_all({ Path(P1), Path(P2) })
-		local extra_results = reader2.read_all({ Path(extra) })
+		local results = reader.read_all({ P1, P2 })
+		local extra_results = reader2.read_all({ extra })
 
 		-- then
 		eq(1, #results)
@@ -187,29 +200,29 @@ describe("JunitResultReader", function()
 		eq(1, #warned)
 	end)
 
-	it("uses the injected tempname function for every constructed JunitResult", function()
+	it("stores the injected tempname function on every JunitResult (no call yet)", function()
 		-- given
 		local tree = {
 			_attr = {},
 			testsuite = { _attr = {}, testcase = { TC("a()"), TC("b()") } },
 		}
-		local calls = 0
-		local xml_reader = stub_xml_reader({ [P1] = { tree = tree, error = nil } })
+		local xml_reader = stub_xml_reader({ [K1] = { tree = tree, error = nil } })
+		local injected = function()
+			return "/tmp/should-not-be-called.txt"
+		end
 		local reader = JunitResultReader({
 			xml_reader = xml_reader,
-			tempname_fn = function()
-				calls = calls + 1
-				return "/tmp/call-" .. calls .. ".txt"
-			end,
+			tempname_fn = injected,
 			log = { debug = function() end, warn = function() end },
 		})
 
 		-- when
-		local results = reader.read_all({ Path(P1) })
+		local results = reader.read_all({ P1 })
 
-		-- then
+		-- then — every JunitResult holds a reference to the injected function
 		eq(2, #results)
-		eq(2, calls)
+		eq(injected, results[1].tempname)
+		eq(injected, results[2].tempname)
 	end)
 
 	it("uses the injected xml_reader — no real XmlReader construction", function()
@@ -236,7 +249,7 @@ describe("JunitResultReader", function()
 		})
 
 		-- when
-		reader.read_all({ Path(P1), Path(P2) })
+		reader.read_all({ P1, P2 })
 
 		-- then
 		eq(2, calls)
