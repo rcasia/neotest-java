@@ -1,8 +1,7 @@
-local xml = require("neotest.lib.xml")
 local flat_map = require("neotest-java.util.flat_map")
 local log = require("neotest-java.logger")
-local lib = require("neotest.lib")
 local JunitResult = require("neotest-java.model.junit_result")
+local XmlReader = require("neotest-java.util.xml_reader").new
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 
@@ -23,16 +22,16 @@ local function load_all_testcases(paths, read_file, tempname)
 		return {}
 	end
 
+	local reader = XmlReader({ read_file = read_file })
+
 	return flat_map(function(filepath)
-		local ok, data = pcall(read_file, filepath)
-		if not ok then
-			log.error("Error reading file: " .. tostring(filepath))
-			lib.notify("Error reading file: " .. tostring(filepath))
+		local parsed = reader.parse(filepath)
+		if parsed.error then
+			log.warn("Skipping report (parse error): " .. tostring(filepath) .. " - " .. parsed.error)
 			return {}
 		end
 
-		local xml_data = xml.parse(data)
-		local suite = xml_data and xml_data.testsuite or nil
+		local suite = parsed.tree.testsuite
 		if not suite then
 			return {}
 		end
