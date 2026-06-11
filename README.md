@@ -154,6 +154,87 @@ require("neotest").setup({
 | `disable_update_notifications`| `boolean`  | `false`                                                    | Disable notifications about available JUnit updates                         |
 | `test_classname_patterns`     | `string[]` | `{"^.*Tests?$", "^.*IT$", "^.*Spec$"}`                    | Regex patterns for test class names (classes must match at least one pattern)|
 
+## 🔧 Advanced: Dependency Injection API
+
+neotest-java exposes a public dependency injection API that allows you to override core adapter components. This is useful for:
+
+- Using custom LSP clients (e.g., coc.nvim)
+- Custom classpath resolution (e.g., Bazel, custom Gradle plugins)
+- Custom build tools (e.g., Ant, Bazel)
+- Custom compilation strategies (e.g., shell commands, skip compilation)
+- Testing downstream plugins/configs
+
+### Usage
+
+Pass a second argument to the adapter constructor with your overrides:
+
+```lua
+require("neotest").setup({
+  adapters = {
+    require("neotest-java")({
+      -- configuration options
+    }, {
+      -- dependency overrides (all optional)
+      client_provider = my_custom_client_provider,
+      classpath_provider = my_custom_classpath_provider,
+      binaries = my_custom_binaries,
+      lsp_compiler = my_custom_compiler,
+      build_tool_getter = my_custom_build_tool_getter,
+      method_id_resolver = my_custom_method_id_resolver,
+    }),
+  },
+})
+```
+
+### Example: Using coc.nvim as LSP client
+
+```lua
+local custom_client_provider = function(cwd)
+  -- Get coc.nvim's Java client
+  local clients = vim.lsp.get_clients({ name = "coc" })
+  for _, client in ipairs(clients) do
+    if client.config.filetypes and vim.tbl_contains(client.config.filetypes, "java") then
+      return client
+    end
+  end
+  error("No coc.nvim Java client found")
+end
+
+require("neotest").setup({
+  adapters = {
+    require("neotest-java")({}, {
+      client_provider = custom_client_provider,
+    }),
+  },
+})
+```
+
+### Example: Custom classpath resolution
+
+```lua
+local custom_classpath_provider = {
+  get_classpath = function(base_dir, additional_entries)
+    -- Your custom classpath resolution logic
+    local result = vim.system({
+      "bazel", "query", "classpath", tostring(base_dir)
+    }):wait()
+    return result.stdout
+  end,
+}
+
+require("neotest").setup({
+  adapters = {
+    require("neotest-java")({}, {
+      classpath_provider = custom_classpath_provider,
+    }),
+  },
+})
+```
+
+### Type Reference
+
+See the `neotest-java.Dependencies` type annotation in [`lua/neotest-java/init.lua`](lua/neotest-java/init.lua) for the full API reference with type signatures.
+
 ## ⚠️ Troubleshooting
 
 ### Multi-module projects: "Given URI does not belong to any Java project" (-32001)
@@ -258,6 +339,7 @@ make test && make test-e2e
 ```
 
 **E2E Test Requirements:**
+
 - Java JDK (11 or higher)
 - `JAVA_HOME` environment variable set
 - Maven wrapper is included in the test fixture

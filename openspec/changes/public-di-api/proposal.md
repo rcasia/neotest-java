@@ -12,9 +12,11 @@ The plugin uses constructor-based dependency injection internally, but the publi
 ## Capabilities
 
 ### New Capabilities
+
 - `public-di-api`: Public dependency injection API allowing users to override core adapter components (client_provider, classpath_provider, binaries, lsp_compiler, build_tool_getter, method_id_resolver)
 
 ### Modified Capabilities
+
 - `build-tool`: Build tool getter becomes overridable via public deps (implementation detail, no spec-level behavior change)
 
 ## Impact

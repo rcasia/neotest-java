@@ -59,8 +59,15 @@ end
 ---@field version_detector? neotest-java.JunitVersionDetector
 
 --- @class neotest-java.Dependencies
----@field root_finder? { find_root: fun(dir: string): string | nil }
----@field check_junit_jar_deps? neotest-java.CheckJunitJarDeps
+--- @field root_finder? { find_root: fun(dir: string): string | nil }
+--- @field check_junit_jar_deps? neotest-java.CheckJunitJarDeps
+---@diagnostic disable-next-line: undefined-doc-name
+--- @field client_provider? fun(cwd: neotest-java.Path): vim.lsp.Client
+--- @field classpath_provider? neotest-java.ClasspathProvider
+--- @field binaries? neotest-java.LspBinaries
+--- @field lsp_compiler? NeotestJavaCompiler
+--- @field build_tool_getter? fun(project_type: string): neotest-java.BuildTool
+--- @field method_id_resolver? neotest-java.MethodIdResolver
 
 --- @param config neotest-java.ConfigOpts
 --- @param deps? neotest-java.Dependencies
@@ -70,6 +77,22 @@ local function NeotestJavaAdapter(config, deps)
 	deps = deps or {}
 	local _root_finder = deps and deps.root_finder or root_finder
 	local check_junit_jar_deps = deps.check_junit_jar_deps or {}
+
+	local _client_provider = deps.client_provider or client_provider
+	local _classpath_provider = deps.classpath_provider or ClasspathProvider({
+		client_provider = _client_provider,
+	})
+	local _binaries = deps.binaries or Binaries({
+		client_provider = _client_provider,
+	})
+	local _lsp_compiler = deps.lsp_compiler or compilers.lsp
+	local _build_tool_getter = deps.build_tool_getter or build_tools.get
+	local _method_id_resolver = deps.method_id_resolver
+		or MethodIdResolver({
+			classpath_provider = _classpath_provider,
+			command_executor = CommandExecutor(),
+			binaries = _binaries,
+		})
 
 	log.info("neotest-java adapter initialized")
 
@@ -159,19 +182,13 @@ local function NeotestJavaAdapter(config, deps)
 		root_getter = root_getter,
 		patterns = config.test_classname_patterns,
 	})
-	local classpath_provider = ClasspathProvider({
-		client_provider = client_provider,
-	})
-	local binaries = Binaries({
-		client_provider = client_provider,
-	})
 	local spec_builder_instance = SpecBuilder({
-		classpath_provider = classpath_provider,
-		binaries = binaries,
+		classpath_provider = _classpath_provider,
+		binaries = _binaries,
 		mkdir = mkdir,
 		scan = scan,
 		compile = function(base_dir, compile_mode)
-			compilers.lsp.compile({
+			_lsp_compiler.compile({
 				base_dir = base_dir,
 				compile_mode = compile_mode,
 			})
@@ -180,7 +197,7 @@ local function NeotestJavaAdapter(config, deps)
 			local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
 			return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
 		end,
-		build_tool_getter = build_tools.get,
+		build_tool_getter = _build_tool_getter,
 		detect_project_type = detect_project_type,
 		launch_debug_test = launcher.launch_debug_test,
 	})
@@ -226,11 +243,7 @@ local function NeotestJavaAdapter(config, deps)
 		filter_dir = dir_filter.filter_dir,
 		is_test_file = file_checker.is_test_file,
 		discover_positions = PositionDiscoverer({
-			method_id_resolver = MethodIdResolver({
-				classpath_provider = classpath_provider,
-				command_executor = CommandExecutor(),
-				binaries = binaries,
-			}),
+			method_id_resolver = _method_id_resolver,
 		}).discover_positions,
 		results = ResultBuilder({
 			scan_dir = require("neotest-java.util.dir_scan"),

@@ -7,12 +7,14 @@ The e2e test suite already demonstrates the pattern for swapping these component
 ## Goals / Non-Goals
 
 **Goals:**
+
 - Allow users to override all major injectable components via the public `deps` argument
 - Maintain 100% backward compatibility — existing configs work unchanged
 - Provide clear `@class` type annotations so users know the interface to implement
 - Document the API with examples in the README
 
 **Non-Goals:**
+
 - Changing the internal DI pattern (constructor-based injection remains)
 - Supporting runtime component swapping after adapter initialization
 - Adding new components or features beyond exposing existing ones
