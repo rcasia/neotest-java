@@ -149,6 +149,22 @@ describe("XmlReader", function()
 			-- then — the result was produced entirely from the stubs
 			eq({ value = "stubbed", found = true, error = nil }, result)
 		end)
+
+		it("merges partial deps with defaults — provided keys win, missing keys fall back", function()
+			-- given — inject read_file, leave xml_parse to default
+			local reader = xml_reader.new({
+				read_file = function()
+					return SIMPLE_POM
+				end,
+			})
+
+			-- when — this should succeed because xml_parse defaults to the real parser,
+			-- and SIMPLE_POM is valid XML
+			local result = reader.read_tag("/fake/pom.xml", "project.artifactId")
+
+			-- then
+			eq({ value = "my-app", found = true, error = nil }, result)
+		end)
 	end)
 
 	describe("parse with stub dependencies", function()

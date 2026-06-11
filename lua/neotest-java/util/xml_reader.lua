@@ -44,7 +44,10 @@ end
 --- @param deps neotest-java.XmlReaderDeps | nil
 --- @return neotest-java.XmlReader
 local XmlReader = function(deps)
-	deps = deps or default_deps()
+	deps = deps or {}
+	local defaults = default_deps()
+	deps.read_file = deps.read_file or defaults.read_file
+	deps.xml_parse = deps.xml_parse or defaults.xml_parse
 
 	local instance = {}
 

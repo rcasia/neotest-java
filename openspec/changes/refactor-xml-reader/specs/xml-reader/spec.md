@@ -54,8 +54,8 @@ The XML reader MUST accept `read_file` and `xml_parse` as injectable dependencie
 
 #### Scenario: Default dependencies wire up real libraries
 
-- **WHEN** the reader is constructed with no `deps` argument (or with `deps = nil`)
-- **THEN** the reader uses `neotest.lib.file.read` as `read_file` and `neotest.lib.xml.parse` as `xml_parse`
+- **WHEN** the reader is constructed with no `deps` argument, with `deps = nil`, or with a partial `deps` table missing some keys
+- **THEN** the missing keys fall back to `neotest.lib.file.read` and `neotest.lib.xml.parse` while the provided keys are preserved
 
 ### Requirement: Backward-compatible default export
 
