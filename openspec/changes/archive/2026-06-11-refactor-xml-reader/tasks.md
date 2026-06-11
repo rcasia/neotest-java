@@ -11,10 +11,7 @@
 - [x] 2.1 Create `tests/unit/test_xml_reader_spec.lua` covering all spec scenarios: scalar at single-segment path, scalar at multi-segment path, missing tag, complex value, file-read error, parse error, stub dependencies, default dependencies, and the default-export shape
 - [x] 2.2 Run `make test_unit` (or `tests/e2e/run.lua unit`) and confirm all new tests pass and no existing test regresses
 
-## 3. Migrate `read_xml_tag` shim
-
-- [ ] 3.1 Refactor `lua/neotest-java/util/read_xml_tag.lua` to instantiate with `XmlReader()` (default deps), call `read_tag` on the instance, and return `result.value` when `result.found` else `nil`. Preserve the global memoization wrapper
-- [ ] 3.2 Run `tests/unit/test_maven_build_tool_spec.lua` to confirm the build-tool caller still works end-to-end
+> Tasks 3.1 and 3.2 (the read_xml_tag shim migration) were originally planned here, but the shim was retired entirely in a later commit. The call sites were updated to use `xml_reader.read_tag` directly. No `read_xml_tag.lua` exists in the final code.
 
 ## 4. Wire `result_builder` through the new reader
 
