@@ -1,6 +1,6 @@
 local create_build_tool = require("neotest-java.build_tool.build_tool")
 local Path = require("neotest-java.model.path")
-local read_xml_tag = require("neotest-java.util.read_xml_tag")
+local xml_reader = require("neotest-java.util.xml_reader")
 local generate_spring_property_filepaths = require("neotest-java.util.spring_property_filepaths")
 
 ---@class neotest-java.BuildTool
@@ -11,7 +11,7 @@ local generate_spring_property_filepaths = require("neotest-java.util.spring_pro
 
 ---@type neotest-java.BuildToolDeps
 local deps = {
-	read_xml_tag = read_xml_tag,
+	read_xml_tag = xml_reader.read_tag,
 	generate_spring_property_filepaths = generate_spring_property_filepaths,
 }
 

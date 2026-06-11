@@ -28,3 +28,6 @@ tests/fixtures/*/*.iml
 # Test dependencies (auto-cloned)
 .dependencies/
 pack/
+
+# OpenSpec: archived changes are historical record, not active work
+openspec/changes/archive/
