@@ -1,6 +1,28 @@
-local nio = require("nio")
-local JunitResult = require("neotest-java.model.junit_result")
-local XmlReader = require("neotest-java.util.xml_reader").new
+--- JunitResultReader
+---
+--- Reads a list of JUnit XML report files and returns a flat array of
+--- `JunitResult` objects, one per testcase. Owns the JUnit-format
+--- knowledge (where the `testsuite.testcase` lives, how to handle a
+--- single-testcase non-array wrap, how to tolerate missing nodes and
+--- per-file parse errors) so that callers — notably `result_builder` —
+--- can stay pure orchestrators.
+---
+--- All I/O flows through the injected `XmlReader` (read + parse) and the
+--- injected `tempname_fn` (per-result output file). Per-file parse
+--- errors are logged via the injected `log` and the file is skipped;
+--- the rest of the list is still processed.
+---
+--- Usage:
+---     local JunitResultReader = require("neotest-java.core.junit_result_reader")
+---     local reader = JunitResultReader({
+---       xml_reader = XmlReader.new({ read_file = my_read_file }),
+---       tempname_fn = function() return vim.fn.tempname() end,
+---     })
+---     local results = reader.read_all(report_files)
+---
+--- Tests typically inject a stub `xml_reader` (no real I/O) and a stub
+--- `tempname_fn` (returns a known path) so the JUnit walk can be
+--- exercised without touching the filesystem or async context.
 
 --- @class neotest-java.JunitResultReaderDeps
 --- @field xml_reader? neotest-java.XmlReader
@@ -9,6 +31,10 @@ local XmlReader = require("neotest-java.util.xml_reader").new
 
 --- @class neotest-java.JunitResultReader
 --- @field read_all fun(paths: neotest-java.Path[]): neotest-java.JunitResult[]
+
+local nio = require("nio")
+local JunitResult = require("neotest-java.model.junit_result")
+local XmlReader = require("neotest-java.util.xml_reader").new
 
 --- @param deps neotest-java.JunitResultReaderDeps | nil
 --- @return neotest-java.JunitResultReader
