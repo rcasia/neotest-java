@@ -13,32 +13,31 @@
 ---@param deps neotest-java.BuildToolDeps
 ---@return neotest-java.BuildTool
 local function create_build_tool(config, deps)
-  ---@type neotest-java.BuildTool
-  return {
-    get_build_dirname = function(base_dir)
-      return config.get_build_dirname(base_dir, deps)
-    end,
+	---@type neotest-java.BuildTool
+	return {
+		get_build_dirname = function(base_dir)
+			return config.get_build_dirname(base_dir, deps)
+		end,
 
-    get_project_filename = function()
-      return config.project_filename
-    end,
+		get_project_filename = function()
+			return config.project_filename
+		end,
 
-    get_artifact_id = function(base_dir)
-      return config.get_artifact_id(base_dir, deps)
-    end,
+		get_artifact_id = function(base_dir)
+			return config.get_artifact_id(base_dir, deps)
+		end,
 
-    get_spring_property_filepaths = function(roots)
-      local base_dirs = vim
-        .iter(roots)
-        :map(function(root)
-          return root:append(config.get_build_dirname(root, deps):to_string())
-        end)
-        :map(config.get_spring_subdirs)
-        :flatten()
-        :totable()
-      return deps.generate_spring_property_filepaths(base_dirs)
-    end,
-  }
+		get_spring_property_filepaths = function(roots)
+			local base_dirs = vim.iter(roots)
+				:map(function(root)
+					return root:append(config.get_build_dirname(root, deps):to_string())
+				end)
+				:map(config.get_spring_subdirs)
+				:flatten()
+				:totable()
+			return deps.generate_spring_property_filepaths(base_dirs)
+		end,
+	}
 end
 
 return create_build_tool
