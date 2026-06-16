@@ -138,14 +138,9 @@ CommandBuilder.build_to_table = function(self)
 	assert(self._spring_property_filepaths, "_spring_property_filepaths cannot be nil")
 
 	local function quote_selector(selector_value, is_debug_mode)
-		-- In debug mode, commands are executed via vim.loop.spawn which doesn't
-		-- strip quotes or expand shell variables, so we must not quote the selectors.
-		-- In normal mode, commands are executed through a shell where quotes
-		-- are needed to prevent $ expansion in inner class names
-		if is_debug_mode then
-			return selector_value
-		end
-		return "'" .. selector_value .. "'"
+		-- We return the command as an array of arguments, bypassing the shell.
+		-- Therefore, we must never quote the arguments, or they will be passed literally to Java.
+		return selector_value
 	end
 
 	local is_debug_mode = self._port ~= nil

@@ -68,13 +68,14 @@ local function ClasspathProvider(deps)
 				end)
 				:totable()
 
+			local path_separator = vim.fn.has("win32") == 1 and ";" or ":"
 			return vim.iter({
 				runtime.wait(),
 				test.wait(),
 				additional_classpath_entries_strings,
 			})
 				:flatten()
-				:join(":")
+				:join(path_separator)
 		end,
 	}
 end
