@@ -20,20 +20,43 @@ local MethodIdResolver = function(deps)
 			end
 			local classpath = classpaths[module_dir:to_string()]
 
-			local result = deps.command_executor.execute_command(
-				"bash",
-				{ "-c", javap_path:to_string() .. " -cp '" .. classpath .. "' '" .. classname .. "'" }
-			)
+			local result
+			if vim.fn.has("win32") == 1 then
+				-- On Windows, run javap directly to avoid cmd.exe command-parsing and quote-stripping issues
+				result = deps.command_executor.execute_command(
+					javap_path:to_string(),
+					{ "-cp", classpath, classname }
+				)
+			else
+				result = deps.command_executor.execute_command(
+					"bash",
+					{ "-c", javap_path:to_string() .. " -cp '" .. classpath .. "' '" .. classname .. "'" }
+				)
+			end
 
 			assert(
 				result.exit_code == 0,
 				"Failed to execute javap to resolve method id. Exit code: "
-					.. result.exit_code
+					.. tostring(result.exit_code)
 					.. ". Stderr: "
-					.. result.stderr
+					.. tostring(result.stderr)
+					.. " Class: "
+					.. tostring(classname)
+					.. " CP: "
+					.. tostring(classpath)
 			)
 
-			assert(result.stdout and result.stdout:len() > 0, "javap returned empty output when resolving method id.")
+			assert(
+				result.stdout and result.stdout:len() > 0,
+				"javap returned empty output when resolving method id. Exit code: "
+					.. tostring(result.exit_code)
+					.. ". Stderr: "
+					.. tostring(result.stderr)
+					.. " Class: "
+					.. tostring(classname)
+					.. " CP: "
+					.. tostring(classpath)
+			)
 
 			local pattern = "%s*([%w%.$<>_]+)%s+([%w_]+)%s*%(([^)]*)%)"
 			local filtered_result = vim.iter(result.stdout:gmatch(pattern))

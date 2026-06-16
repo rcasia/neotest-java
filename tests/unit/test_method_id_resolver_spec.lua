@@ -68,9 +68,18 @@ describe("Method Id Resolver", function()
 		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
 
 		eq(1, #fake_command_executor_invocations, "command_executor should be invoked once")
+		local expected_command, expected_args
+		if vim.fn.has("win32") == 1 then
+			expected_command = Path("/fake/javap"):to_string()
+			expected_args = { "-cp", "my_classpath", "com.example.ExampleTest" }
+		else
+			expected_command = "bash"
+			expected_args = { "-c", Path("/fake/javap"):to_string() .. " -cp 'my_classpath' 'com.example.ExampleTest'" }
+		end
+
 		eq({
-			command = "bash",
-			args = { "-c", Path("/fake/javap"):to_string() .. " -cp 'my_classpath' 'com.example.ExampleTest'" },
+			command = expected_command,
+			args = expected_args,
 		}, fake_command_executor_invocations[1])
 	end)
 

@@ -3,6 +3,7 @@ local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfro
 
 local assertions = require("tests.assertions")
 local async = require("tests.async_helpers").async
+local neotest_file = require("neotest.lib.file")
 
 local eq = assertions.eq
 local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
@@ -29,6 +30,7 @@ describe("PositionsDiscoverer", function()
 	local tmp_files
 	--- @type neotest-java.PositionsDiscoverer
 	local positions_discoverer
+	local original_read
 
 	before_each(function()
 		tmp_files = {}
@@ -39,9 +41,20 @@ describe("PositionsDiscoverer", function()
 				end,
 			},
 		})
+		original_read = neotest_file.read
+		neotest_file.read = function(file_path)
+			local f = io.open(file_path, "r")
+			if not f then
+				error("Could not open file: " .. tostring(file_path))
+			end
+			local content = f:read("*a")
+			f:close()
+			return content
+		end
 	end)
 
 	after_each(function()
+		neotest_file.read = original_read
 		-- clear temporary files
 		for _, file in ipairs(tmp_files) do
 			os.remove(file)

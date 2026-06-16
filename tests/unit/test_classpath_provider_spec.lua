@@ -40,8 +40,9 @@ describe("Classpath Provider", function()
 				end,
 			})
 
+			local expected_separator = vim.fn.has("win32") == 1 and ";" or ":"
 			eq(
-				"source_classpath:test_classpath:additional_classpath",
+				table.concat({ "source_classpath", "test_classpath", "additional_classpath" }, expected_separator),
 				classpath_provider.get_classpath(base_dir, { Path("additional_classpath") })
 			)
 		end)
