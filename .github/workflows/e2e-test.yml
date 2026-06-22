@@ -24,7 +24,7 @@ jobs:
         nvim-version: [stable, v0.11.7, nightly]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Neovim
         uses: rhysd/action-setup-vim@v1
