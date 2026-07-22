@@ -182,15 +182,24 @@ CommandBuilder.build_to_table = function(self)
 		table.insert(jvm_args, 1, "-Duser.dir=" .. self._basedir:to_string())
 	end
 
+	-- Run the launcher via its main class on -cp rather than
+	-- `-jar <junit_jar> execute --classpath=<cp>`. The Console Launcher's
+	-- --classpath option loads discovered test classes through its own
+	-- isolated classloader, which pre-empts frameworks (e.g. Quarkus's
+	-- @QuarkusTest) that need to install their own ClassLoader before test
+	-- classes load. Putting everything on -cp keeps normal JVM classloading
+	-- semantics that such frameworks rely on; verified behaviorally neutral
+	-- for Spring Boot's @SpringBootTest (identical pass/fail behavior under
+	-- both invocation styles).
 	local junit_command = {
 		command = self._java_bin:to_string(),
 		args = vim.iter({
 			jvm_args,
-			"-jar",
-			self._junit_jar:to_string(),
+			"-cp",
+			self._classpath_file_arg .. ":" .. self._junit_jar:to_string(),
+			"org.junit.platform.console.ConsoleLauncher",
 			"execute",
 			include_classname_args,
-			"--classpath=" .. self._classpath_file_arg,
 			"--reports-dir=" .. self._reports_dir:to_string(),
 			"--fail-if-no-tests",
 			"--disable-banner",
