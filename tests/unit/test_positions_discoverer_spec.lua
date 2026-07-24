@@ -3,6 +3,7 @@ local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfro
 
 local assertions = require("tests.assertions")
 local async = require("tests.async_helpers").async
+local lib = require("neotest.lib")
 
 local eq = assertions.eq
 local PositionsDiscoverer = require("neotest-java.core.positions_discoverer")
@@ -25,6 +26,25 @@ local function remove_ref_field(tbl)
 	return result
 end
 
+-- Wrapper around parse_positions that avoids getenv in fast event contexts.
+-- Newer Neovim versions restrict getenv in coroutines, which breaks filetype
+-- detection. This wrapper returns "java" for .java files without calling getenv.
+local function safe_parse_positions(file_path, query, opts)
+	local original_detect = lib.files.detect_filetype
+	lib.files.detect_filetype = function(path)
+		if path:match("%.java$") then
+			return "java"
+		end
+		return original_detect(path)
+	end
+	local ok, result = pcall(lib.treesitter.parse_positions, file_path, query, opts)
+	lib.files.detect_filetype = original_detect
+	if not ok then
+		error(result)
+	end
+	return result
+end
+
 describe("PositionsDiscoverer", function()
 	local tmp_files
 	--- @type neotest-java.PositionsDiscoverer
@@ -38,6 +58,7 @@ describe("PositionsDiscoverer", function()
 					return method_id
 				end,
 			},
+			parse_positions = safe_parse_positions,
 		})
 	end)
 

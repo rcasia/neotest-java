@@ -75,12 +75,15 @@ end
 
 --- @class neotest-java.PositionsDiscoverer.Dependencies
 --- @field method_id_resolver neotest-java.MethodIdResolver
+--- @field parse_positions? fun(file_path: string, query: string, opts: table): neotest.Tree | any
 
 local PositionsDiscoverer = {}
 
 --- @param deps neotest-java.PositionsDiscoverer.Dependencies
 --- @return neotest-java.PositionsDiscoverer
 local function create_positions_discoverer(deps)
+	deps = deps or {}
+	local parse_positions = deps.parse_positions or lib.treesitter.parse_positions
 	local annotations = { "Test", "ParameterizedTest", "TestFactory", "CartesianTest" }
 	local a = vim.iter(annotations)
 		:map(function(v)
@@ -122,7 +125,7 @@ local function create_positions_discoverer(deps)
 		---@param file_path string Absolute file path
 		---@return neotest.Tree | nil
 		discover_positions = function(file_path)
-			local tree = lib.treesitter.parse_positions(file_path, query, {
+			local tree = parse_positions(file_path, query, {
 				require_namespaces = true,
 				nested_tests = false,
 				build_position = "require('neotest-java.core.positions_discoverer').build_position",
