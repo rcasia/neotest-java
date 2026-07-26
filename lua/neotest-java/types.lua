@@ -55,3 +55,8 @@
 ---@class nio.control.Event
 ---@field wait fun()
 ---@field set fun()
+
+---@class vim.lsp.Client
+---@field initialized boolean
+---@field attached_buffers table<number, boolean>
+---@field request fun(self: vim.lsp.Client, method: string, params: table, callback: fun(err: table?, result: table?), bufnr: number?)
