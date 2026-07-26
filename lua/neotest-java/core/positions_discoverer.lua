@@ -75,12 +75,38 @@ end
 
 --- @class neotest-java.PositionsDiscoverer.Dependencies
 --- @field method_id_resolver neotest-java.MethodIdResolver
+--- @field parse_positions? fun(file_path: string, query: string, opts: table): neotest.Tree | any
 
 local PositionsDiscoverer = {}
+
+--- Wrapper around parse_positions that avoids getenv in fast event contexts.
+--- Newer Neovim versions restrict getenv in coroutines, which breaks filetype
+--- detection. This wrapper returns "java" for .java files without calling getenv.
+--- @param file_path string
+--- @param query string
+--- @param opts table
+--- @return neotest.Tree | any
+local function safe_parse_positions(file_path, query, opts)
+	local original_detect = lib.files.detect_filetype
+	lib.files.detect_filetype = function(path)
+		if path:match("%.java$") then
+			return "java"
+		end
+		return original_detect(path)
+	end
+	local ok, result = pcall(lib.treesitter.parse_positions, file_path, query, opts)
+	lib.files.detect_filetype = original_detect
+	if not ok then
+		error(result)
+	end
+	return result
+end
 
 --- @param deps neotest-java.PositionsDiscoverer.Dependencies
 --- @return neotest-java.PositionsDiscoverer
 local function create_positions_discoverer(deps)
+	deps = deps or {}
+	local parse_positions = deps.parse_positions or safe_parse_positions
 	local annotations = { "Test", "ParameterizedTest", "TestFactory", "CartesianTest" }
 	local a = vim.iter(annotations)
 		:map(function(v)
@@ -126,7 +152,7 @@ local function create_positions_discoverer(deps)
 				nio.scheduler()
 			end
 
-			local tree = lib.treesitter.parse_positions(file_path, query, {
+			local tree = parse_positions(file_path, query, {
 				require_namespaces = true,
 				nested_tests = false,
 				build_position = "require('neotest-java.core.positions_discoverer').build_position",
