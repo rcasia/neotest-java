@@ -221,6 +221,12 @@ CommandBuilder.build_to_table = function(self)
 	return junit_command
 end
 
+--- @return string[]
+CommandBuilder.build_to_array = function(self)
+	local junit_command = self:build_to_table()
+	return vim.iter({ junit_command.command, junit_command.args }):flatten():totable()
+end
+
 --- @return string
 CommandBuilder.build_to_string = function(self)
 	local junit_command = self:build_to_table()

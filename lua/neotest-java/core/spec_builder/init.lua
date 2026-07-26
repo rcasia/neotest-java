@@ -128,11 +128,10 @@ local SpecBuilder = function(deps)
 			end
 
 			-- NORMAL STRATEGY
-			local junit_cmd = command:build_to_table()
-			local command_list = vim.iter({ junit_cmd.command, junit_cmd.args }):flatten():totable()
-			logger.info("junit command: ", vim.inspect(command_list))
+			local command_array = command:build_to_array()
+			logger.info("junit command: ", vim.inspect(command_array))
 			return {
-				command = command_list,
+				command = command_array,
 				cwd = module.base_dir:to_string(),
 				symbol = position.name,
 				context = { reports_dir = reports_dir },

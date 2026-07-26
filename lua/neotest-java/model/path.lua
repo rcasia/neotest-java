@@ -192,6 +192,21 @@ function Path:to_string()
 	return vim.iter(slugs):join(self.separator)
 end
 
+--- Render the path with forward slashes (Unix-style).
+--- Useful for external tools that expect Unix paths even on Windows.
+--- @return string
+function Path:to_unix_string()
+	local slugs = self:slugs()
+	if self.is_absolute and #slugs == 1 then
+		return UNIX_SEPARATOR
+	end
+
+	if #slugs == 0 then
+		return "."
+	end
+	return vim.iter(slugs):join(UNIX_SEPARATOR)
+end
+
 --- @type neotest-java.Path
 local PathStruct = setmetatable(Path --[[@as table]], {
 	__call = function(_, ...)
