@@ -129,9 +129,7 @@ local SpecBuilder = function(deps)
 
 			-- NORMAL STRATEGY
 			local junit_cmd = command:build_to_table()
-			local command_list = vim.iter({ junit_cmd.command, junit_cmd.args })
-				:flatten()
-				:totable()
+			local command_list = vim.iter({ junit_cmd.command, junit_cmd.args }):flatten():totable()
 			logger.info("junit command: ", vim.inspect(command_list))
 			return {
 				command = command_list,

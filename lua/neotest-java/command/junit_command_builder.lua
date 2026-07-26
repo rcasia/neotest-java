@@ -137,7 +137,7 @@ CommandBuilder.build_to_table = function(self)
 	assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
 	assert(self._spring_property_filepaths, "_spring_property_filepaths cannot be nil")
 
-	local function quote_selector(selector_value, is_debug_mode)
+	local function quote_selector(selector_value, _is_debug_mode)
 		-- We return the command as an array of arguments, bypassing the shell.
 		-- Therefore, we must never quote the arguments, or they will be passed literally to Java.
 		return selector_value

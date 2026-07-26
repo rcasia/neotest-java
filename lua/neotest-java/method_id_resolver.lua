@@ -23,10 +23,7 @@ local MethodIdResolver = function(deps)
 			local result
 			if vim.fn.has("win32") == 1 then
 				-- On Windows, run javap directly to avoid cmd.exe command-parsing and quote-stripping issues
-				result = deps.command_executor.execute_command(
-					javap_path:to_string(),
-					{ "-cp", classpath, classname }
-				)
+				result = deps.command_executor.execute_command(javap_path:to_string(), { "-cp", classpath, classname })
 			else
 				result = deps.command_executor.execute_command(
 					"bash",
