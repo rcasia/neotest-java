@@ -4,11 +4,15 @@
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field command_executor neotest-java.CommandExecutor
 --- @field binaries neotest-java.LspBinaries
+--- @field platform? fun(feature: string): boolean Defaults to vim.fn.has. Inject in tests to exercise platform-specific branches.
 --- @param deps neotest-java.MethodIdResolver.Dependencies
 --- @return neotest-java.MethodIdResolver
 local MethodIdResolver = function(deps)
 	local classpaths = {}
 	local javap_path
+	local platform = deps.platform or function(feature)
+		return vim.fn.has(feature) == 1
+	end
 	--- @type neotest-java.MethodIdResolver
 	return {
 		resolve_complete_method_id = function(classname, method_id, module_dir)
@@ -21,7 +25,7 @@ local MethodIdResolver = function(deps)
 			local classpath = classpaths[module_dir:to_string()]
 
 			local result
-			if vim.fn.has("win32") == 1 then
+			if platform("win32") then
 				-- On Windows, run javap directly to avoid cmd.exe command-parsing and quote-stripping issues
 				result = deps.command_executor.execute_command(javap_path:to_string(), { "-cp", classpath, classname })
 			else
