@@ -43,6 +43,10 @@ describe("Method Id Resolver", function()
 	end)
 
 	it("runs javap command correctly", function()
+		local fake_platform = function(_feature)
+			return false
+		end
+
 		local resolver = MethodIdResolver({ --
 			binaries = fake_binaries,
 			classpath_provider = fake_classpath_provider,
@@ -63,6 +67,7 @@ describe("Method Id Resolver", function()
 				stderr = "",
 				exit_code = 0,
 			}),
+			platform = fake_platform,
 		})
 
 		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
@@ -74,7 +79,41 @@ describe("Method Id Resolver", function()
 		}, fake_command_executor_invocations[1])
 	end)
 
+	it("runs javap directly on Windows", function()
+		local fake_platform = function(feature)
+			return feature == "win32"
+		end
+
+		local resolver = MethodIdResolver({
+			binaries = fake_binaries,
+			classpath_provider = fake_classpath_provider,
+			command_executor = fake_command_executor({
+				stdout = [[
+    Compiled from "Something1Test.java"
+    public class com.example.application.Something1Test {
+        void someMonths_scv(int, java.lang.String);
+    }
+				]],
+				stderr = "",
+				exit_code = 0,
+			}),
+			platform = fake_platform,
+		})
+
+		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
+
+		eq(1, #fake_command_executor_invocations, "command_executor should be invoked once")
+		eq({
+			command = Path("/fake/javap"):to_string(),
+			args = { "-cp", "my_classpath", "com.example.ExampleTest" },
+		}, fake_command_executor_invocations[1])
+	end)
+
 	it("resolves the complete method ids", function()
+		local fake_platform = function(_feature)
+			return false
+		end
+
 		local resolver = MethodIdResolver({ --
 			binaries = fake_binaries,
 			classpath_provider = fake_classpath_provider,
@@ -95,6 +134,7 @@ describe("Method Id Resolver", function()
 				stderr = "",
 				exit_code = 0,
 			}),
+			platform = fake_platform,
 		})
 
 		eq(

@@ -124,7 +124,9 @@ require("mini.test").setup({
 	collect = {
 		emulate_busted = true,
 		find_files = function()
-			return vim.fn.globpath("tests/unit", "**/*_spec.lua", true, true)
+			local unit_files = vim.fn.globpath("tests/unit", "**/*_spec.lua", true, true)
+			local integration_files = vim.fn.globpath("tests/integration", "**/*_spec.lua", true, true)
+			return vim.list_extend(unit_files, integration_files)
 		end,
 	},
 	execute = {

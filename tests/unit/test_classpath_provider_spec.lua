@@ -10,40 +10,44 @@ describe("Classpath Provider", function()
 	local sync_schedule = function(fn)
 		fn()
 	end
+
+	--- @param path_separator string The separator to inject (":" for Unix, ";" for Windows)
+	--- @return neotest-java.ClasspathProvider
+	local function create_provider(path_separator)
+		return ClasspathProvider({
+			schedule = sync_schedule,
+			path_separator = path_separator,
+			client_provider = function()
+				return {
+					attached_buffers = { [1234] = true },
+					request = function(_, _, params, callback)
+						local options = vim.json.decode(params.arguments[2])
+						if options.scope == "runtime" then
+							callback(nil, { classpaths = { "source_classpath" } })
+						elseif options.scope == "test" then
+							callback(nil, { classpaths = { "test_classpath" } })
+						end
+					end,
+				}
+			end,
+		})
+	end
+
 	it(
-		"works",
+		"uses ':' separator on Unix",
 		async(function()
-			local base_dir = Path("some")
-			local classpath_provider = ClasspathProvider({
-				schedule = sync_schedule,
-				client_provider = function(base_dir_arg)
-					eq(base_dir, base_dir_arg)
+			local provider = create_provider(":")
+			local result = provider.get_classpath(Path("some"), { Path("additional") })
+			eq("source_classpath:test_classpath:additional", result)
+		end)
+	)
 
-					return {
-						attached_buffers = { [1234] = true },
-						request = function(_, method, params, callback)
-							eq(method, "workspace/executeCommand")
-							eq(params.command, "java.project.getClasspaths")
-							eq(params.arguments[1], "file://some")
-							assert(params.arguments[2], "Expected second argument to be present")
-							local options = vim.json.decode(params.arguments[2])
-
-							if options.scope == "runtime" then
-								callback(nil, { classpaths = { "source_classpath" } })
-							elseif options.scope == "test" then
-								callback(nil, { classpaths = { "test_classpath" } })
-							else
-								error("Unexpected scope: " .. tostring(options.scope))
-							end
-						end,
-					}
-				end,
-			})
-
-			eq(
-				"source_classpath:test_classpath:additional_classpath",
-				classpath_provider.get_classpath(base_dir, { Path("additional_classpath") })
-			)
+	it(
+		"uses ';' separator on Windows",
+		async(function()
+			local provider = create_provider(";")
+			local result = provider.get_classpath(Path("some"), { Path("additional") })
+			eq("source_classpath;test_classpath;additional", result)
 		end)
 	)
 end)

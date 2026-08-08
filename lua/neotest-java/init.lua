@@ -223,7 +223,9 @@ local function NeotestJavaAdapter(config, deps)
 					return hash
 				end,
 				download = function(url, output)
-					return vim.system({ "curl", "--output", output, url, "--create-dirs" }):wait(10000)
+					-- Use Unix-style paths for curl on Windows
+					return vim.system({ "curl", "--output", Path(output):to_unix_string(), url, "--create-dirs" })
+						:wait(20000)
 				end,
 				delete_file = vim.fn.delete,
 				ask_user_consent = function(msg, choices, cb)

@@ -166,4 +166,29 @@ describe("Path", function()
 			eq(case.expected, path:append(case.append_path):to_string())
 		end)
 	end
+
+	describe("to_unix_string", function()
+		it("converts Windows path to Unix-style", function()
+			local path = Path("C:\\Users\\test\\file.txt", {
+				separator = function()
+					return "\\"
+				end,
+			})
+			eq("C:/Users/test/file.txt", path:to_unix_string())
+		end)
+
+		it("keeps Unix path unchanged", function()
+			local path = Path("/home/user/file.txt")
+			eq("/home/user/file.txt", path:to_unix_string())
+		end)
+
+		it("handles relative paths", function()
+			local path = Path("src\\main\\java", {
+				separator = function()
+					return "\\"
+				end,
+			})
+			eq("src/main/java", path:to_unix_string())
+		end)
+	end)
 end)

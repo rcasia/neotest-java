@@ -1,6 +1,9 @@
 local options = {
 	setup = function()
 		local ch = require("neotest-java.context_holder")
+		if not ch.adapter then
+			require("neotest-java")
+		end
 		local adapter = assert(ch.adapter)
 
 		adapter.install()

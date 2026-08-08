@@ -148,6 +148,10 @@ local function create_positions_discoverer(deps)
 		---@param file_path string Absolute file path
 		---@return neotest.Tree | nil
 		discover_positions = function(file_path)
+			if vim.in_fast_event() then
+				nio.scheduler()
+			end
+
 			local tree = parse_positions(file_path, query, {
 				require_namespaces = true,
 				nested_tests = false,
