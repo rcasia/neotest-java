@@ -687,20 +687,34 @@ describe("SpecBuilder", function()
 		---@diagnostic disable-next-line: missing-fields
 		local spec_builder_instance = SpecBuilder({
 			mkdir = function() end,
-			scan = function() return project_paths end,
+			scan = function()
+				return project_paths
+			end,
 			compile = function()
 				error("jdtls compiler crashed")
 			end,
 			classpath_provider = {
-				get_classpath = function() return "classpath" end,
+				get_classpath = function()
+					return "classpath"
+				end,
 			},
-			report_folder_name_gen = function() return Path("target/reports") end,
+			report_folder_name_gen = function()
+				return Path("target/reports")
+			end,
 			binaries = {
-				java = function() return Path("java") end,
-				javap = function() return Path("javap") end,
+				java = function()
+					return Path("java")
+				end,
+				javap = function()
+					return Path("javap")
+				end,
 			},
-			build_tool_getter = function() return FakeBuildTool end,
-			detect_project_type = function() return "maven" end,
+			build_tool_getter = function()
+				return FakeBuildTool
+			end,
+			detect_project_type = function()
+				return "maven"
+			end,
 		})
 
 		local tree = Tree.from_list({
@@ -717,9 +731,12 @@ describe("SpecBuilder", function()
 		local original_index = mt.__index
 		mt.__index = function(t, k)
 			if k == "ref" then
-				return function() return t.id end
+				return function()
+					return t.id
+				end
 			end
-			return type(original_index) == "function" and original_index(t, k) or (type(original_index) == "table" and original_index[k])
+			return type(original_index) == "function" and original_index(t, k)
+				or (type(original_index) == "table" and original_index[k])
 		end
 		setmetatable(position, mt)
 

@@ -1,3 +1,5 @@
+local Path = require("neotest-java.model.path")
+
 --- @class neotest-java.TestReference
 --- @field qualified_name string
 --- @field type "method" | "class"
@@ -13,8 +15,6 @@
 --- @field _basedir neotest-java.Path
 --- @field _classpath_file_arg string
 --- @field _spring_property_filepaths neotest-java.Path[]
-local Path = require("neotest-java.model.path")
-
 local CommandBuilder = {}
 CommandBuilder.__index = CommandBuilder
 
