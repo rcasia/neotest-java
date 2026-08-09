@@ -64,6 +64,8 @@ function Path.new(raw_path, opts)
 		first_char == UNIX_SEPARATOR
 		--
 		or first_char == WINDOWS_SEPARATOR
+		--
+		or raw_path:match("^%a:[/\\]") ~= nil
 
 	return setmetatable(
 		--- @type neotest-java.Path
@@ -165,7 +167,7 @@ function Path:slugs()
 		:map(remove_separator)
 		:totable()
 
-	if self.is_absolute then
+	if self.is_absolute and not self.raw_path:match("^%a:[/\\]") then
 		table.insert(slugs, 1, "")
 	end
 

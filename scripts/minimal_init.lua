@@ -121,6 +121,8 @@ vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/plenary.nvim")
 
 -- Inject luassert as global 'assert' so tests can use assert.are.same etc.
 _G.assert = require("luassert")
+vim.opt.rtp:append(vim.fn.getcwd())
+package.path = package.path .. ";" .. vim.fn.getcwd() .. "/?.lua"
 
 require("mini.test").setup({
 	collect = {
