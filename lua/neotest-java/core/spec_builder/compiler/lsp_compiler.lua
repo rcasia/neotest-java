@@ -7,6 +7,9 @@ local function LspCompiler(deps)
 	return {
 		compile = function(args)
 			local client = deps.client_provider(args.base_dir)
+			if not client or not client.initialized then
+				return
+			end
 
 			logger.debug(("compilation in %s mode"):format(args.compile_mode))
 
