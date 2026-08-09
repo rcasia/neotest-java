@@ -5,7 +5,12 @@
 --- @param dir neotest-java.Path
 --- @return fun(): neotest-java.DirScanResultItem | nil
 local iter_dir = function(dir)
-	local handle = assert(vim.uv.fs_scandir(dir:to_string()))
+	local handle, _ = vim.uv.fs_scandir(dir:to_string())
+	if not handle then
+		return function()
+			return nil
+		end
+	end
 
 	return function()
 		local name, typ = vim.uv.fs_scandir_next(handle)

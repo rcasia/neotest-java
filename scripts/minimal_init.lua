@@ -82,8 +82,9 @@ local function ensure_java_parser()
 		tmp_dir,
 	})
 	vim.fn.mkdir(parser_dir, "p")
+	local cc = (vim.fn.executable("cc") == 1 and "cc") or (vim.fn.executable("gcc") == 1 and "gcc") or "clang"
 	vim.fn.system({
-		"cc",
+		cc,
 		"-shared",
 		"-fPIC",
 		"-O2",
@@ -106,6 +107,7 @@ ensure_java_parser()
 -- ─────────────────────────────────────────────────────────────
 -- Runtime path setup (plugin roots, NOT /lua/ subdirectories)
 -- ─────────────────────────────────────────────────────────────
+package.path = "./?.lua;./?/init.lua;" .. package.path
 vim.opt.runtimepath:append(".")
 vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/mini.nvim")
 vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/nvim-nio")
