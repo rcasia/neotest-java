@@ -69,17 +69,9 @@ local MethodIdResolver = function(deps)
 				end)
 				:totable()
 
-			assert(
-				#filtered_result > 0,
-				"Could not find method '"
-					.. method_id
-					.. "' in class '"
-					.. classname
-					.. "' via javap."
-					.. " javap output:\n"
-					.. result.stdout
-			)
-
+			if #filtered_result == 0 then
+				return method_id .. "()"
+			end
 			return ("%s(%s)"):format(filtered_result[1].name, filtered_result[1].params)
 		end,
 	}

@@ -172,20 +172,31 @@ local function create_positions_discoverer(deps)
 							if node.type ~= "test" then
 								return node.id
 							end
-							local parent_id = tree:get_key(node.id):parent():data().id
+							local parent_key = tree:get_key(node.id) and tree:get_key(node.id):parent()
+							local parent_id = parent_key and parent_key:data() and parent_key:data().id
+							if not parent_id then
+								return node.id
+							end
 
 							if not id then
 								if vim.in_fast_event() then
 									nio.scheduler()
 								end
 
-								id = nio.run(function()
-									return deps.method_id_resolver.resolve_complete_method_id(
-										parent_id,
-										node.name,
-										Path(node.path):parent()
-									)
-								end):wait()
+								local ok, resolved_id = pcall(function()
+									return nio.run(function()
+										return deps.method_id_resolver.resolve_complete_method_id(
+											parent_id,
+											node.name,
+											Path(node.path):parent()
+										)
+									end):wait()
+								end)
+								if ok and resolved_id then
+									id = resolved_id
+								else
+									id = node.name .. "()"
+								end
 							end
 							return parent_id .. "#" .. id
 						end
