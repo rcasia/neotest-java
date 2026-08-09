@@ -678,4 +678,55 @@ describe("SpecBuilder", function()
 		---@diagnostic disable-next-line: need-check-nil
 		eq(mock_terminated_event, actual.context.terminated_command_event)
 	end)
+
+	it("builds a spec even if compilation throws an error (resilience)", function()
+		local path = Path("/user/home/root/src/test/java/com/example/Test.java")
+		local parent_path = path:parent()
+		local project_paths = { parent_path, parent_path:append("pom.xml") }
+
+		---@diagnostic disable-next-line: missing-fields
+		local spec_builder_instance = SpecBuilder({
+			mkdir = function() end,
+			scan = function() return project_paths end,
+			compile = function()
+				error("jdtls compiler crashed")
+			end,
+			classpath_provider = {
+				get_classpath = function() return "classpath" end,
+			},
+			report_folder_name_gen = function() return Path("target/reports") end,
+			binaries = {
+				java = function() return Path("java") end,
+				javap = function() return Path("javap") end,
+			},
+			build_tool_getter = function() return FakeBuildTool end,
+			detect_project_type = function() return "maven" end,
+		})
+
+		local tree = Tree.from_list({
+			id = "com.example.Test#myTest()",
+			path = path:to_string(),
+			name = "myTest",
+			type = "test",
+		}, function(x)
+			return x
+		end)
+		-- Add ref method to the tree node
+		local position = tree:data()
+		local mt = getmetatable(position) or {}
+		local original_index = mt.__index
+		mt.__index = function(t, k)
+			if k == "ref" then
+				return function() return t.id end
+			end
+			return type(original_index) == "function" and original_index(t, k) or (type(original_index) == "table" and original_index[k])
+		end
+		setmetatable(position, mt)
+
+		local args = { tree = tree }
+		local spec = spec_builder_instance.build_spec(args, config)
+
+		assert(spec ~= nil, "Spec should be built despite compile error")
+		assert(spec.command ~= nil, "Command should be built")
+	end)
 end)
