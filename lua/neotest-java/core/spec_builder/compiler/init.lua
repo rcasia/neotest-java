@@ -17,7 +17,11 @@ local client_provider = ClientProvider({
 	globpath = nio.fn.globpath,
 	bufadd = vim.fn.bufadd,
 	bufload = vim.fn.bufload,
-	sleep = nio.sleep,
+	sleep = function(ms)
+		vim.wait(ms, function()
+			return false
+		end)
+	end,
 	hrtime = function()
 		return vim.uv.hrtime()
 	end,
