@@ -27,8 +27,11 @@ local PATH_METATABLE = {
 	end,
 }
 
+local is_windows = vim.fn.has("win64") == 1 or vim.fn.has("win32") == 1
+
 local UNIX_SEPARATOR = "/"
 local WINDOWS_SEPARATOR = "\\"
+local SEPARATOR = is_windows and WINDOWS_SEPARATOR or UNIX_SEPARATOR
 
 local is_not_empty = function(s)
 	return s ~= nil and s ~= ""
@@ -43,13 +46,18 @@ local remove_separator = function(s)
 	return clean
 end
 
-local separator = function()
-	if vim.fn.has("win64") == 1 or vim.fn.has("win32") == 1 then
-		return WINDOWS_SEPARATOR
+--- Get the string representation of an absolute path's root.
+--- Handles the difference between Unix roots (e.g. "/") which have an empty first slug,
+--- and Windows roots (e.g. "C:\") which have the drive letter as the first slug.
+--- @param slugs string[]
+--- @param separator string
+--- @return string
+local get_absolute_root = function(slugs, separator)
+	if slugs[1] ~= "" then
+		return slugs[1] .. separator
 	end
-	return UNIX_SEPARATOR
+	return separator
 end
-local SEPARATOR = separator()
 
 --- Create a new Path instance.
 --- @param raw_path string
@@ -65,7 +73,7 @@ function Path.new(raw_path, opts)
 		--
 		or first_char == WINDOWS_SEPARATOR
 		--
-		or raw_path:match("^%a:[/\\]") ~= nil
+		or (raw_path:match("^%a:[/\\]") ~= nil)
 
 	return setmetatable(
 		--- @type neotest-java.Path
@@ -101,8 +109,8 @@ end
 --- @return neotest-java.Path
 function Path:parent()
 	local slugs = self:slugs()
-	if self.is_absolute and #slugs == 2 then
-		return Path(self.separator, self.opts)
+	if self.is_absolute and #slugs <= 2 then
+		return Path(get_absolute_root(slugs, self.separator), self.opts)
 	end
 	return Path(vim.iter(slugs):take(#slugs - 1):join(self.separator), self.opts)
 end
@@ -167,6 +175,8 @@ function Path:slugs()
 		:map(remove_separator)
 		:totable()
 
+	-- Handling absolute paths
+	-- In Unix, an absolute path starts with "/", so the first slug is an empty string
 	if self.is_absolute and not self.raw_path:match("^%a:[/\\]") then
 		table.insert(slugs, 1, "")
 	end
@@ -185,7 +195,7 @@ end
 function Path:to_string()
 	local slugs = self:slugs()
 	if self.is_absolute and #slugs == 1 then
-		return self.separator
+		return get_absolute_root(slugs, self.separator)
 	end
 
 	if #slugs == 0 then
@@ -200,7 +210,7 @@ end
 function Path:to_unix_string()
 	local slugs = self:slugs()
 	if self.is_absolute and #slugs == 1 then
-		return UNIX_SEPARATOR
+		return get_absolute_root(slugs, UNIX_SEPARATOR)
 	end
 
 	if #slugs == 0 then

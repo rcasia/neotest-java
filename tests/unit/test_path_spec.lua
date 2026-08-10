@@ -125,9 +125,27 @@ describe("Path", function()
 			separator = "/",
 		},
 		{
+			description = "[unix] parent of root is root",
+			input_path = "/",
+			expected_parent = "/",
+			separator = "/",
+		},
+		{
 			description = "[win] parent is root",
 			input_path = "\\some",
 			expected_parent = "\\",
+			separator = "\\",
+		},
+		{
+			description = "[win] parent of file in drive is drive root",
+			input_path = "C:\\some",
+			expected_parent = "C:\\",
+			separator = "\\",
+		},
+		{
+			description = "[win] parent of drive root is drive root",
+			input_path = "C:\\",
+			expected_parent = "C:\\",
 			separator = "\\",
 		},
 	}
