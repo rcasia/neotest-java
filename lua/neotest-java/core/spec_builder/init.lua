@@ -5,6 +5,7 @@ local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local Project = require("neotest-java.model.project")
 local Path = require("neotest-java.model.path")
+local root_finder = require("neotest-java.core.root_finder")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -39,8 +40,13 @@ local SpecBuilder = function(deps)
 			local tree = args.tree
 			local position = tree:data()
 			local filepath = Path(position.path)
-			local root = Path(args.tree:root():data().path)
+
+			local root_str = args.tree:root():data().path
+			local real_root_str = root_finder.find_root(root_str)
+			local root = Path(real_root_str or root_str)
+
 			local project_type = deps.detect_project_type(root)
+
 			--- @type neotest-java.BuildTool
 			local build_tool = deps.build_tool_getter(project_type)
 			local command = CommandBuilder.new()
@@ -89,7 +95,7 @@ local SpecBuilder = function(deps)
 
 			-- COMPILATION STEP
 			local compile_mode = config.incremental_build and "incremental" or "full"
-			deps.compile(module.base_dir, compile_mode)
+			pcall(deps.compile, module.base_dir, compile_mode)
 
 			local classpath_file_arg = deps.classpath_provider.get_classpath(
 				module.base_dir,
