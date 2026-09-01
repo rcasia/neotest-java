@@ -173,7 +173,7 @@ local function NeotestJavaAdapter(config, deps)
 		end
 	end
 
-	local cwd = vim.loop.cwd()
+	local cwd = vim.uv.cwd()
 	--- @type neotest-java.Path|nil
 	local root
 	local root_getter = function()
