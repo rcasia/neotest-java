@@ -235,6 +235,7 @@ local function NeotestJavaAdapter(config, deps)
 				end,
 				notify = lib.notify,
 				detect_existing_version = version_detector.detect_existing_version,
+				check_for_update = version_detector.check_for_update,
 			})
 			installer.install(config)
 		end,

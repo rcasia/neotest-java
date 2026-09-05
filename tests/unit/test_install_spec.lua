@@ -79,6 +79,9 @@ describe("Installer", function()
 					table.insert(workflow, { action = "detect_version" })
 					return JUNIT_VERSIONS.v1_10_1, Path("/data/junit-1.10.1.jar")
 				end,
+				check_for_update = function()
+					return true, JUNIT_VERSIONS.v6_0_3
+				end,
 				ask_user_consent = function(message, _, callback)
 					table.insert(workflow, { action = "ask_consent", detail = message })
 					callback("Yes, upgrade")
@@ -132,6 +135,9 @@ describe("Installer", function()
 				end,
 				detect_existing_version = function()
 					return JUNIT_VERSIONS.v1_10_1, Path("/data/junit-1.10.1.jar")
+				end,
+				check_for_update = function()
+					return true, JUNIT_VERSIONS.v6_0_3
 				end,
 				ask_user_consent = function(_, _, callback)
 					table.insert(workflow, { action = "ask_consent" })
