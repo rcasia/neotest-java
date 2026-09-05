@@ -24,7 +24,7 @@ local LINE_SEPARATOR = "=================================\n"
 --- @field run? fun(fn: function)
 
 --- @class neotest-java.OutputWriter
---- @field write fun(data: string | string[] | table): string | nil
+--- @field write fun(data: string | table | nil): string | nil
 
 --- @param deps neotest-java.OutputWriterDeps | nil
 --- @return neotest-java.OutputWriter
@@ -39,7 +39,7 @@ local OutputWriter = function(deps)
 		--- Nested tables (e.g. an array of output lines, possibly containing
 		--- further nested arrays) are flattened and joined with a visual
 		--- separator before writing.
-		--- @param data string | string[] | table
+		--- @param data string | table | nil
 		--- @return string | nil filepath
 		write = function(data)
 			if not data then

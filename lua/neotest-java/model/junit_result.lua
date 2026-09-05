@@ -13,7 +13,7 @@ local JunitResult = {}
 
 --- @class neotest-java.JunitResultData
 --- @field status neotest.ResultStatus
---- @field output_lines string[]
+--- @field output_lines string | string[]
 --- @field errors neotest.Error[] | nil
 --- @field short string | nil
 
