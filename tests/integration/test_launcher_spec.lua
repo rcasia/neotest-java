@@ -21,9 +21,8 @@ local launcher = BuildToolLauncher({ dap_repl = false })
 --- "Listening for transport dt_socket at address: <port>" to stdout as
 --- soon as the debug socket is open, then continues running normally.
 ---
---- This exercises the real `plenary.job` spawn + JDWP "Listening" wait +
---- process-exit logic end-to-end, which is the exact behavior a future
---- non-plenary implementation (see #317) must preserve.
+--- This exercises the real default `vim.system`-backed job runner's spawn +
+--- JDWP "Listening" wait + process-exit logic end-to-end.
 describe("BuildToolLauncher (real JVM integration)", function()
 	it(
 		"detects the JDWP 'Listening' message from a real JVM and waits for it to exit",
@@ -41,7 +40,7 @@ describe("BuildToolLauncher (real JVM integration)", function()
 			local terminated_event = launcher.launch_debug_test("java", args, Path(vim.uv.cwd()))
 
 			-- `launch_debug_test` only returns once the JVM has printed the
-			-- "Listening" line, proving the real plenary.job stdout wiring
+			-- "Listening" line, proving the real vim.system-backed stdout wiring
 			-- correctly detects it.
 			assert(terminated_event ~= nil, "should return a terminated_command_event")
 

@@ -6,9 +6,8 @@ local detect_project_type = require("neotest-java.util.detect_project_type")
 
 --- Real-filesystem integration coverage for `detect_project_type`'s
 --- fallback path: a genuine multi-directory layout with no build markers
---- at the top level, scanned by the *real* `plenary.scandir` (no stubs
---- injected), exactly as it runs in production. This is the exact
---- behavior a future non-plenary implementation (see #317) must preserve.
+--- at the top level, scanned by the *real* default `dir_scan`-based
+--- recursive walk (no stubs injected), exactly as it runs in production.
 describe("detect_project_type (real filesystem integration)", function()
 	local root_dir
 
