@@ -2,25 +2,46 @@ local log = require("neotest-java.logger")
 local nio = require("nio")
 local lib = require("neotest.lib")
 
---- A minimal shape of the job runner this module needs. The default
---- implementation is backed by `plenary.job`, but it can be swapped out
---- (e.g. in tests, or by a future implementation that drops the
---- plenary.nvim dependency) as long as it honors this contract:
----   * `new(opts)` accepts the same callback fields plenary.Job does
----     (`command`, `cwd`, `args`, `on_stderr`, `on_stdout`, `on_exit`)
+--- A minimal shape of the job runner this module needs:
+---   * `new(opts)` accepts `command`, `cwd`, `args`, `on_stderr`, `on_stdout`,
+---     `on_exit` callback fields
 ---   * the returned job exposes a `start()` method
 --- @class neotest-java.JobRunner
 --- @field new fun(self: neotest-java.JobRunner, opts: table): { start: fun() }
+
+--- Default job runner, built directly on `vim.system` (see #317), matching
+--- the same `vim.system` usage already established in
+--- `command/command_executor.lua`. Unlike that module this doesn't need
+--- `nio.wrap`, since `launch_debug_test` below already waits on its own
+--- `nio.control.event()` rather than blocking on the process exiting.
+--- @type neotest-java.JobRunner
+local default_job_runner = {
+	new = function(_, opts)
+		return {
+			start = function()
+				vim.system(vim.list_extend({ opts.command }, opts.args), {
+					cwd = opts.cwd,
+					stdout = opts.on_stdout,
+					stderr = opts.on_stderr,
+				}, function(obj)
+					if opts.on_exit then
+						opts.on_exit(nil, obj.code)
+					end
+				end)
+			end,
+		}
+	end,
+}
 
 ---@param deps neotest-java.BuildToolLauncherDeps | nil
 ---@return neotest-java.BuildToolLauncher
 local function BuildToolLauncher(deps)
 	deps = deps or {}
-	deps.job_runner = deps.job_runner or require("plenary.job")
+	deps.job_runner = deps.job_runner or default_job_runner
 	deps.dap_repl = deps.dap_repl
 	if deps.dap_repl == nil then
-		local _, repl = pcall(require, "dap.repl")
-		deps.dap_repl = repl
+		local ok, repl = pcall(require, "dap.repl")
+		deps.dap_repl = ok and repl or nil
 	end
 
 	return {
@@ -101,8 +122,7 @@ end
 local launcher = BuildToolLauncher()
 
 -- Exposed for tests / future callers that want to inject a custom job_runner
--- (e.g. a stub, or a non-plenary implementation) without going through the
--- module-level singleton.
+-- (e.g. a stub) without going through the module-level singleton.
 launcher.new = BuildToolLauncher
 
 return launcher
