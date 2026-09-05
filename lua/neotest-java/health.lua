@@ -56,7 +56,6 @@ return {
 		check_plugin("nvim-treesitter", "nvim-treesitter/nvim-treesitter")
 		check_treesitter()
 		check_plugin("nio", "nvim-neotest/nvim-nio")
-		check_plugin("plenary", "nvim-lua/plenary.nvim")
 		check_plugin("jdtls", "mfussenegger/nvim-jdtls")
 
 		health.start("Required plugin dependencies for debugging")

@@ -17,6 +17,12 @@ test-e2e: install
 
 install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio deps/plenary.nvim
 
+# plenary.nvim is no longer a runtime dependency of neotest-java itself
+# (see #317 — plenary.nvim is archived; build_tool/launcher.lua and
+# util/detect_project_type.lua now use vim.system/vim.uv instead). It is
+# kept here ONLY because the test suite's minimal_init.lua pulls
+# `luassert` (bundled inside plenary.nvim) for busted-style assertions
+# (`assert.is_true`, etc.) used by a handful of specs.
 deps/plenary.nvim:
 	mkdir -p deps
 	git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git $@
