@@ -42,6 +42,17 @@ lua/neotest-java/
     checksums, dir_scan, etc.
 ```
 
+## Architecture documentation
+
+[ARCHITECTURE.md](./ARCHITECTURE.md) documents the codebase's main flows
+(test discovery, spec building, results, root-finding) with diagrams,
+aimed at human readers. **If your change adds/removes/renames a module,
+changes one of these flows, or alters how a component is wired
+together, check whether ARCHITECTURE.md needs updating too** — either
+as part of the same change, or flagged explicitly to the user/reviewer
+if you can't update it yourself. Don't let it silently drift out of
+date.
+
 ## Architectural patterns
 
 ### Function-as-constructor (this codebase's DI style)
