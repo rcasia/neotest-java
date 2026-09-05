@@ -54,7 +54,7 @@ function Logger.new(filename, opts)
 	vim.fn.mkdir(logpath, "p")
 	local logfile = assert(io.open(logger._filename, "a+"))
 
-	local log_info = vim.loop.fs_stat(logger._filename)
+	local log_info = vim.uv.fs_stat(logger._filename)
 	if log_info and log_info.size > LARGE then
 		local warn_msg =
 			string.format("Neotest log is large (%d MB): %s", log_info.size / (1000 * 1000), logger._filename)
