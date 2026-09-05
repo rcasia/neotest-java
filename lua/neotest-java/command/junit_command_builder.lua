@@ -1,4 +1,5 @@
 local Path = require("neotest-java.model.path")
+local resolve_package_name = require("neotest-java.util.resolve_package_name")
 
 --- @class neotest-java.TestReference
 --- @field qualified_name string
@@ -108,7 +109,6 @@ function CommandBuilder:add_test_references_from_tree(tree)
 	-- Fallback: if tree traversal yielded no test selectors but position points to a .java file,
 	-- resolve the class name directly from the file path and package declaration.
 	if #self._test_references == 0 and position.path and position.path:match("%.java$") then
-		local resolve_package_name = require("neotest-java.util.resolve_package_name")
 		local p = Path(position.path)
 		local stem = p:stem()
 		if stem and stem ~= "" then
