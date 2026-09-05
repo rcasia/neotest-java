@@ -1,5 +1,6 @@
 local log = require("neotest-java.logger")
 local JunitResult = require("neotest-java.model.junit_result")
+local OutputWriter = require("neotest-java.util.output_writer")
 
 local REPORT_FILE_NAMES_PATTERN = "TEST-.+%.xml$"
 
@@ -18,6 +19,22 @@ local function group_by_method_base(testcases)
 	return groups
 end
 
+--- Converts `JunitResult`/`JunitResult.merge_results`'s plain result data
+--- into a `neotest.Result`, writing `output_lines` to disk via the
+--- injected `output_writer`. This is the only place in the results flow
+--- that touches a real (or stubbed) `output_writer`.
+--- @param data neotest-java.JunitResultData
+--- @param output_writer neotest-java.OutputWriter
+--- @return neotest.Result
+local function to_neotest_result(data, output_writer)
+	return {
+		status = data.status,
+		short = data.short,
+		errors = data.errors,
+		output = output_writer.write(data.output_lines),
+	}
+end
+
 -- -----------------------------------------------------------------------------
 -- Public API
 -- -----------------------------------------------------------------------------
@@ -30,6 +47,7 @@ end
 --- @field junit_result_reader { read_all: fun(paths: neotest-java.Path[]): neotest-java.JunitResult[] }
 --- @field remove_file fun(filepath: string): boolean, string?
 --- @field tempname_fn fun(): string
+--- @field output_writer? neotest-java.OutputWriter
 
 --- @param deps neotest-java.ResultBuilderDeps
 --- @return neotest-java.ResultBuilder
@@ -39,6 +57,7 @@ local ResultBuilder = function(deps)
 	assert(deps.junit_result_reader, "junit_result_reader should not be nil")
 	assert(deps.remove_file, "remove_file should not be nil")
 	assert(deps.tempname_fn, "tempname_fn should not be nil")
+	deps.output_writer = deps.output_writer or OutputWriter({ tempname_fn = deps.tempname_fn })
 
 	local find_report_files = function(dir)
 		return deps.scan_dir(dir, { search_patterns = { REPORT_FILE_NAMES_PATTERN } })
@@ -52,7 +71,7 @@ local ResultBuilder = function(deps)
 		build_results = function(spec, result, tree)
 			if result.code ~= 0 and result.code ~= 1 then
 				local node = tree:data()
-				return { [node.id] = JunitResult.ERROR(node.id, result.output, deps.tempname_fn) }
+				return { [node.id] = to_neotest_result(JunitResult.ERROR(node.id, result.output), deps.output_writer) }
 			end
 
 			if spec.context.strategy == "dap" then
@@ -70,7 +89,7 @@ local ResultBuilder = function(deps)
 					--- @type neotest-java.JunitResult
 					local jres = items[1]
 
-					results[id] = jres:result()
+					results[id] = to_neotest_result(jres:result(), deps.output_writer)
 				else
 					local _id = vim
 						.iter(tree:iter())
@@ -83,7 +102,7 @@ local ResultBuilder = function(deps)
 						end)
 
 					if _id then
-						results[_id] = JunitResult.merge_results(items, deps.tempname_fn)
+						results[_id] = to_neotest_result(JunitResult.merge_results(items), deps.output_writer)
 					else
 						log.error("Could not find matching test node for results with id: " .. items[1]:id())
 					end

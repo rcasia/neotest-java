@@ -14,8 +14,8 @@ local P2 = Path("/fake/TEST-B.xml")
 local K1 = tostring(P1)
 local K2 = tostring(P2)
 
---- Build a reader with a stub xml_reader keyed by stringified filepath, plus
---- a known tempname. Records warns in `warned` if provided.
+--- Build a reader with a stub xml_reader keyed by stringified filepath.
+--- Records warns in `warned` if provided.
 local function reader_with(trees, warned)
 	local function parse(filepath)
 		local key = tostring(filepath)
@@ -26,9 +26,6 @@ local function reader_with(trees, warned)
 	end
 	return JunitResultReader({
 		xml_reader = { parse = parse },
-		tempname_fn = function()
-			return "/tmp/social.txt"
-		end,
 		log = {
 			debug = function() end,
 			warn = function(...)
