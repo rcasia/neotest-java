@@ -1,4 +1,5 @@
 local nio = require("nio")
+local logger = require("neotest-java.logger")
 
 local async_system = nio.wrap(function(cmd, args, cb)
 	vim.system(vim.list_extend({ cmd }, args), {}, function(obj)
@@ -13,7 +14,6 @@ local CommandExecutor = function()
 	--- @type neotest-java.CommandExecutor
 	return {
 		execute_command = function(command, args)
-			local logger = require("neotest-java.logger")
 			logger.debug("Executing command:", command, "with args:", args)
 			local ok, result = pcall(async_system, command, args or {})
 			if not ok then
