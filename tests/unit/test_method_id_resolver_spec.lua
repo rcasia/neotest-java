@@ -43,6 +43,10 @@ describe("Method Id Resolver", function()
 	end)
 
 	it("runs javap command correctly", function()
+		local fake_platform = function(_feature)
+			return false
+		end
+
 		local resolver = MethodIdResolver({ --
 			binaries = fake_binaries,
 			classpath_provider = fake_classpath_provider,
@@ -63,6 +67,7 @@ describe("Method Id Resolver", function()
 				stderr = "",
 				exit_code = 0,
 			}),
+			platform = fake_platform,
 		})
 
 		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
@@ -74,7 +79,41 @@ describe("Method Id Resolver", function()
 		}, fake_command_executor_invocations[1])
 	end)
 
+	it("runs javap directly on Windows", function()
+		local fake_platform = function(feature)
+			return feature == "win32"
+		end
+
+		local resolver = MethodIdResolver({
+			binaries = fake_binaries,
+			classpath_provider = fake_classpath_provider,
+			command_executor = fake_command_executor({
+				stdout = [[
+    Compiled from "Something1Test.java"
+    public class com.example.application.Something1Test {
+        void someMonths_scv(int, java.lang.String);
+    }
+				]],
+				stderr = "",
+				exit_code = 0,
+			}),
+			platform = fake_platform,
+		})
+
+		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir)
+
+		eq(1, #fake_command_executor_invocations, "command_executor should be invoked once")
+		eq({
+			command = Path("/fake/javap"):to_string(),
+			args = { "-cp", "my_classpath", "com.example.ExampleTest" },
+		}, fake_command_executor_invocations[1])
+	end)
+
 	it("resolves the complete method ids", function()
+		local fake_platform = function(_feature)
+			return false
+		end
+
 		local resolver = MethodIdResolver({ --
 			binaries = fake_binaries,
 			classpath_provider = fake_classpath_provider,
@@ -95,6 +134,7 @@ describe("Method Id Resolver", function()
 				stderr = "",
 				exit_code = 0,
 			}),
+			platform = fake_platform,
 		})
 
 		eq(
@@ -116,6 +156,76 @@ describe("Method Id Resolver", function()
 		eq(
 			"personProvider()",
 			resolver.resolve_complete_method_id("com.example.ExampleTest", "personProvider", module_dir)
+		)
+	end)
+
+	it("caches javap_path per module_dir instead of reusing the first-resolved one", function()
+		local fake_platform = function(_feature)
+			return false
+		end
+
+		local module_dir_a = Path("module_a")
+		local module_dir_b = Path("module_b")
+
+		--- @type neotest-java.ClasspathProvider
+		local multi_module_classpath_provider = {
+			get_classpath = function(_base_dir)
+				return "my_classpath"
+			end,
+		}
+
+		--- @type neotest-java.LspBinaries
+		local multi_module_binaries = {
+			javap = function(cwd)
+				if cwd:to_string() == module_dir_a:to_string() then
+					return Path("/fake/javap-a")
+				end
+				return Path("/fake/javap-b")
+			end,
+
+			java = function(_cwd)
+				return Path("/fake/java")
+			end,
+		}
+
+		local resolver = MethodIdResolver({
+			binaries = multi_module_binaries,
+			classpath_provider = multi_module_classpath_provider,
+			command_executor = fake_command_executor({
+				stdout = [[
+    Compiled from "Something1Test.java"
+    public class com.example.application.Something1Test {
+        void someMonths_scv(int, java.lang.String);
+    }
+				]],
+				stderr = "",
+				exit_code = 0,
+			}),
+			platform = fake_platform,
+		})
+
+		-- resolve for module_dir_a first
+		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir_a)
+		-- then resolve for module_dir_b, which should use its own javap path, not module_a's
+		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir_b)
+		-- resolve for module_dir_a again to ensure it still uses its own cached javap path
+		resolver.resolve_complete_method_id("com.example.ExampleTest", "someMonths_scv", module_dir_a)
+
+		eq(3, #fake_command_executor_invocations, "command_executor should be invoked three times")
+		eq("bash", fake_command_executor_invocations[1].command, "first invocation should use module_a's javap path")
+		eq(
+			{ "-c", Path("/fake/javap-a"):to_string() .. " -cp 'my_classpath' 'com.example.ExampleTest'" },
+			fake_command_executor_invocations[1].args
+		)
+		eq(
+			{ "-c", Path("/fake/javap-b"):to_string() .. " -cp 'my_classpath' 'com.example.ExampleTest'" },
+			fake_command_executor_invocations[2].args,
+			"second invocation should use module_b's own javap path, not a stale module_a path"
+		)
+		eq(
+			{ "-c", Path("/fake/javap-a"):to_string() .. " -cp 'my_classpath' 'com.example.ExampleTest'" },
+			fake_command_executor_invocations[3].args,
+			"third invocation should still use module_a's cached javap path"
 		)
 	end)
 end)

@@ -1,5 +1,9 @@
 local nio = require("nio")
 
+-- Classpath separator: ";" on Windows, ":" on Unix.
+-- Computed once at module load time since the platform doesn't change at runtime.
+local DEFAULT_PATH_SEPARATOR = vim.fn.has("win32") == 1 and ";" or ":"
+
 --- @class neotest-java.ClasspathProvider
 --- @field get_classpath async fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by ":"
 
@@ -9,14 +13,17 @@ local nio = require("nio")
 --- @field projectRoot string
 
 --- @class neotest-java.ClasspathProviderDeps
----@diagnostic disable-next-line: undefined-doc-name
 --- @field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
 --- @field schedule? fun(fn: fun()) Defaults to vim.schedule. Inject a synchronous pass-through in tests.
+--- @field path_separator? string Defaults to ";" on Windows, ":" on Unix. Inject in tests to avoid platform-dependent behavior.
 
 --- @param deps neotest-java.ClasspathProviderDeps
 --- @return neotest-java.ClasspathProvider
 local function ClasspathProvider(deps)
 	local schedule = deps.schedule or vim.schedule
+	-- Inject path_separator to make tests deterministic across platforms.
+	-- Without injection, tests would need to know the platform they're running on.
+	local path_separator = deps.path_separator or DEFAULT_PATH_SEPARATOR
 	return {
 		get_classpath = function(base_dir, additional_classpath_entries)
 			additional_classpath_entries = additional_classpath_entries or {}
@@ -74,7 +81,7 @@ local function ClasspathProvider(deps)
 				additional_classpath_entries_strings,
 			})
 				:flatten()
-				:join(":")
+				:join(path_separator)
 		end,
 	}
 end

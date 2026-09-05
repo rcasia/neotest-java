@@ -16,6 +16,7 @@ local Path = require("neotest-java.model.path")
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
 --- @field binaries neotest-java.LspBinaries
 --- @field launch_debug_test fun(command: string, args: string[], cwd: neotest-java.Path): any
+--- @field root_finder? { find_root: fun(dir: string): string | nil }
 
 --- @class neotest-java.SpecBuilder
 --- @field build_spec fun(args: neotest.RunArgs, config: neotest-java.ConfigOpts): nil | neotest.RunSpec | neotest.RunSpec[]
@@ -25,6 +26,7 @@ local Path = require("neotest-java.model.path")
 local SpecBuilder = function(deps)
 	--- @type neotest-java.BuildSpecDependencies
 	deps = deps or {}
+	deps.root_finder = deps.root_finder or require("neotest-java.core.root_finder")
 
 	return {
 		---@param args neotest.RunArgs
@@ -39,8 +41,13 @@ local SpecBuilder = function(deps)
 			local tree = args.tree
 			local position = tree:data()
 			local filepath = Path(position.path)
-			local root = Path(args.tree:root():data().path)
+
+			local root_str = args.tree:root():data().path
+			local real_root_str = deps.root_finder.find_root(root_str)
+			local root = Path(real_root_str or root_str)
+
 			local project_type = deps.detect_project_type(root)
+
 			--- @type neotest-java.BuildTool
 			local build_tool = deps.build_tool_getter(project_type)
 			local command = CommandBuilder.new()
@@ -89,7 +96,7 @@ local SpecBuilder = function(deps)
 
 			-- COMPILATION STEP
 			local compile_mode = config.incremental_build and "incremental" or "full"
-			deps.compile(module.base_dir, compile_mode)
+			pcall(deps.compile, module.base_dir, compile_mode)
 
 			local classpath_file_arg = deps.classpath_provider.get_classpath(
 				module.base_dir,
@@ -128,10 +135,10 @@ local SpecBuilder = function(deps)
 			end
 
 			-- NORMAL STRATEGY
-			local command_string = command:build_to_string()
-			logger.info("junit command: ", command_string)
+			local command_array = command:build_to_array()
+			logger.info("junit command: ", vim.inspect(command_array))
 			return {
-				command = command_string,
+				command = command_array,
 				cwd = module.base_dir:to_string(),
 				symbol = position.name,
 				context = { reports_dir = reports_dir },

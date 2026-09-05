@@ -125,9 +125,27 @@ describe("Path", function()
 			separator = "/",
 		},
 		{
+			description = "[unix] parent of root is root",
+			input_path = "/",
+			expected_parent = "/",
+			separator = "/",
+		},
+		{
 			description = "[win] parent is root",
 			input_path = "\\some",
 			expected_parent = "\\",
+			separator = "\\",
+		},
+		{
+			description = "[win] parent of file in drive is drive root",
+			input_path = "C:\\some",
+			expected_parent = "C:\\",
+			separator = "\\",
+		},
+		{
+			description = "[win] parent of drive root is drive root",
+			input_path = "C:\\",
+			expected_parent = "C:\\",
 			separator = "\\",
 		},
 	}
@@ -166,4 +184,29 @@ describe("Path", function()
 			eq(case.expected, path:append(case.append_path):to_string())
 		end)
 	end
+
+	describe("to_unix_string", function()
+		it("converts Windows path to Unix-style", function()
+			local path = Path("C:\\Users\\test\\file.txt", {
+				separator = function()
+					return "\\"
+				end,
+			})
+			eq("C:/Users/test/file.txt", path:to_unix_string())
+		end)
+
+		it("keeps Unix path unchanged", function()
+			local path = Path("/home/user/file.txt")
+			eq("/home/user/file.txt", path:to_unix_string())
+		end)
+
+		it("handles relative paths", function()
+			local path = Path("src\\main\\java", {
+				separator = function()
+					return "\\"
+				end,
+			})
+			eq("src/main/java", path:to_unix_string())
+		end)
+	end)
 end)

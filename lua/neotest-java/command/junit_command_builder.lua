@@ -1,3 +1,6 @@
+local Path = require("neotest-java.model.path")
+local resolve_package_name = require("neotest-java.util.resolve_package_name")
+
 --- @class neotest-java.TestReference
 --- @field qualified_name string
 --- @field type "method" | "class"
@@ -103,6 +106,18 @@ function CommandBuilder:add_test_references_from_tree(tree)
 		end
 	end
 
+	-- Fallback: if tree traversal yielded no test selectors but position points to a .java file,
+	-- resolve the class name directly from the file path and package declaration.
+	if #self._test_references == 0 and position.path and position.path:match("%.java$") then
+		local p = Path(position.path)
+		local stem = p:stem()
+		if stem and stem ~= "" then
+			local ok, pkg = pcall(resolve_package_name, p)
+			local fqn = (ok and pkg and pkg ~= "") and (pkg .. "." .. stem) or stem
+			self:add_test_class(fqn)
+		end
+	end
+
 	return self
 end
 
@@ -137,15 +152,10 @@ CommandBuilder.build_to_table = function(self)
 	assert(self._classpath_file_arg, "classpath_file_arg cannot be nil")
 	assert(self._spring_property_filepaths, "_spring_property_filepaths cannot be nil")
 
-	local function quote_selector(selector_value, is_debug_mode)
-		-- In debug mode, commands are executed via vim.loop.spawn which doesn't
-		-- strip quotes or expand shell variables, so we must not quote the selectors.
-		-- In normal mode, commands are executed through a shell where quotes
-		-- are needed to prevent $ expansion in inner class names
-		if is_debug_mode then
-			return selector_value
-		end
-		return "'" .. selector_value .. "'"
+	local function quote_selector(selector_value, _is_debug_mode)
+		-- We return the command as an array of arguments, bypassing the shell.
+		-- Therefore, we must never quote the arguments, or they will be passed literally to Java.
+		return selector_value
 	end
 
 	local is_debug_mode = self._port ~= nil
@@ -224,6 +234,12 @@ CommandBuilder.build_to_table = function(self)
 	end
 
 	return junit_command
+end
+
+--- @return string[]
+CommandBuilder.build_to_array = function(self)
+	local junit_command = self:build_to_table()
+	return vim.iter({ junit_command.command, junit_command.args }):flatten():totable()
 end
 
 --- @return string

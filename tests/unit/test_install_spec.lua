@@ -42,6 +42,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					return nil, nil
 				end,
+				check_for_update = function()
+					return false, nil
+				end,
 				ask_user_consent = function()
 					table.insert(actions, { type = "ask_consent" })
 				end,
@@ -78,6 +81,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					table.insert(workflow, { action = "detect_version" })
 					return JUNIT_VERSIONS.v1_10_1, Path("/data/junit-1.10.1.jar")
+				end,
+				check_for_update = function()
+					return true, JUNIT_VERSIONS.v6_0_3
 				end,
 				ask_user_consent = function(message, _, callback)
 					table.insert(workflow, { action = "ask_consent", detail = message })
@@ -133,6 +139,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					return JUNIT_VERSIONS.v1_10_1, Path("/data/junit-1.10.1.jar")
 				end,
+				check_for_update = function()
+					return true, JUNIT_VERSIONS.v6_0_3
+				end,
 				ask_user_consent = function(_, _, callback)
 					table.insert(workflow, { action = "ask_consent" })
 					callback("No, keep current version")
@@ -179,6 +188,9 @@ describe("Installer", function()
 				end,
 				detect_existing_version = function()
 					return nil, nil
+				end,
+				check_for_update = function()
+					return false, nil
 				end,
 				ask_user_consent = function(message, _, callback)
 					table.insert(workflow, { action = "ask_consent", detail = message })
@@ -231,6 +243,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					return nil, nil
 				end,
+				check_for_update = function()
+					return false, nil
+				end,
 				ask_user_consent = function(_, _, callback)
 					callback("Yes, download")
 				end,
@@ -258,6 +273,9 @@ describe("Installer", function()
 				notify = function() end,
 				detect_existing_version = function()
 					return nil, nil
+				end,
+				check_for_update = function()
+					return false, nil
 				end,
 				ask_user_consent = function(_, _, callback)
 					callback("Yes, download")

@@ -28,7 +28,7 @@ describe("JUnitCommandBuilder", function()
 		local command = base_builder():add_test_references_from_tree(tree):build_to_table()
 
 		assert(vim.iter(command.args):any(function(arg)
-			return arg == "--select-class='com.example.ExampleTest'"
+			return arg == "--select-class=com.example.ExampleTest"
 		end))
 	end)
 
@@ -56,7 +56,7 @@ describe("JUnitCommandBuilder", function()
 		local command = base_builder():add_test_references_from_tree(tree):build_to_table()
 
 		assert(vim.iter(command.args):any(function(arg)
-			return arg == "--select-class='com.example.ExampleTest'"
+			return arg == "--select-class=com.example.ExampleTest"
 		end))
 	end)
 
@@ -96,10 +96,10 @@ describe("JUnitCommandBuilder", function()
 			:build_to_table()
 
 		assert(vim.iter(command.args):any(function(arg)
-			return arg == "--include-classname='^.*Tests?$'"
+			return arg == "--include-classname=^.*Tests?$"
 		end))
 		assert(vim.iter(command.args):any(function(arg)
-			return arg == "--include-classname='^.*IT$'"
+			return arg == "--include-classname=^.*IT$"
 		end))
 	end)
 end)

@@ -173,7 +173,7 @@ local function NeotestJavaAdapter(config, deps)
 		end
 	end
 
-	local cwd = vim.loop.cwd()
+	local cwd = vim.uv.cwd()
 	--- @type neotest-java.Path|nil
 	local root
 	local root_getter = function()
@@ -208,6 +208,7 @@ local function NeotestJavaAdapter(config, deps)
 		build_tool_getter = resolved.build_tool_getter,
 		detect_project_type = detect_project_type,
 		launch_debug_test = launcher.launch_debug_test,
+		root_finder = resolved.root_finder,
 	})
 
 	return setmetatable({
@@ -223,7 +224,9 @@ local function NeotestJavaAdapter(config, deps)
 					return hash
 				end,
 				download = function(url, output)
-					return vim.system({ "curl", "--output", output, url, "--create-dirs" }):wait(10000)
+					-- Use Unix-style paths for curl on Windows
+					return vim.system({ "curl", "--output", Path(output):to_unix_string(), url, "--create-dirs" })
+						:wait(20000)
 				end,
 				delete_file = vim.fn.delete,
 				ask_user_consent = function(msg, choices, cb)
@@ -233,6 +236,7 @@ local function NeotestJavaAdapter(config, deps)
 				end,
 				notify = lib.notify,
 				detect_existing_version = version_detector.detect_existing_version,
+				check_for_update = version_detector.check_for_update,
 			})
 			installer.install(config)
 		end,
