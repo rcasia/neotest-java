@@ -9,16 +9,17 @@
 --- @return neotest-java.MethodIdResolver
 local MethodIdResolver = function(deps)
 	local classpaths = {}
-	local javap_path
+	local javap_paths = {}
 	local platform = deps.platform or function(feature)
 		return vim.fn.has(feature) == 1
 	end
 	--- @type neotest-java.MethodIdResolver
 	return {
 		resolve_complete_method_id = function(classname, method_id, module_dir)
-			if not javap_path then
-				javap_path = deps.binaries.javap(module_dir)
+			if not javap_paths[module_dir:to_string()] then
+				javap_paths[module_dir:to_string()] = deps.binaries.javap(module_dir)
 			end
+			local javap_path = javap_paths[module_dir:to_string()]
 			if not classpaths[module_dir:to_string()] then
 				classpaths[module_dir:to_string()] = deps.classpath_provider.get_classpath(module_dir)
 			end
