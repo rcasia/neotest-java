@@ -41,27 +41,36 @@ describe("JunitResult", function()
 	end)
 
 	describe("status", function()
-		it("delegates to junit_status.derive", function()
-			local status = (JunitResult:new(passing("a()")):status())
+		it("is PASSED with no failures for a testcase with no failure/error node", function()
+			local status, failures = JunitResult:new(passing("a()")):status()
 			eq(ResultStatus.passed, status)
+			eq({}, failures)
+		end)
+
+		it("is FAILED with the parsed failure for a testcase with a failure node", function()
+			local status, failures = JunitResult:new(failing("a()", nil, "expected true", "stack")):status()
+			eq(ResultStatus.failed, status)
+			eq(1, #failures)
+			eq("expected true", failures[1].failure_message)
 		end)
 	end)
 
 	describe("errors", function()
-		it("returns nil when passed", function()
+		it("returns nil when passed (no errors to report)", function()
 			local jres = JunitResult:new(passing("a()"))
 			eq(nil, jres:errors())
 		end)
 
-		it("returns the failure message and line for a failed testcase", function()
-			local jres = JunitResult:new(failing("a()", nil, "expected true", "stack"))
+		it("returns one neotest.Error per failure, with the line scraped from the stack trace", function()
+			local body = "org.opentest4j.AssertionFailedError: expected true\n" .. "at com.example.Foo.a(Foo.java:42)"
+			local jres = JunitResult:new(failing("a()", "com.example.Foo", "expected true", body))
+
 			local errors = jres:errors()
-			assert(errors, "errors should not be nil for a failed testcase")
-			eq(1, #errors)
-			eq("expected true", errors[1].message)
+
+			eq({ { message = "expected true", line = 41 } }, errors)
 		end)
 
-		it("prefixes the failure message with the test name when requested", function()
+		it("prefixes the message with the test name when with_name_prefix is true", function()
 			local jres = JunitResult:new(failing("a()", nil, "expected true", "stack"))
 			local errors = jres:errors(true)
 			assert(errors, "errors should not be nil for a failed testcase")
@@ -70,91 +79,87 @@ describe("JunitResult", function()
 	end)
 
 	describe("output", function()
-		it("returns a single 'Test passed' line when passed", function()
+		it("is a single 'Test passed' line when passed", function()
 			local jres = JunitResult:new(passing("a()"))
 			eq({ "Test passed\n" }, jres:output())
 		end)
 
-		it("returns the failure output when failed", function()
+		it("includes the raw failure output (stack trace) when failed", function()
 			local jres = JunitResult:new(failing("a()", nil, "expected true", "stack trace here"))
-			local output = jres:output()
-			assert(
-				vim.iter(output):any(function(l)
-					return l == "stack trace here"
-				end),
-				"should include the failure output"
-			)
+			eq({ "stack trace here", "\n" }, jres:output())
 		end)
 	end)
 
-	describe("result — plain data, no I/O", function()
-		it("returns status/output_lines/errors/short without touching disk", function()
+	describe("result()", function()
+		it("returns exactly {status, output_lines, errors, short} for a failed testcase", function()
 			local jres = JunitResult:new(failing("a()", nil, "expected true", "stack"))
 
-			local data = jres:result()
-
-			eq(ResultStatus.failed, data.status)
-			eq("table", type(data.output_lines))
-			eq(1, #data.errors)
-			eq("expected true", data.short)
-			-- crucially: no `output` filepath field — that's OutputWriter's job
-			eq(nil, data.output)
+			eq({
+				status = ResultStatus.failed,
+				output_lines = jres:output(),
+				errors = jres:errors(),
+				short = "expected true",
+			}, jres:result())
 		end)
 
-		it("omits short/errors when passed", function()
+		it("omits short/errors when passed, but still includes output_lines", function()
 			local jres = JunitResult:new(passing("a()"))
 
-			local data = jres:result()
+			eq({
+				status = ResultStatus.passed,
+				output_lines = jres:output(),
+			}, jres:result())
+		end)
+	end)
+
+	describe("SKIPPED / ERROR (static results, no testcase involved)", function()
+		it("SKIPPED is a skipped result explaining the test didn't run", function()
+			eq({
+				status = ResultStatus.skipped,
+				output_lines = { "com.example.Foo#a()", "This test was not executed." },
+			}, JunitResult.SKIPPED("com.example.Foo#a()"))
+		end)
+
+		it("ERROR uses the given output verbatim when provided", function()
+			eq({
+				status = "failed",
+				output_lines = "boom output",
+			}, JunitResult.ERROR("com.example.Foo#a()", "boom output"))
+		end)
+
+		it("ERROR falls back to an explanatory message when no output is given", function()
+			eq({
+				status = "failed",
+				output_lines = { "com.example.Foo#a()", "This test execution had an unexpected error." },
+			}, JunitResult.ERROR("com.example.Foo#a()"))
+		end)
+	end)
+
+	describe("merge_results() — combining parameterized-test iterations", function()
+		it("is PASSED, with every iteration's output concatenated, when all iterations pass", function()
+			local a = JunitResult:new(passing("a(int)[2]"))
+			local b = JunitResult:new(passing("a(int)[1]"))
+
+			local data = JunitResult.merge_results({ a, b })
 
 			eq(ResultStatus.passed, data.status)
-			eq(nil, data.short)
 			eq(nil, data.errors)
-		end)
-	end)
-
-	describe("SKIPPED / ERROR static results", function()
-		it("SKIPPED returns skipped status and explanatory output_lines", function()
-			local data = JunitResult.SKIPPED("com.example.Foo#a()")
-			eq(ResultStatus.skipped, data.status)
-			eq({ "com.example.Foo#a()", "This test was not executed." }, data.output_lines)
+			-- sorted by name: [1] before [2]
+			local expected_output = {}
+			vim.list_extend(expected_output, b:output())
+			vim.list_extend(expected_output, a:output())
+			eq(expected_output, data.output_lines)
 		end)
 
-		it("ERROR returns failed status with the given output when provided", function()
-			local data = JunitResult.ERROR("com.example.Foo#a()", "boom output")
-			eq("failed", data.status)
-			eq("boom output", data.output_lines)
-		end)
+		it("is FAILED as a whole when any single iteration fails", function()
+			local a = JunitResult:new(passing("a(int)[1]"))
+			local b = JunitResult:new(failing("a(int)[2]", nil, "expected true", "stack"))
 
-		it("ERROR falls back to explanatory output_lines when no output given", function()
-			local data = JunitResult.ERROR("com.example.Foo#a()")
-			eq("failed", data.status)
-			eq({ "com.example.Foo#a()", "This test execution had an unexpected error." }, data.output_lines)
-		end)
-	end)
-
-	describe("merge_results — plain data, no I/O", function()
-		it("merges multiple parameterized-test iterations into one passed result", function()
-			local results = {
-				JunitResult:new(passing("a(int)[2]")),
-				JunitResult:new(passing("a(int)[1]")),
-			}
-
-			local data = JunitResult.merge_results(results)
-
-			eq(ResultStatus.passed, data.status)
-			eq(nil, data.output)
-		end)
-
-		it("marks the merged result failed if any iteration failed", function()
-			local results = {
-				JunitResult:new(passing("a(int)[1]")),
-				JunitResult:new(failing("a(int)[2]", nil, "expected true", "stack")),
-			}
-
-			local data = JunitResult.merge_results(results)
+			local data = JunitResult.merge_results({ a, b })
 
 			eq(ResultStatus.failed, data.status)
 			eq(1, #data.errors)
+			eq("a(int)[2] -> expected true", data.errors[1].message)
 		end)
 	end)
 end)
