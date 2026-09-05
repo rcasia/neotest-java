@@ -26,6 +26,31 @@ init.lua      <- composition root; wires everything into a neotest.Adapter
 `core/spec_builder/` (building the command that will run tests) and
 `core/position_ids/` (computing stable IDs for test/namespace positions).
 
+```mermaid
+graph TD
+    util["util/<br/>xml_reader, dir_scan, ..."]
+    model["model/<br/>path, project, module, ..."]
+    core["core/<br/>file_checker,<br/>root_finder,<br/>spec_builder/, ..."]
+    command["command/<br/>binaries, junit_command_builder"]
+    build_tool["build_tool/<br/>build_tool, launcher"]
+    init["init.lua<br/>(composition root)"]
+
+    util --> model
+    model --> core
+    util --> core
+    model --> command
+    model --> build_tool
+    util --> build_tool
+    core --> init
+    command --> init
+    build_tool --> init
+```
+
+This mirrors the actual `require("neotest-java...")` call graph (verified
+with `grep -rn 'require("neotest-java' lua/neotest-java`): dependencies
+only ever point "up" the diagram, and nothing in `util/` or `model/`
+requires from `core/`, `command/`, or `build_tool/`.
+
 ### The function-as-constructor DI pattern
 
 Almost every component in this codebase is a plain function that takes a
@@ -112,6 +137,33 @@ wired into the constructors described above, and the only exported
 
 ### Test discovery flow
 
+```mermaid
+sequenceDiagram
+    participant neotest
+    participant init as init.lua
+    participant filter as dir_filter
+    participant checker as file_checker
+    participant discoverer as positions_discoverer
+    participant resolver as method_id_resolver
+    participant binaries as command.binaries
+    participant javap
+
+    neotest->>init: filter_dir(dir)
+    init->>filter: dir_filter.filter_dir
+    neotest->>init: is_test_file(file_path)
+    init->>checker: file_checker.is_test_file
+    neotest->>init: discover_positions(file_path)
+    init->>discoverer: PositionDiscoverer(...).discover_positions
+    discoverer->>discoverer: parse_positions (tree-sitter query)
+    Note over discoverer: test node gets lazy ref()<br/>(no javap yet)
+    neotest->>discoverer: node.ref() (only when a test actually runs)
+    discoverer->>resolver: resolve_complete_method_id(classname, id, dir)
+    resolver->>binaries: binaries.javap(module_dir)
+    resolver->>javap: execute javap -cp <classpath> <classname>
+    javap-->>resolver: overload-disambiguated method signature
+    resolver-->>discoverer: resolved method id
+```
+
 1. Neotest asks the adapter whether a directory should be scanned at all:
    `filter_dir = dir_filter.filter_dir` in `lua/neotest-java/init.lua:243`
    excludes `target`, `build`, `out`, `bin`, `resources`, `main` (unless
@@ -142,6 +194,41 @@ wired into the constructors described above, and the only exported
    producing a JUnit-compatible selector when a test is actually run.
 
 ### Spec building flow
+
+```mermaid
+sequenceDiagram
+    participant neotest
+    participant init as init.lua
+    participant sb as spec_builder
+    participant rf as root_finder /<br/>detect_project_type
+    participant bt as build_tool
+    participant proj as model.Project
+    participant bin as binaries.java (LSP)
+    participant cp as classpath_provider (LSP)
+    participant cb as junit_command_builder
+    participant launcher
+
+    neotest->>init: build_spec(args)
+    init->>init: check_junit_jar(config.junit_jar, ...)
+    init->>sb: spec_builder.build_spec(args, build_config)
+    sb->>rf: root_finder.find_root(root_str)
+    sb->>rf: detect_project_type(root)
+    sb->>bt: build_tool_getter(project_type)
+    sb->>proj: Project.from_dirs_and_project_file(...)
+    sb->>bin: binaries.java(module.base_dir)
+    sb->>sb: lsp_compiler.compile({base_dir, compile_mode})
+    Note over sb: java/buildWorkspace request,<br/>failure only logged
+    sb->>cp: classpath_provider.get_classpath(module.base_dir, ...)
+    sb->>cb: CommandBuilder.new():java_bin():jvm_args():...
+    cb-->>sb: junit-platform-console-standalone command
+    alt args.strategy == "dap"
+        sb->>launcher: launch_debug_test(command, args, base_dir)
+        launcher-->>sb: terminated_command_event
+        sb-->>neotest: neotest.RunSpec (strategy = dap attach)
+    else normal strategy
+        sb-->>neotest: neotest.RunSpec (command = command_array)
+    end
+```
 
 1. Neotest calls `build_spec`, wired in
    `lua/neotest-java/init.lua:259-263`. This first resolves the actual
@@ -191,6 +278,34 @@ wired into the constructors described above, and the only exported
 
 ### Results flow
 
+```mermaid
+sequenceDiagram
+    participant strategy as strategy runner /<br/>launcher.launch_debug_test
+    participant neotest
+    participant init as init.lua
+    participant rb as result_builder
+    participant jrr as junit_result_reader
+    participant xr as xml_reader
+    participant jr as model.junit_result
+
+    strategy-->>neotest: process exit (code)
+    neotest->>init: results(spec, result, tree)
+    init->>rb: ResultBuilder(...).build_results
+    rb->>rb: scan reports_dir for TEST-*.xml
+    rb->>jrr: junit_result_reader.read_all(report_files)
+    jrr->>xr: xml_reader.parse(filepath)
+    xr-->>jrr: parsed tree / error
+    jrr->>jr: JunitResult:new(testcase, tempname_fn)
+    jrr-->>rb: JunitResult[] (flat list)
+    rb->>rb: group_by_method_base(testcases)
+    alt group of 1
+        rb->>jr: JunitResult:result()
+    else group of many (parameterized/factory)
+        rb->>jr: JunitResult.merge_results(items, tempname_fn)
+    end
+    rb-->>neotest: table<string, neotest.Result>
+```
+
 1. After the strategy runner (or `launcher.launch_debug_test`) exits,
    neotest calls `results`, wired to `ResultBuilder(...).build_results`
    in `lua/neotest-java/init.lua:248-255`.
@@ -225,6 +340,19 @@ wired into the constructors described above, and the only exported
 
 ### Root finding
 
+```mermaid
+graph TD
+    Start(["find_root(dir)"]) --> GitCheck{".git found?<br/>match_root_pattern"}
+    GitCheck -- yes --> MarkerAtGit{"build/wrapper file<br/>at git_root?"}
+    GitCheck -- no --> NearestMarker
+    MarkerAtGit -- yes --> P1["Priority 1:<br/>return git_root"]
+    MarkerAtGit -- no --> NearestMarker{"nearest marker<br/>found above dir?"}
+    NearestMarker -- yes --> P2["Priority 2:<br/>return nearest marker root"]
+    NearestMarker -- no --> GitAlone{"was git_root<br/>found earlier?"}
+    GitAlone -- yes --> P3["Priority 3:<br/>return git_root"]
+    GitAlone -- no --> P4["return nil<br/>(adapter works file-by-file)"]
+```
+
 `lua/neotest-java/core/root_finder.lua:22-55` resolves the project root
 with an explicit priority order, using `neotest.lib.files.match_root_pattern`
 against `.git`, `pom.xml`, `settings.gradle(.kts)`, `build.gradle(.kts)`,
@@ -243,6 +371,35 @@ against `.git`, `pom.xml`, `settings.gradle(.kts)`, `build.gradle(.kts)`,
    multi-module structure.
 
 ## Build tool strategy: Maven vs Gradle
+
+```mermaid
+classDiagram
+    class create_build_tool {
+        +get_build_dirname(base_dir) Path
+        +get_project_filename() string
+        +get_artifact_id(base_dir) string
+        +get_spring_property_filepaths(roots) Path[]
+    }
+    class maven_config {
+        project_filename = "pom.xml"
+        get_build_dirname: read_xml_tag(pom, build.directory)
+        get_artifact_id: read_xml_tag(pom, "project.artifactId") or dirname
+        get_spring_subdirs: [classes, test-classes]
+    }
+    class gradle_config {
+        project_filename = "%.gradle"
+        get_build_dirname: always "bin"
+        get_artifact_id: dirname
+        get_spring_subdirs: [main, test]
+    }
+    class deps {
+        read_xml_tag = xml_reader.read_tag
+        generate_spring_property_filepaths
+    }
+    create_build_tool --> maven_config : instantiated with
+    create_build_tool --> gradle_config : instantiated with
+    create_build_tool --> deps : shared
+```
 
 `lua/neotest-java/build_tool/build_tool.lua` defines a small factory,
 `create_build_tool(config, deps)`, that both Maven and Gradle instantiate
