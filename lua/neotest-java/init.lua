@@ -208,6 +208,7 @@ local function NeotestJavaAdapter(config, deps)
 		build_tool_getter = resolved.build_tool_getter,
 		detect_project_type = detect_project_type,
 		launch_debug_test = launcher.launch_debug_test,
+		root_finder = resolved.root_finder,
 	})
 
 	return setmetatable({
@@ -235,6 +236,7 @@ local function NeotestJavaAdapter(config, deps)
 				end,
 				notify = lib.notify,
 				detect_existing_version = version_detector.detect_existing_version,
+				check_for_update = version_detector.check_for_update,
 			})
 			installer.install(config)
 		end,

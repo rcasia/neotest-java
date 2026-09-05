@@ -1,21 +1,4 @@
 local logger = require("neotest-java.logger")
-local checksum = require("neotest-java.util.checksum")
-local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
-local exists = require("neotest.lib.file").exists
-local version_detector = JunitVersionDetector({
-	exists = function(path)
-		return exists(path:to_string())
-	end,
-	checksum = function(path)
-		local hash, err = checksum.sha256(path:to_string())
-		if not hash then
-			error(err)
-		end
-		return hash
-	end,
-	scan = require("neotest-java.util.dir_scan"),
-	stdpath_data = vim.fn.stdpath,
-})
 
 ---@class neotest-java.InstallDeps
 ---@field exists fun(filepath: string): boolean
@@ -25,6 +8,7 @@ local version_detector = JunitVersionDetector({
 ---@field ask_user_consent fun(message: string, choices: string[], callback: fun(choice: string | nil))
 ---@field notify fun(message: string, level?: string)
 ---@field detect_existing_version fun(): neotest-java.JunitVersion | nil, neotest-java.Path | nil
+---@field check_for_update fun(current_version: neotest-java.JunitVersion): boolean, neotest-java.JunitVersion | nil
 
 ---@class neotest-java.Installer
 ---@field install fun(config: neotest-java.ConfigOpts)
@@ -37,6 +21,7 @@ local Installer = function(deps)
 	local delete_file_fn = deps.delete_file
 	local notify_fn = deps.notify
 	local detect_existing_version_fn = deps.detect_existing_version
+	local check_for_update_fn = deps.check_for_update
 	local download_fn = deps.download
 	local ask_user_consent_fn = deps.ask_user_consent
 
@@ -102,7 +87,7 @@ local Installer = function(deps)
 			local has_update, latest_version = false, nil
 
 			if existing_version then
-				has_update, latest_version = version_detector.check_for_update(existing_version)
+				has_update, latest_version = check_for_update_fn(existing_version)
 			end
 
 			-- If there's an existing version and it's not the latest, ask for upgrade
