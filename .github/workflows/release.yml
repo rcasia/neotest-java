@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: "24"
       - name: Install semantic-release
-        run: npm install --no-save semantic-release @semantic-release/release-notes-generator conventional-changelog-conventionalcommits
+        run: npm install --no-save semantic-release @semantic-release/release-notes-generator conventional-changelog-conventionalcommits@^7.0.0
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
