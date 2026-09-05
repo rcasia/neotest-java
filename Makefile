@@ -15,7 +15,17 @@ test-e2e: install
 	@tests/e2e/run-all.sh
 
 
-install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio
+install: deps/nvim-treesitter deps/nvim-treesitter/parser/java.so deps/neotest deps/nvim-nio deps/plenary.nvim
+
+# plenary.nvim is NOT a dependency of neotest-java (see #317 — our code now
+# uses vim.system/vim.uv directly). It IS a transitive dependency of
+# nvim-neotest/neotest itself (neotest.lib.file/positions/subprocess require
+# plenary.path), so the e2e harness — which builds a real user-like
+# environment by hand instead of using a plugin manager — must provide it,
+# just as lazy.nvim/packer would in a real setup.
+deps/plenary.nvim:
+	mkdir -p deps
+	git clone --depth 1 https://github.com/nvim-lua/plenary.nvim.git $@
 
 deps/nvim-treesitter:
 	mkdir -p deps
