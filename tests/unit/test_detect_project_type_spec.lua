@@ -98,7 +98,7 @@ describe("detect_project_type", function()
 
 			eq("maven", result)
 			assert(scandir_called_with ~= nil, "scandir should have been called as a fallback")
-			eq("/fake/root", scandir_called_with.root_str)
+			eq(Path("/fake/root"):to_string(), scandir_called_with.root_str)
 		end)
 
 		it("falls back to scandir when the top-level directory has no marker files", function()

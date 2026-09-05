@@ -46,7 +46,7 @@ describe("BuildToolLauncher", function()
 			assert(opts ~= nil, "job runner should have been started with opts")
 			eq("java", opts.command)
 			eq({ "-jar", "foo.jar" }, opts.args)
-			eq("/fake/cwd", opts.cwd)
+			eq(Path("/fake/cwd"):to_string(), opts.cwd)
 		end)
 	)
 
