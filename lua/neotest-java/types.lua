@@ -55,6 +55,7 @@
 ---@class nio.control.Event
 ---@field wait fun()
 ---@field set fun()
+---@field is_set fun(): boolean
 
 ---@class vim.lsp.Client
 ---@field initialized boolean
