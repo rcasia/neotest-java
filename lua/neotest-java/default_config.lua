@@ -1,4 +1,5 @@
 local Path = require("neotest-java.model.path")
+local patterns = require("neotest-java.model.patterns")
 
 local JUNIT_JAR_FILE_NAME = function(version)
 	return "junit-platform-console-standalone-" .. version .. ".jar"
@@ -47,11 +48,7 @@ local default_config = {
 	jvm_args = {},
 	incremental_build = true,
 	disable_update_notifications = false,
-	test_classname_patterns = {
-		"^.*Tests?$",
-		"^.*IT$",
-		"^.*Spec$",
-	},
+	test_classname_patterns = patterns.JAVA_TEST_FILE_REGEXES,
 	get_supported_versions = get_supported_versions,
 }
 
