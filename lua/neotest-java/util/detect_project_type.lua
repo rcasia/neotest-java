@@ -1,4 +1,37 @@
-local scan = require("plenary.scandir")
+local dir_scan = require("neotest-java.util.dir_scan")
+local Path = require("neotest-java.model.path")
+
+-- Build-marker file name patterns, reused as `dir_scan`'s search patterns
+-- so we only collect entries we actually care about while walking the tree.
+local MARKER_PATTERNS = {
+	"pom%.xml$",
+	"mvnw$",
+	"mvnw%.cmd$",
+	"settings%.gradle$",
+	"settings%.gradle%.kts$",
+	"build%.gradle$",
+	"build%.gradle%.kts$",
+	"gradlew$",
+	"gradlew%.bat$",
+}
+
+--- Default recursive scandir, built on top of `util/dir_scan.lua`'s
+--- existing `vim.uv.fs_scandir`-based walk, replacing the previous
+--- `plenary.scandir` default (see #317). `dir_scan.scan` already filters
+--- entries by `search_patterns` and returns a flat array of matching
+--- `Path`s directly (not `{path, typ}` wrapper tables) — a directory
+--- happening to be named exactly like one of our marker filenames is not
+--- a realistic concern, so every match is treated as a file path.
+--- @param root_str string
+--- @return string[]
+local function default_scandir(root_str)
+	local matches = dir_scan(Path(root_str), { search_patterns = MARKER_PATTERNS })
+	local files = {}
+	for i, path in ipairs(matches) do
+		files[i] = path:to_string()
+	end
+	return files
+end
 
 --- Detect project type (maven | gradle | unknown)
 --- @param root_dir neotest-java.Path
@@ -6,7 +39,7 @@ local scan = require("plenary.scandir")
 --- @param readdir? fun(path: string): string[]
 --- @return "maven"|"gradle"|"unknown"
 local function detect_project_type(root_dir, scandir, readdir)
-	scandir = scandir or scan.scan_dir
+	scandir = scandir or default_scandir
 	readdir = readdir or vim.fn.readdir
 
 	local root_str = root_dir:to_string()
