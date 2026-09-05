@@ -42,6 +42,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					return nil, nil
 				end,
+				check_for_update = function()
+					return false, nil
+				end,
 				ask_user_consent = function()
 					table.insert(actions, { type = "ask_consent" })
 				end,
@@ -186,6 +189,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					return nil, nil
 				end,
+				check_for_update = function()
+					return false, nil
+				end,
 				ask_user_consent = function(message, _, callback)
 					table.insert(workflow, { action = "ask_consent", detail = message })
 					callback("Yes, download")
@@ -237,6 +243,9 @@ describe("Installer", function()
 				detect_existing_version = function()
 					return nil, nil
 				end,
+				check_for_update = function()
+					return false, nil
+				end,
 				ask_user_consent = function(_, _, callback)
 					callback("Yes, download")
 				end,
@@ -264,6 +273,9 @@ describe("Installer", function()
 				notify = function() end,
 				detect_existing_version = function()
 					return nil, nil
+				end,
+				check_for_update = function()
+					return false, nil
 				end,
 				ask_user_consent = function(_, _, callback)
 					callback("Yes, download")
