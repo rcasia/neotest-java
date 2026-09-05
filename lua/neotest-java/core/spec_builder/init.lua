@@ -5,7 +5,6 @@ local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local Project = require("neotest-java.model.project")
 local Path = require("neotest-java.model.path")
-local root_finder = require("neotest-java.core.root_finder")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -17,6 +16,7 @@ local root_finder = require("neotest-java.core.root_finder")
 --- @field detect_project_type fun(base_dir: neotest-java.Path): string
 --- @field binaries neotest-java.LspBinaries
 --- @field launch_debug_test fun(command: string, args: string[], cwd: neotest-java.Path): any
+--- @field root_finder? { find_root: fun(dir: string): string | nil }
 
 --- @class neotest-java.SpecBuilder
 --- @field build_spec fun(args: neotest.RunArgs, config: neotest-java.ConfigOpts): nil | neotest.RunSpec | neotest.RunSpec[]
@@ -26,6 +26,7 @@ local root_finder = require("neotest-java.core.root_finder")
 local SpecBuilder = function(deps)
 	--- @type neotest-java.BuildSpecDependencies
 	deps = deps or {}
+	deps.root_finder = deps.root_finder or require("neotest-java.core.root_finder")
 
 	return {
 		---@param args neotest.RunArgs
@@ -42,7 +43,7 @@ local SpecBuilder = function(deps)
 			local filepath = Path(position.path)
 
 			local root_str = args.tree:root():data().path
-			local real_root_str = root_finder.find_root(root_str)
+			local real_root_str = deps.root_finder.find_root(root_str)
 			local root = Path(real_root_str or root_str)
 
 			local project_type = deps.detect_project_type(root)
