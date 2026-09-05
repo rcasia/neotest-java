@@ -1,4 +1,3 @@
----@diagnostic disable: undefined-field
 local checksum = require("neotest-java.util.checksum")
 
 local eq = require("tests.assertions").eq
@@ -25,14 +24,14 @@ describe("Checksum", function()
 			os.remove(tmp_file)
 
 			-- Verify
-			assert.is_nil(err, "Expected no error, got: " .. tostring(err))
-			assert.is_nil(err2, "Expected no error on second call, got: " .. tostring(err2))
-			assert.is_not_nil(hash, "Expected hash to be computed")
+			assert(err == nil, "Expected no error, got: " .. tostring(err))
+			assert(err2 == nil, "Expected no error on second call, got: " .. tostring(err2))
+			assert(hash ~= nil, "Expected hash to be computed")
 			eq(64, #hash, "SHA256 hash should be 64 characters (hex)")
 			eq(hash, hash2, "Checksum should be consistent")
 			-- Verify it's a valid hex string
 			local is_hex = hash and hash:match("^[a-f0-9]+$") ~= nil
-			assert.is_true(is_hex, "Hash should be lowercase hex: " .. hash)
+			assert(is_hex, "Hash should be lowercase hex: " .. hash)
 		end)
 
 		it("computes checksum for binary files", function()
@@ -51,8 +50,8 @@ describe("Checksum", function()
 			os.remove(tmp_file)
 
 			-- Verify
-			assert.is_nil(err, "Expected no error, got: " .. tostring(err))
-			assert.is_not_nil(hash, "Expected hash to be computed")
+			assert(err == nil, "Expected no error, got: " .. tostring(err))
+			assert(hash ~= nil, "Expected hash to be computed")
 			eq(64, #hash, "SHA256 hash should be 64 characters (hex)")
 		end)
 
@@ -61,12 +60,9 @@ describe("Checksum", function()
 
 			local hash, err = checksum.sha256(non_existent)
 
-			assert.is_nil(hash, "Expected hash to be nil")
-			assert.is_not_nil(err, "Expected error message")
-			assert.is_true(
-				err and err:match("Failed to compute checksum") ~= nil,
-				"Error should mention checksum failure"
-			)
+			assert(hash == nil, "Expected hash to be nil")
+			assert(err ~= nil, "Expected error message")
+			assert(err and err:match("Failed to compute checksum") ~= nil, "Error should mention checksum failure")
 		end)
 
 		it("works cross-platform (unix and windows)", function()
@@ -87,13 +83,13 @@ describe("Checksum", function()
 			os.remove(tmp_file)
 
 			-- Verify
-			assert.is_nil(err, "Expected no error on current platform, got: " .. tostring(err))
-			assert.is_not_nil(hash, "Expected hash to be computed on current platform")
+			assert(err == nil, "Expected no error on current platform, got: " .. tostring(err))
+			assert(hash ~= nil, "Expected hash to be computed on current platform")
 			eq(64, #hash, "SHA256 hash should be 64 characters (hex)")
 
 			-- Verify it's a valid hex string
 			local is_hex = hash and hash:match("^[a-f0-9]+$") ~= nil
-			assert.is_true(is_hex, "Hash should be lowercase hex: " .. hash)
+			assert(is_hex, "Hash should be lowercase hex: " .. hash)
 		end)
 	end)
 end)

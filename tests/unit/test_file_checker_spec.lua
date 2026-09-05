@@ -26,7 +26,7 @@ describe("file_checker", function()
 		}
 
 		for _, file_path in ipairs(test_files) do
-			assert.is_true(file_checker_undertest.is_test_file(file_path), file_path)
+			assert(file_checker_undertest.is_test_file(file_path), file_path)
 		end
 	end)
 
@@ -37,7 +37,7 @@ describe("file_checker", function()
 			"src/test/java/neotest/Neotest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
+			assert(not (file_checker_undertest.is_test_file(file_path)), file_path)
 		end
 	end)
 
@@ -46,7 +46,7 @@ describe("file_checker", function()
 			"/home/user/repo/src/main/java/neotest/NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(file_checker_undertest.is_test_file(file_path), file_path)
+			assert(not (file_checker_undertest.is_test_file(file_path)), file_path)
 		end
 	end)
 
@@ -55,7 +55,7 @@ describe("file_checker", function()
 			"/absolute_path/main/src/java/neotest/NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_true(file_checker_undertest.is_test_file(file_path))
+			assert(file_checker_undertest.is_test_file(file_path))
 		end
 	end)
 
@@ -64,7 +64,7 @@ describe("file_checker", function()
 			"C:\\absolute_path\\src\\main\\java\\neotest\\NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_false(file_checker_undertest.is_test_file(file_path))
+			assert(not (file_checker_undertest.is_test_file(file_path)))
 		end
 	end)
 
@@ -73,7 +73,7 @@ describe("file_checker", function()
 			"C:\\absolute_path\\main\\src\\java\\neotest\\NeotestTest.java",
 		}
 		for _, file_path in ipairs(non_test_files) do
-			assert.is_true(FileChecker({
+			assert(FileChecker({
 				patterns = patterns,
 				root_getter = function()
 					return Path("C:\\absolute_path\\main\\src")
@@ -91,6 +91,6 @@ describe("file_checker", function()
 			end,
 		})
 
-		assert.is_false(file_checker.is_test_file("/any/path/Test.java"))
+		assert(not (file_checker.is_test_file("/any/path/Test.java")))
 	end)
 end)

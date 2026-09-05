@@ -109,8 +109,8 @@ describe("XmlReader", function()
 			-- then
 			eq(false, result.found)
 			eq(nil, result.value)
-			assert.is_not_nil(result.error)
-			assert.is_truthy(result.error:find("disk on fire"))
+			assert(result.error ~= nil)
+			assert(result.error:find("disk on fire"), "expected error to mention: disk on fire")
 		end)
 
 		it("surfaces XML parse errors instead of throwing", function()
@@ -128,8 +128,8 @@ describe("XmlReader", function()
 			-- then
 			eq(false, result.found)
 			eq(nil, result.value)
-			assert.is_not_nil(result.error)
-			assert.is_truthy(result.error:find("unexpected token"))
+			assert(result.error ~= nil)
+			assert(result.error:find("unexpected token"), "expected error to mention: unexpected token")
 		end)
 
 		it("uses injected stubs and never touches the real neotest.lib.file or neotest.lib.xml", function()
@@ -196,8 +196,8 @@ describe("XmlReader", function()
 
 			-- then
 			eq(nil, result.tree)
-			assert.is_not_nil(result.error)
-			assert.is_truthy(result.error:find("cannot stat file"))
+			assert(result.error ~= nil)
+			assert(result.error:find("cannot stat file"), "expected error to mention: cannot stat file")
 		end)
 
 		it("surfaces XML parse errors", function()
@@ -214,8 +214,8 @@ describe("XmlReader", function()
 
 			-- then
 			eq(nil, result.tree)
-			assert.is_not_nil(result.error)
-			assert.is_truthy(result.error:find("malformed XML"))
+			assert(result.error ~= nil)
+			assert(result.error:find("malformed XML"), "expected error to mention: malformed XML")
 		end)
 	end)
 

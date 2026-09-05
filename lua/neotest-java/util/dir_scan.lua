@@ -4,7 +4,7 @@
 
 --- @param dir neotest-java.Path
 --- @return fun(): neotest-java.DirScanResultItem | nil
-local iter_dir = function(dir)
+local default_iter_dir = function(dir)
 	local handle, _ = vim.uv.fs_scandir(dir:to_string())
 	if not handle then
 		return function()
@@ -46,7 +46,11 @@ end
 local function scan(dir, opts, dependencies)
 	opts = opts or {}
 	dependencies = dependencies or {}
-	iter_dir = dependencies.iter_dir or iter_dir
+	-- IMPORTANT: local, not a reassignment of the module-level default —
+	-- otherwise an injected stub (e.g. from a test) would permanently
+	-- replace the real implementation for every subsequent call in the
+	-- same process, not just this one.
+	local iter_dir = dependencies.iter_dir or default_iter_dir
 
 	local stack = { dir }
 	local result = {}

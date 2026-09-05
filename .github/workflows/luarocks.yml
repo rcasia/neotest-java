@@ -61,7 +61,6 @@ jobs:
           version: ${{ env.LUAROCKS_VERSION }}
           dependencies: |
             neotest
-            plenary.nvim
             nvim-nio
             tree-sitter-java
             nvim-dap

@@ -5,8 +5,8 @@ local eq = assertions.eq
 local Path = require("neotest-java.model.path")
 local BuildToolLauncher = require("neotest-java.build_tool.launcher").new
 
---- Build a stub job runner mimicking the shape `plenary.job` exposes
---- (`Job:new(opts)` returning an object with `start()`). The stub captures
+--- Build a stub job runner mimicking the shape the job runner contract
+--- exposes (`Job:new(opts)` returning an object with `start()`). The stub captures
 --- the callbacks and lets `start()` drive them synchronously via
 --- `on_start`, matching how a real job would invoke them from its own
 --- process lifecycle (started -> stdout/stderr chunks -> exit) without
@@ -105,7 +105,7 @@ describe("BuildToolLauncher", function()
 		end)
 	)
 
-	it("defaults to plenary.job when no job_runner is injected", function()
+	it("defaults to a vim.system-backed job runner when no job_runner is injected", function()
 		local launcher = BuildToolLauncher({ dap_repl = false })
 		assert(launcher.launch_debug_test ~= nil, "launch_debug_test should exist with default deps")
 	end)

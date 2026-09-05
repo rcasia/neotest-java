@@ -27,7 +27,7 @@ describe("E2E: neotest-java full workflow", function()
 
 	it("runs tests and reports correct pass/fail results", function()
 		-- Make sure test file exists
-		assert.is_true(vim.fn.filereadable(test_file) == 1, "Test file should exist: " .. test_file)
+		assert(vim.fn.filereadable(test_file) == 1, "Test file should exist: " .. test_file)
 
 		-- Run the tests (this triggers async execution)
 		nio.run(function()
@@ -49,9 +49,9 @@ describe("E2E: neotest-java full workflow", function()
 			end
 
 			-- Verify we got results
-			assert.is_not_nil(results, "Should have test results")
+			assert(results ~= nil, "Should have test results")
 			---@diagnostic disable-next-line: param-type-mismatch
-			assert.is_true(next(results) ~= nil, "Results should not be empty")
+			assert(next(results) ~= nil, "Results should not be empty")
 
 			-- Count pass/fail
 			local passed = 0
@@ -72,9 +72,9 @@ describe("E2E: neotest-java full workflow", function()
 
 			-- Verify counts
 			-- SampleTest has 4 tests: 2 should pass, 2 should fail
-			assert.is_true(total >= 4, "Should have at least 4 test results, got " .. total)
-			assert.is_true(passed >= 2, "Should have at least 2 passing tests, got " .. passed)
-			assert.is_true(failed >= 2, "Should have at least 2 failing tests, got " .. failed)
+			assert(total >= 4, "Should have at least 4 test results, got " .. total)
+			assert(passed >= 2, "Should have at least 2 passing tests, got " .. passed)
+			assert(failed >= 2, "Should have at least 2 failing tests, got " .. failed)
 
 			print(string.format("\n✓ E2E Test Results: %d total, %d passed, %d failed", total, passed, failed))
 		end)

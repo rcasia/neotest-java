@@ -37,7 +37,7 @@ make
 
 This command will:
 
-1. Clone neotest, plenary and nvim-treesitter
+1. Clone neotest and nvim-treesitter
 2. Install the Java parser for nvim-treesitter
 3. Build the Java projects (some failing tests are expected)
 4. Run the neotest-java test suite
