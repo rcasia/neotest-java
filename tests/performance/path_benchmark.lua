@@ -2,14 +2,9 @@
 -- Native (vim.fs + strings)      : 83.88 ms (0.0008 ms/op)
 -- Path Struct                    : 550.41 ms (0.0055 ms/op)
 -- Allocation Cost (Path())       : 10.25 ms (0.0001 ms/op)
--- Plenary Path (Creation)        : 199.67 ms (0.0020 ms/op)
--- Plenary Path (Parent)          : 1843.74 ms (0.0184 ms/op)
 --
 -- === MEMORY FOOTPRINT ===
 -- Path (Allocation)              : 21875.00 KB total (0.2188 KB/op)
--- Plenary Path (Creation)        : 21256.73 KB total (0.2126 KB/op)
-
-local has_plenary, PlenaryPath = pcall(require, "plenary.path")
 
 local Path = require("neotest-java.model.path")
 
@@ -61,28 +56,7 @@ benchmark("Allocation Cost (Path())", function()
 	local _ = Path(LONG_PATH)
 end)
 
-if has_plenary then
-	benchmark("Plenary Path (Creation)", function()
-		local _ = PlenaryPath:new(LONG_PATH)
-	end)
-
-	benchmark("Plenary Path (Parent)", function()
-		local p = PlenaryPath:new(LONG_PATH)
-		local _ = p:parent()
-	end)
-else
-	print("Skipping Plenary benchmark (plugin not found)")
-end
-
 print("\n=== MEMORY FOOTPRINT ===")
 benchmark_memory("Path (Allocation)", function()
 	local _ = Path(LONG_PATH)
 end)
-
-if has_plenary then
-	benchmark_memory("Plenary Path (Creation)", function()
-		local _ = PlenaryPath:new(LONG_PATH)
-	end)
-else
-	print("Skipping Plenary benchmark (plugin not found)")
-end
