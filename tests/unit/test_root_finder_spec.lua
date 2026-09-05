@@ -1,5 +1,5 @@
 local root_finder = require("neotest-java.core.root_finder")
----@diagnostic disable: undefined-field
+local eq = require("tests.assertions").eq
 
 describe("RootFinder", function()
 	it("should find the root when matcher matches", function()
@@ -15,7 +15,7 @@ describe("RootFinder", function()
 		local actualRoot = root_finder.find_root(dir, matcher)
 
 		-- then
-		assert.are.same(dir, actualRoot)
+		eq(dir, actualRoot)
 	end)
 
 	it("should not find the root when matcher does not match", function()
@@ -31,7 +31,7 @@ describe("RootFinder", function()
 		local actualRoot = root_finder.find_root(dir, matcher)
 
 		-- then
-		assert.is_nil(actualRoot)
+		assert(actualRoot == nil)
 	end)
 
 	it("should find build.gradle before .git for single-module Gradle projects", function()
@@ -48,9 +48,9 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/some/dir", matcher)
 
-		assert.are.same("/path/to/project", root)
-		assert.is_true(patterns_checked[#patterns_checked] == "build.gradle")
-		assert.is_true(patterns_checked[#patterns_checked - 1] ~= ".git")
+		eq("/path/to/project", root)
+		assert(patterns_checked[#patterns_checked] == "build.gradle")
+		assert(patterns_checked[#patterns_checked - 1] ~= ".git")
 	end)
 
 	it("prefers .git root when it also contains a gradlew wrapper", function()
@@ -71,7 +71,7 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/repo/module/src", matcher)
 
-		assert.are.same("/repo", root)
+		eq("/repo", root)
 	end)
 
 	it("prefers .git root when it also contains a mvnw wrapper", function()
@@ -92,7 +92,7 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/repo/module/src", matcher)
 
-		assert.are.same("/repo", root)
+		eq("/repo", root)
 	end)
 
 	it("prefers .git root when it also contains a build file (multi-module Maven)", function()
@@ -115,7 +115,7 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/repo/module/src", matcher)
 
-		assert.are.same("/repo", root)
+		eq("/repo", root)
 	end)
 
 	it("falls back to nearest build file when .git root has no build file or wrapper", function()
@@ -136,7 +136,7 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/repo/module/src", matcher)
 
-		assert.are.same("/repo/module", root)
+		eq("/repo/module", root)
 	end)
 
 	it("falls back to .git alone when no build file or wrapper exists anywhere", function()
@@ -151,6 +151,6 @@ describe("RootFinder", function()
 
 		local root = root_finder.find_root("/repo/module/src", matcher)
 
-		assert.are.same("/repo", root)
+		eq("/repo", root)
 	end)
 end)

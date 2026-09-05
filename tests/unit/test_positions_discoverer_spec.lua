@@ -1,4 +1,3 @@
----@module "luassert"
 local _ = require("vim.treesitter") -- NOTE: needed for loading treesitter upfront for the tests
 
 local assertions = require("tests.assertions")
