@@ -30,14 +30,11 @@ local function stub_xml_reader(trees)
 	return { parse = parse }
 end
 
---- Build a JunitResultReader with the given trees and a known tempname.
---- Records warn calls in `warned`.
-local function make_reader(trees, warned, tempname_fn)
+--- Build a JunitResultReader with the given trees. Records warn calls in
+--- `warned`.
+local function make_reader(trees, warned)
 	local xml_reader = stub_xml_reader(trees)
 	warned = warned or {}
-	tempname_fn = tempname_fn or function()
-		return "/tmp/test-output.txt"
-	end
 	local log = {
 		debug = function() end,
 		warn = function(...)
@@ -46,7 +43,6 @@ local function make_reader(trees, warned, tempname_fn)
 	}
 	return JunitResultReader({
 		xml_reader = xml_reader,
-		tempname_fn = tempname_fn,
 		log = log,
 	})
 end
@@ -88,10 +84,6 @@ describe("JunitResultReader", function()
 		eq("com.example.ExampleTest#a()", results[1]:id())
 		eq("com.example.ExampleTest#b()", results[2]:id())
 		eq("com.example.ExampleTest#c()", results[3]:id())
-		-- and each was constructed with the injected tempname function
-		for _, jres in ipairs(results) do
-			eq("function", type(jres.tempname))
-		end
 		-- and the testcase payload is preserved
 		eq("a()", results[1].testcase._attr.name)
 	end)
@@ -200,31 +192,6 @@ describe("JunitResultReader", function()
 		eq(1, #warned)
 	end)
 
-	it("stores the injected tempname function on every JunitResult (no call yet)", function()
-		-- given
-		local tree = {
-			_attr = {},
-			testsuite = { _attr = {}, testcase = { TC("a()"), TC("b()") } },
-		}
-		local xml_reader = stub_xml_reader({ [K1] = { tree = tree, error = nil } })
-		local injected = function()
-			return "/tmp/should-not-be-called.txt"
-		end
-		local reader = JunitResultReader({
-			xml_reader = xml_reader,
-			tempname_fn = injected,
-			log = { debug = function() end, warn = function() end },
-		})
-
-		-- when
-		local results = reader.read_all({ P1 })
-
-		-- then — every JunitResult holds a reference to the injected function
-		eq(2, #results)
-		eq(injected, results[1].tempname)
-		eq(injected, results[2].tempname)
-	end)
-
 	it("uses the injected xml_reader — no real XmlReader construction", function()
 		-- given — a reader with an xml_reader that records its calls
 		local calls = 0
@@ -237,9 +204,6 @@ describe("JunitResultReader", function()
 		local warned = {}
 		local reader = JunitResultReader({
 			xml_reader = xml_reader,
-			tempname_fn = function()
-				return "/tmp/x"
-			end,
 			log = {
 				debug = function() end,
 				warn = function(...)

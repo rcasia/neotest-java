@@ -1,4 +1,3 @@
-local nio = require("nio")
 local junit_failure = require("neotest-java.model.junit_failure")
 local junit_status = require("neotest-java.model.junit_status")
 
@@ -6,72 +5,41 @@ local FAILED = require("neotest.types").ResultStatus.failed
 local PASSED = require("neotest.types").ResultStatus.passed
 local SKIPPED = require("neotest.types").ResultStatus.skipped
 
-local LINE_SEPARATOR = "=================================\n"
 local NEW_LINE = "\n"
 
----@param data string | string[] | table
----@param tempname? fun(): string
----@return string | nil filepath
-local function create_file_with_content(data, tempname)
-	if not data then
-		return nil
-	end
-
-	if type(data) == "table" then
-		if #data == 0 then
-			return nil
-		end
-		data = table.concat(vim.iter(vim.tbl_values(data)):flatten(math.huge):totable(), LINE_SEPARATOR)
-	end
-
-	-- Generate a unique temporary file name
-	local filepath = (tempname or nio.fn.tempname)()
-
-	nio.run(function()
-		-- Open the file in write mode
-		local file = assert(io.open(filepath, "w"))
-
-		file:write(data)
-
-		-- Close the file
-		file:close()
-	end)
-
-	-- Return the path to the file
-	return filepath
-end
-
----@class neotest-java.JunitResult
----@field testcase table
----@field tempname? fun(): string
+--- @class neotest-java.JunitResult
+--- @field testcase table
 local JunitResult = {}
 
+--- @class neotest-java.JunitResultData
+--- @field status neotest.ResultStatus
+--- @field output_lines string[]
+--- @field errors neotest.Error[] | nil
+--- @field short string | nil
+
 ---@param id string
----@param tempname? fun(): string
----@return neotest.Result
-function JunitResult.SKIPPED(id, tempname)
+---@return neotest-java.JunitResultData
+function JunitResult.SKIPPED(id)
 	return {
 		status = SKIPPED,
-		output = create_file_with_content({ id, "This test was not executed." }, tempname),
+		output_lines = { id, "This test was not executed." },
 	}
 end
 
 ---@param id string
 ---@param output? string
----@param tempname? fun(): string
----@return neotest.Result
-function JunitResult.ERROR(id, output, tempname)
+---@return neotest-java.JunitResultData
+function JunitResult.ERROR(id, output)
 	return {
 		status = "failed",
-		output = output or create_file_with_content({ id, "This test execution had an unexpected error." }, tempname),
+		output_lines = output or { id, "This test execution had an unexpected error." },
 	}
 end
 
 ---@param testcase table
----@param tempname? fun(): string
-function JunitResult:new(testcase, tempname)
+function JunitResult:new(testcase)
 	self.__index = self
-	return setmetatable({ testcase = testcase, tempname = tempname }, self)
+	return setmetatable({ testcase = testcase }, self)
 end
 
 function JunitResult:id()
@@ -167,53 +135,41 @@ function JunitResult:output()
 	return output_lines
 end
 
---- Builds the final `neotest.Result` table shared by `result()` and
---- `merge_results()`, writing `output_lines` to a temporary file and
---- omitting `short`/`errors` when the status is PASSED.
----@param status neotest.ResultStatus
----@param output_lines string[]
----@param errors neotest.Error[] | nil
----@param short string | nil
----@param tempname? fun(): string
----@return neotest.Result
-local function build_neotest_result(status, output_lines, errors, short, tempname)
+---@return string | nil
+local function short_failure_message(status, failures)
 	if status == PASSED then
-		return { status = status, output = create_file_with_content(output_lines, tempname) }
+		return nil
 	end
 
-	return {
-		status = status,
-		short = short,
-		errors = errors,
-		output = create_file_with_content(output_lines, tempname),
-	}
+	local message = ""
+	for i, failure in ipairs(failures) do
+		message = message .. failure.failure_message
+		if i < #failures then
+			message = message .. NEW_LINE
+		end
+	end
+	return message
 end
 
---- Convert neotest-java.JunitResult to neotest.Result
---- Each time this function is called, it will create a temporary file with the output content
----@return neotest.Result
+--- Converts this JunitResult into plain result data: status, output lines,
+--- errors and a short failure summary. Callers (e.g. `result_builder`) are
+--- responsible for turning `output_lines` into a `neotest.Result.output`
+--- filepath via an `neotest-java.OutputWriter` — this method does no I/O.
+---@return neotest-java.JunitResultData
 function JunitResult:result()
 	local status, failures = self:status()
 
-	local failure_message
-	if status ~= PASSED then
-		failure_message = ""
-		for i, failure in ipairs(failures) do
-			failure_message = failure_message .. failure.failure_message
-			if i < #failures then
-				failure_message = failure_message .. NEW_LINE
-			end
-		end
-	end
-
-	return build_neotest_result(status, self:output(), self:errors(), failure_message, self.tempname)
+	return {
+		status = status,
+		output_lines = self:output(),
+		errors = self:errors(),
+		short = short_failure_message(status, failures),
+	}
 end
 
 ---@param results neotest-java.JunitResult[]
----@param tempname? fun(): string
----@return neotest.Result
-function JunitResult.merge_results(results, tempname)
-	tempname = tempname or (results[1] and results[1].tempname)
+---@return neotest-java.JunitResultData
+function JunitResult.merge_results(results)
 	table.sort(results, function(a, b)
 		return a:name() < b:name()
 	end)
@@ -222,7 +178,7 @@ function JunitResult.merge_results(results, tempname)
 		return result:status() == FAILED
 	end) and FAILED or PASSED
 
-	local output = vim.iter(results)
+	local output_lines = vim.iter(results)
 		:map(function(result)
 			return result:output()
 		end)
@@ -267,7 +223,7 @@ function JunitResult.merge_results(results, tempname)
 			end)
 	end
 
-	return build_neotest_result(status, output, errors, short, tempname)
+	return { status = status, output_lines = output_lines, errors = errors, short = short }
 end
 
 return JunitResult

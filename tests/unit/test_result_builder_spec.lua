@@ -24,9 +24,7 @@ local DEFAULT_SPEC = {
 --- Build a JunitResult from a testcase table shaped the way xml2lua would
 --- produce it (with `_attr`, optional `failure` / `error` / `system-out` / `system-err`).
 local function jr(testcase)
-	return JunitResult:new(testcase, function()
-		return TEMPNAME
-	end)
+	return JunitResult:new(testcase)
 end
 
 --- Build a passing testcase (xml2lua shape).
