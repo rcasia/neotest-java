@@ -167,21 +167,37 @@ function JunitResult:output()
 	return output_lines
 end
 
+--- Builds the final `neotest.Result` table shared by `result()` and
+--- `merge_results()`, writing `output_lines` to a temporary file and
+--- omitting `short`/`errors` when the status is PASSED.
+---@param status neotest.ResultStatus
+---@param output_lines string[]
+---@param errors neotest.Error[] | nil
+---@param short string | nil
+---@param tempname? fun(): string
+---@return neotest.Result
+local function build_neotest_result(status, output_lines, errors, short, tempname)
+	if status == PASSED then
+		return { status = status, output = create_file_with_content(output_lines, tempname) }
+	end
+
+	return {
+		status = status,
+		short = short,
+		errors = errors,
+		output = create_file_with_content(output_lines, tempname),
+	}
+end
+
 --- Convert neotest-java.JunitResult to neotest.Result
 --- Each time this function is called, it will create a temporary file with the output content
 ---@return neotest.Result
 function JunitResult:result()
 	local status, failures = self:status()
 
-	if status == PASSED then
-		return {
-			status = status,
-			output = create_file_with_content(self:output(), self.tempname),
-		}
-	end
-
-	local failure_message = ""
-	if failures then
+	local failure_message
+	if status ~= PASSED then
+		failure_message = ""
 		for i, failure in ipairs(failures) do
 			failure_message = failure_message .. failure.failure_message
 			if i < #failures then
@@ -190,12 +206,7 @@ function JunitResult:result()
 		end
 	end
 
-	return {
-		status = status,
-		short = failure_message,
-		errors = self:errors(),
-		output = create_file_with_content(self:output(), self.tempname),
-	}
+	return build_neotest_result(status, self:output(), self:errors(), failure_message, self.tempname)
 end
 
 ---@param results neotest-java.JunitResult[]
@@ -218,46 +229,45 @@ function JunitResult.merge_results(results, tempname)
 		:flatten(math.huge)
 		:totable()
 
-	if status == PASSED then
-		return { status = status, output = create_file_with_content(output, tempname) }
+	local errors, short
+	if status == FAILED then
+		errors = vim.iter(results)
+			:map(function(result)
+				return result:errors(true)
+			end)
+			:flatten()
+			:totable()
+
+		short = vim.iter(results)
+			:filter(function(result)
+				return result:status() == FAILED
+			end)
+			:map(function(result)
+				return result:errors(), result:name()
+			end)
+			:map(function(error, name)
+				if #error == 1 then
+					return name .. " -> " .. error[1].message
+				end
+
+				local errs = name .. " -> {" .. NEW_LINE
+				for i, err in ipairs(error) do
+					errs = errs .. err.message
+					if i < #error then
+						errs = errs .. NEW_LINE
+					end
+				end
+				return errs .. NEW_LINE .. "}"
+			end)
+			:fold(nil, function(a, b)
+				if not a then
+					return b
+				end
+				return a .. NEW_LINE .. b
+			end)
 	end
 
-	local errors = vim.iter(results)
-		:map(function(result)
-			return result:errors(true)
-		end)
-		:flatten()
-		:totable()
-
-	local short = vim.iter(results)
-		:filter(function(result)
-			return result:status() == FAILED
-		end)
-		:map(function(result)
-			return result:errors(), result:name()
-		end)
-		:map(function(error, name)
-			if #error == 1 then
-				return name .. " -> " .. error[1].message
-			end
-
-			local errs = name .. " -> {" .. NEW_LINE
-			for i, err in ipairs(error) do
-				errs = errs .. err.message
-				if i < #error then
-					errs = errs .. NEW_LINE
-				end
-			end
-			return errs .. NEW_LINE .. "}"
-		end)
-		:fold(nil, function(a, b)
-			if not a then
-				return b
-			end
-			return a .. NEW_LINE .. b
-		end)
-
-	return { status = status, errors = errors, short = short, output = create_file_with_content(output, tempname) }
+	return build_neotest_result(status, output, errors, short, tempname)
 end
 
 return JunitResult
