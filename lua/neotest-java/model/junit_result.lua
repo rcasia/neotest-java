@@ -1,4 +1,5 @@
 local nio = require("nio")
+local junit_failure = require("neotest-java.model.junit_failure")
 
 local FAILED = require("neotest.types").ResultStatus.failed
 local PASSED = require("neotest.types").ResultStatus.passed
@@ -43,43 +44,6 @@ end
 ---@field testcase table
 ---@field tempname? fun(): string
 local JunitResult = {}
-
-local function failure_message_from_output(output, fallback)
-	if type(output) ~= "string" then
-		return fallback or "<unknown failure>"
-	end
-
-	local first_line = output:match("^%s*([^\n]+)")
-	if not first_line then
-		return fallback or "<unknown failure>"
-	end
-
-	return first_line:match("^[%w%._$]+:%s*(.+)$") or first_line
-end
-
-local function failure_from_node(node)
-	if type(node) ~= "table" then
-		local output = tostring(node)
-		return {
-			failure_message = failure_message_from_output(output),
-			failure_output = output,
-		}
-	end
-
-	if node._attr then
-		return {
-			failure_message = node._attr.message or node._attr.type or "<unknown failure>",
-			failure_output = node[1],
-		}
-	end
-
-	local output = type(node[#node]) == "string" and node[#node] or nil
-	local fallback = type(node[1]) == "string" and node[1]:match('type="([^"]+)"') or nil
-	return {
-		failure_message = failure_message_from_output(output, fallback),
-		failure_output = output,
-	}
-end
 
 ---@param id string
 ---@param tempname? fun(): string
@@ -138,15 +102,15 @@ function JunitResult:status()
 		local failures = {}
 		for i, fail in ipairs(failed) do
 			if type(fail) ~= "table" then
-				return FAILED, { failure_from_node(failed) }
+				return FAILED, { junit_failure.from_node(failed) }
 			end
 
-			failures[i] = failure_from_node(fail)
+			failures[i] = junit_failure.from_node(fail)
 		end
 		return FAILED, failures
 	end
 	if failed and failed._attr then
-		return FAILED, { failure_from_node(failed) }
+		return FAILED, { junit_failure.from_node(failed) }
 	end
 	return PASSED, {}
 end
@@ -160,17 +124,10 @@ function JunitResult:errors(with_name_prefix)
 		return nil
 	end
 
-	local filename = string.match(self:classname(), "[%.]?([%a%$_][%a%d%$_]+)$") .. ".java"
-	local line_searchpattern = string.gsub(filename, "%.", "%%.") .. ":(%d+)%)"
 	local errors = {}
 
 	for i, failure in ipairs(failures) do
-		local line
-		if failure.failure_output then
-			line = string.match(failure.failure_output, line_searchpattern)
-			-- NOTE: errors array is expecting lines properties to be 0 index based
-			line = line and line - 1 or nil
-		end
+		local line = junit_failure.line_number(failure.failure_output, self:classname())
 
 		local failure_message = failure.failure_message
 		if with_name_prefix then
