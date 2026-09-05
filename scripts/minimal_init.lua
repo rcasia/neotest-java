@@ -46,10 +46,6 @@ ensure_repo(DEPENDENCIES_DIR .. "/mini.nvim", "https://github.com/echasnovski/mi
 ensure_repo(DEPENDENCIES_DIR .. "/nvim-nio", "https://github.com/nvim-neotest/nvim-nio")
 ensure_repo(DEPENDENCIES_DIR .. "/neotest", "https://github.com/nvim-neotest/neotest")
 ensure_repo(DEPENDENCIES_DIR .. "/nvim-treesitter", "https://github.com/nvim-treesitter/nvim-treesitter")
--- Test-only: plenary.nvim is no longer a runtime dependency of
--- neotest-java (see #317), it's kept solely to provide `luassert`
--- (bundled inside it) for busted-style assertions used by a few specs.
-ensure_repo(DEPENDENCIES_DIR .. "/plenary.nvim", "https://github.com/nvim-lua/plenary.nvim")
 
 -- ─────────────────────────────────────────────────────────────
 -- Ensure the Java treesitter parser (.so) is compiled and present
@@ -116,14 +112,11 @@ vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/mini.nvim")
 vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/nvim-nio")
 vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/neotest")
 vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/nvim-treesitter")
-vim.opt.runtimepath:append(DEPENDENCIES_DIR .. "/plenary.nvim")
 
 -- ─────────────────────────────────────────────────────────────
 -- Enable mini.test
 -- ─────────────────────────────────────────────────────────────
 
--- Inject luassert as global 'assert' so tests can use assert.are.same etc.
-_G.assert = require("luassert")
 vim.opt.rtp:append(vim.fn.getcwd())
 package.path = package.path .. ";" .. vim.fn.getcwd() .. "/?.lua"
 
