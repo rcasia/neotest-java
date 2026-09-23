@@ -40,19 +40,19 @@ repos:
 
   - repo: local
     hooks:
-      - id: stylua_check
-        name: Stylua Check
-        entry: stylua
+      - id: lux_fmt
+        name: Lux Fmt
+        entry: lx --lua-version 5.1 fmt
         language: system
-        pass_filenames: true
+        pass_filenames: false
         types_or: [lua]
         stages: [pre-commit]
 
-      - id: luacheck
-        name: Luacheck
-        entry: luacheck
+      - id: lux_lint
+        name: Lux Lint
+        entry: lx --lua-version 5.1 lint
         language: system
-        pass_filenames: true
+        pass_filenames: false
         types_or: [lua]
         stages: [pre-commit]
 

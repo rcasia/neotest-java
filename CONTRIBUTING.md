@@ -22,13 +22,22 @@ You will need:
 - Java JDK 17 or 21
 - The following tools available in your terminal:
   - pre-commit (<https://pre-commit.com/#install>)
-  - `stylua`
-  - `luacheck`
-  - `make`
-  - `git`
   - `lx` (<https://lux.lumen-labs.org/>) — for package
     management (`lux.toml` is the single source of truth
-    for the luarocks package)
+    for the luarocks package), formatting (`lx fmt`)
+    and linting (`lx lint`)
+  - `make`
+  - `git`
+
+> On Linux, `lx lint` needs a dynamically-linked Lua 5.1,
+> otherwise luacheck's `luafilesystem` module fails to load
+> (`lfs.so: undefined symbol: lua_gettop`):
+>
+> ```bash
+> sudo apt-get install lua5.1 liblua5.1-0-dev
+> ```
+>
+> macOS works out of the box.
 
 #### First build
 
