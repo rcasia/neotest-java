@@ -40,25 +40,32 @@ jobs:
       - uses: actions/checkout@v7
         with: { fetch-depth: 0 }
 
-      - name: Set Version
-        run: echo "LUAROCKS_VERSION=${{ needs.check_tag.outputs.tag }}" >> $GITHUB_ENV
-
-      - name: LuaRocks Upload
-        uses: nvim-neorocks/luarocks-tag-release@v7
-        env:
-          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+      - name: Install Lux
+        uses: lumen-oss/gh-actions-lux@v1
         with:
-          version: ${{ env.LUAROCKS_VERSION }}
-          # NOTE: tree-sitter-java is intentionally NOT a luarocks dependency.
-          # The Java parser is provided by nvim-treesitter (`:TSInstall java`,
-          # see README prerequisites and `:checkhealth neotest-java`).
-          # Listing it here broke the release workflow because the
-          # tree-sitter-java rock needs the `treesitter-parser` build backend
-          # (luarocks-build-treesitter-parser), which luarocks 3.13 in the
-          # action's nix environment cannot find in the isolated test tree
-          # (see Release run 35866794049).
-          dependencies: |
-            neotest
-            nvim-nio
-            nvim-dap
-            nvim-dap-ui
+          version: 0.46.0
+
+      - name: Validate project
+        run: |
+          lx --lua-version 5.1 build
+          lx --lua-version 5.1 generate-rockspec
+
+      # NOTE: lux.toml is the single source of truth for the
+      # luarocks package (dependencies, build spec, metadata).
+      # `lx upload` generates the rockspec from lux.toml, so the
+      # dependencies below are informational only — keep them in
+      # sync with the [dependencies] table in lux.toml.
+      # NOTE: tree-sitter-java is intentionally NOT a dependency.
+      # The Java parser is provided by nvim-treesitter (`:TSInstall java`,
+      # see README prerequisites and `:checkhealth neotest-java`).
+      # Listing it here broke the release workflow because the
+      # tree-sitter-java rock needs the `treesitter-parser` build backend
+      # (luarocks-build-treesitter-parser), which luarocks 3.13 in the
+      # action's nix environment cannot find in the isolated test tree
+      # (see Release run 35866794049).
+      # Current lux.toml dependencies:
+      #   neotest, nvim-nio, nvim-dap, nvim-dap-ui
+      - name: Lux Upload
+        run: lx upload --sign-protocol none
+        env:
+          LUX_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}

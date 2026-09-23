@@ -1,18 +1,28 @@
 {
-    "diagnostics.globals": [
-        "vim",
-        "describe",
-        "it",
-        "assert",
-        "before_each",
-        "after_each",
-        "jit",
-        "_G",
-        "_NEOTEST_IS_CHILD",
-        "unpack"
-    ],
-    "diagnostics.neededFileStatus": {
-        "undefined-field": "none",
-        "deprecated": "none"
-    }
+  "diagnostics.globals": [
+    "vim",
+    "describe",
+    "it",
+    "assert",
+    "before_each",
+    "after_each",
+    "jit",
+    "_G",
+    "_NEOTEST_IS_CHILD",
+    "unpack"
+  ],
+  "diagnostics.neededFileStatus": {
+    "undefined-field": "none",
+    "deprecated": "none"
+  },
+  "workspace": {
+    "library": [
+      ".lux/5.1/1cac0fb981f4b22dc93e889c354aaf639ed7ac9fe3fb98b349bfaea47f83efb7-nvim-dap@0.10.0-1/src",
+      ".lux/5.1/8e323ff492bc769418af667a70f9172011b68f8290d7b2bf2f3acb147a04f00f-nvim-dap@0.10.0-1/src",
+      ".lux/5.1/c2cca5b988043795056f705fdd6cce841d1476b9bb45aff389a5499aa6b79479-nvim-dap-ui@4.0.0-1/src",
+      ".lux/5.1/de206edd51dbfc1bbe56869d6729cf4a6e6e70e7b2e107093c0f6520c142d79b-nvim-nio@1.10.1-1/src",
+      ".lux/5.1/f93005c41bfd7f344700c1e7c2e423478991138d0f9f7ed512b263fe384313cc-nvim-nio@1.10.1-1/src",
+      ".lux/5.1/fd3cf668616289b2b2d747e78a3786b371e3912050962a1378803e4de441842a-neotest@5.20.0-1/src"
+    ]
+  }
 }

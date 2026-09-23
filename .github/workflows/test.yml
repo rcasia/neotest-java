@@ -11,7 +11,10 @@ on:
       - "scripts/**"
       - "*.lua"
       - "Makefile"
+      - "lux.toml"
+      - "lux.lock"
       - ".github/workflows/test.yml"
+      - ".github/workflows/lux.yml"
   workflow_call:
 
 jobs:

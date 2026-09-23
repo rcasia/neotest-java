@@ -1,4 +1,4 @@
-.PHONY: clean test test-fail-fast test-e2e
+.PHONY: clean test test-fail-fast test-e2e lux-sync lux-build lux-lint lux-test
 
 all: hooks test
 
@@ -57,3 +57,18 @@ validate:
 
 format:
 	stylua .
+
+# Lux targets (https://github.com/lumen-oss/lux).
+# lux.toml is the single source of truth for the luarocks package.
+# These require `lx` on PATH (see https://lux.lumen-labs.org).
+lux-sync:
+	lx --lua-version 5.1 sync
+
+lux-build:
+	lx --lua-version 5.1 build
+
+lux-lint:
+	lx --lua-version 5.1 lint
+
+lux-test:
+	lx --lua-version 5.1 test

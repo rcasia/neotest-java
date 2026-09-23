@@ -1,0 +1,27 @@
+package = "neotest-java"
+lua = "==5.1"
+
+[source]
+url = "https://github.com/rcasia/$(PACKAGE)/archive/refs/tags/v$(VERSION).zip"
+dev = "git+https://github.com/rcasia/$(PACKAGE).git"
+
+[description]
+summary = "Neotest adapter for Java."
+homepage = "https://github.com/rcasia/neotest-java"
+license = "MIT"
+labels = ["java", "junit", "lua", "neotest", "neovim"]
+
+[dependencies]
+neotest = ">=5.0.0"
+nvim-nio = ">=1.7.0"
+nvim-dap = ">=0.5.0"
+nvim-dap-ui = ">=3.9.0"
+
+[build]
+type = "builtin"
+copy_directories = ["plugin"]
+
+[test]
+type = "command"
+command = "make"
+flags = ["test"]
