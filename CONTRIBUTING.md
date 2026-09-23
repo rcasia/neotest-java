@@ -108,6 +108,9 @@ make lux-sync
 # Build the project
 make lux-build
 
+# Format via lux (stylua)
+make lux-fmt
+
 # Lint via lux (luacheck)
 make lux-lint
 

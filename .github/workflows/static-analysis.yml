@@ -25,6 +25,12 @@ on:
       - ".github/workflows/lux.yml"
 
 jobs:
+  # NOTE: linting stays on the system luacheck action for now.
+  # `lx lint` (same luacheck under the hood) cannot run on
+  # GitHub-hosted ubuntu runners: lux's auto-installed static Lua
+  # can't dlopen the luafilesystem C module
+  # (`lfs.so: undefined symbol: lua_gettop`). Revisit when
+  # upstream lux fixes Linux C-module loading.
   luacheck:
     runs-on: ubuntu-latest
     steps:
@@ -33,18 +39,19 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1.2.0
 
-  stylua:
+  fmt:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Stylua
-        uses: JohnnyMorganz/stylua-action@v5
+      - name: Install Lux
+        uses: lumen-oss/gh-actions-lux@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: latest # NOTE: we recommend pinning to a specific version in case of formatting changes
-          # CLI arguments
-          args: --check .
+          version: 0.46.0
+      - name: Check formatting with lux
+        run: |
+          lx --lua-version 5.1 fmt
+          git diff --exit-code
 
   lua-language-server:
     runs-on: ubuntu-latest
