@@ -35,5 +35,9 @@ jobs:
           lx --lua-version 5.1 generate-rockspec
           ls neotest-java-*.rockspec
 
-      - name: Lint with lux
-        run: lx --lua-version 5.1 lint
+      # NOTE: `lx lint` (luacheck via lux) is intentionally not run
+      # here. It fails on GitHub-hosted ubuntu runners with
+      # `lfs.so: undefined symbol: lua_gettop` (lux's luacheck builds
+      # luafilesystem against incompatible Lua headers in that
+      # environment), while the dedicated `luacheck` job in
+      # static-analysis.yml covers the same check and passes.
