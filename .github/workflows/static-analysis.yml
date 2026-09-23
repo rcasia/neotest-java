@@ -25,19 +25,17 @@ on:
       - ".github/workflows/lux.yml"
 
 jobs:
-  # NOTE: linting stays on the system luacheck action for now.
-  # `lx lint` (same luacheck under the hood) cannot run on
-  # GitHub-hosted ubuntu runners: lux's auto-installed static Lua
-  # can't dlopen the luafilesystem C module
-  # (`lfs.so: undefined symbol: lua_gettop`). Revisit when
-  # upstream lux fixes Linux C-module loading.
-  luacheck:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Luacheck
-        uses: lunarmodules/luacheck@v1.2.0
+      - name: Install Lux
+        uses: lumen-oss/gh-actions-lux@v1
+        with:
+          version: 0.46.0
+      - name: Lint with lux
+        run: lx --lua-version 5.1 lint
 
   fmt:
     runs-on: ubuntu-latest
