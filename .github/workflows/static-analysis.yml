@@ -8,7 +8,10 @@ on:
       - "*.lua"
       - ".stylua.toml"
       - ".luacheckrc"
+      - "lux.toml"
+      - "lux.lock"
       - ".github/workflows/static-analysis.yml"
+      - ".github/workflows/lux.yml"
   pull_request:
     branches: ["main"]
     paths:
@@ -16,7 +19,10 @@ on:
       - "*.lua"
       - ".stylua.toml"
       - ".luacheckrc"
+      - "lux.toml"
+      - "lux.lock"
       - ".github/workflows/static-analysis.yml"
+      - ".github/workflows/lux.yml"
 
 jobs:
   luacheck:

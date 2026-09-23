@@ -9,6 +9,8 @@ on:
       - "scripts/**"
       - "*.lua"
       - "Makefile"
+      - "lux.toml"
+      - "lux.lock"
       - ".github/workflows/**"
 
 jobs:

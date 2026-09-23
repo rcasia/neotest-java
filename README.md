@@ -129,6 +129,18 @@ with SHA-256 checksum verification.
 > The plugin will detect if you have an older JUnit version
 > installed and prompt you to upgrade.
 
+### Packaging with Lux
+
+This project uses [Lux](https://github.com/lumen-oss/lux)
+for Lua package management. `lux.toml` is the single
+source of truth — releases are published to
+[luarocks.org](https://luarocks.org/modules/rcasia/neotest-java)
+via `lx upload`, which generates the rockspec from it.
+
+```bash
+lx install neotest-java
+```
+
 ## ⚙️ Configuration
 
 All configuration options are optional.

@@ -29,5 +29,9 @@ tests/fixtures/*/*.iml
 .dependencies/
 pack/
 
+# Lux (https://github.com/lumen-oss/lux)
+.lux/
+*.rockspec
+
 # OpenSpec: archived changes are historical record, not active work
 openspec/changes/archive/

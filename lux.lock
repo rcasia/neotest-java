@@ -1,0 +1,126 @@
+{
+  "version": "1.0.0",
+  "dependencies": {
+    "rocks": {
+      "1cac0fb981f4b22dc93e889c354aaf639ed7ac9fe3fb98b349bfaea47f83efb7": {
+        "name": "nvim-dap",
+        "version": "0.10.0-1",
+        "pinned": false,
+        "opt": false,
+        "dependencies": [],
+        "constraint": ">=0.5.0",
+        "binaries": [],
+        "source": "luarocks_rockspec+https://luarocks.org/",
+        "source_url": {
+          "type": "url",
+          "url": "https://github.com/mfussenegger/nvim-dap/archive/0.10.0.zip"
+        },
+        "hashes": {
+          "rockspec": "sha256-1I+b1kcgY/5G4EogluprGiVJ27xG8tHDykJSH4IDDj4=",
+          "source": "sha256-S3Q810Zph3f3a/qIRe9j0L0DWHZWi4oxPLD5ZsWo1XE="
+        }
+      },
+      "8e323ff492bc769418af667a70f9172011b68f8290d7b2bf2f3acb147a04f00f": {
+        "name": "nvim-dap",
+        "version": "0.10.0-1",
+        "pinned": false,
+        "opt": false,
+        "dependencies": [],
+        "constraint": null,
+        "binaries": [],
+        "source": "luarocks_rockspec+https://luarocks.org/",
+        "source_url": {
+          "type": "url",
+          "url": "https://github.com/mfussenegger/nvim-dap/archive/0.10.0.zip"
+        },
+        "hashes": {
+          "rockspec": "sha256-1I+b1kcgY/5G4EogluprGiVJ27xG8tHDykJSH4IDDj4=",
+          "source": "sha256-S3Q810Zph3f3a/qIRe9j0L0DWHZWi4oxPLD5ZsWo1XE="
+        }
+      },
+      "c2cca5b988043795056f705fdd6cce841d1476b9bb45aff389a5499aa6b79479": {
+        "name": "nvim-dap-ui",
+        "version": "4.0.0-1",
+        "pinned": false,
+        "opt": false,
+        "dependencies": [
+          "8e323ff492bc769418af667a70f9172011b68f8290d7b2bf2f3acb147a04f00f",
+          "de206edd51dbfc1bbe56869d6729cf4a6e6e70e7b2e107093c0f6520c142d79b"
+        ],
+        "constraint": ">=3.9.0",
+        "binaries": [],
+        "source": "luarocks_rockspec+https://luarocks.org/",
+        "source_url": {
+          "type": "url",
+          "url": "https://github.com/rcarriga/nvim-dap-ui/archive/v4.0.0.zip"
+        },
+        "hashes": {
+          "rockspec": "sha256-VDCV1BjukKW0Zm6Qg/4xT21J1WPYYugnLOlniF9scho=",
+          "source": "sha256-0yaL0FuxwNsLj6FcWDnnorNZEyn1yEN8+k2/eMhkXpc="
+        }
+      },
+      "de206edd51dbfc1bbe56869d6729cf4a6e6e70e7b2e107093c0f6520c142d79b": {
+        "name": "nvim-nio",
+        "version": "1.10.1-1",
+        "pinned": false,
+        "opt": false,
+        "dependencies": [],
+        "constraint": null,
+        "binaries": [],
+        "source": "luarocks_rockspec+https://luarocks.org/",
+        "source_url": {
+          "type": "url",
+          "url": "https://github.com/nvim-neotest/nvim-nio/archive/21f5324bfac14e22ba26553caf69ec76ae8a7662.zip"
+        },
+        "hashes": {
+          "rockspec": "sha256-QL5OCZFBGixecdEoriGck4iG83tjM09ewYbWVSbcfa4=",
+          "source": "sha256-5x+iHduNdyVjS6+OrqfDh17g9o2tP2YFFqKEsK6Z5zw="
+        }
+      },
+      "f93005c41bfd7f344700c1e7c2e423478991138d0f9f7ed512b263fe384313cc": {
+        "name": "nvim-nio",
+        "version": "1.10.1-1",
+        "pinned": false,
+        "opt": false,
+        "dependencies": [],
+        "constraint": ">=1.7.0",
+        "binaries": [],
+        "source": "luarocks_rockspec+https://luarocks.org/",
+        "source_url": {
+          "type": "url",
+          "url": "https://github.com/nvim-neotest/nvim-nio/archive/21f5324bfac14e22ba26553caf69ec76ae8a7662.zip"
+        },
+        "hashes": {
+          "rockspec": "sha256-QL5OCZFBGixecdEoriGck4iG83tjM09ewYbWVSbcfa4=",
+          "source": "sha256-5x+iHduNdyVjS6+OrqfDh17g9o2tP2YFFqKEsK6Z5zw="
+        }
+      },
+      "fd3cf668616289b2b2d747e78a3786b371e3912050962a1378803e4de441842a": {
+        "name": "neotest",
+        "version": "5.20.0-1",
+        "pinned": false,
+        "opt": false,
+        "dependencies": [
+          "de206edd51dbfc1bbe56869d6729cf4a6e6e70e7b2e107093c0f6520c142d79b"
+        ],
+        "constraint": ">=5.0.0",
+        "binaries": [],
+        "source": "luarocks_rockspec+https://luarocks.org/",
+        "source_url": {
+          "type": "url",
+          "url": "https://github.com/nvim-neotest/neotest/archive/1c529a1ef9c82e8131e872368415cecc2bb86ea2.zip"
+        },
+        "hashes": {
+          "rockspec": "sha256-N8+UxMyOyOKb4+8n3nAQ2Kd3zfGZaFrpeyJmgKvdZc4=",
+          "source": "sha256-PXzEYKTCVfr/YMdqEc6o2pQG7iAMsVxWDGCUxJAMkjM="
+        }
+      }
+    },
+    "entrypoints": [
+      "1cac0fb981f4b22dc93e889c354aaf639ed7ac9fe3fb98b349bfaea47f83efb7",
+      "c2cca5b988043795056f705fdd6cce841d1476b9bb45aff389a5499aa6b79479",
+      "f93005c41bfd7f344700c1e7c2e423478991138d0f9f7ed512b263fe384313cc",
+      "fd3cf668616289b2b2d747e78a3786b371e3912050962a1378803e4de441842a"
+    ]
+  }
+}

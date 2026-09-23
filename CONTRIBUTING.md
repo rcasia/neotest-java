@@ -26,6 +26,9 @@ You will need:
   - `luacheck`
   - `make`
   - `git`
+  - `lx` (<https://lux.lumen-labs.org/>) — for package
+    management (`lux.toml` is the single source of truth
+    for the luarocks package)
 
 #### First build
 
@@ -89,3 +92,29 @@ If you change Java source files, rebuild before running tests:
 ```bash
 make clean && make
 ```
+
+#### Packaging with Lux
+
+This project uses [Lux](https://github.com/lumen-oss/lux)
+for Lua package management. `lux.toml` is the single
+source of truth — `lx upload` generates the rockspec
+from it when publishing to
+[luarocks.org](https://luarocks.org/modules/rcasia/neotest-java).
+
+```bash
+# Install/sync dependencies into .lux/
+make lux-sync
+
+# Build the project
+make lux-build
+
+# Lint via lux (luacheck)
+make lux-lint
+
+# Run the test suite via lux (delegates to `make test`)
+make lux-test
+```
+
+`lux.lock` is committed for reproducible installs.
+`.lux/` (local build tree) and generated `*.rockspec`
+files are gitignored — never commit them.
