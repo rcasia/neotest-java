@@ -18,6 +18,7 @@ local checksum = require("neotest-java.util.checksum")
 local JunitVersionDetector = require("neotest-java.util.junit_version_detector")
 local MethodIdResolver = require("neotest-java.method_id_resolver")
 local ClasspathProvider = require("neotest-java.core.spec_builder.compiler.classpath_provider")
+local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
 local CommandExecutor = require("neotest-java.command.command_executor")
 local scan = require("neotest-java.util.dir_scan")
 local build_tools = require("neotest-java.build_tool")
@@ -74,6 +75,7 @@ end
 --- @field check_junit_jar_deps? neotest-java.CheckJunitJarDeps
 ---@diagnostic disable-next-line: undefined-doc-name
 --- @field client_provider? fun(cwd: neotest-java.Path): vim.lsp.Client
+--- @field language_server? neotest-java.JavaLanguageServer Single seam replacing client_provider + classpath + binaries + compile. Explicit component fields below win over it per-concern.
 --- @field classpath_provider? neotest-java.ClasspathProvider
 --- @field binaries? neotest-java.LspBinaries
 --- @field lsp_compiler? NeotestJavaCompiler
@@ -85,6 +87,7 @@ end
 --- @field check_junit_jar_deps neotest-java.CheckJunitJarDeps
 ---@diagnostic disable-next-line: undefined-doc-name
 --- @field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
+--- @field language_server neotest-java.JavaLanguageServer
 --- @field classpath_provider neotest-java.ClasspathProvider
 --- @field binaries neotest-java.LspBinaries
 --- @field lsp_compiler NeotestJavaCompiler
@@ -95,9 +98,19 @@ end
 --- @return neotest-java.ResolvedDeps
 local function resolve_deps(deps)
 	deps = deps or {}
+	local LanguageServer = require("neotest-java.core.language_server")
 	local _client_provider = deps.client_provider or compilers.client_provider
-	local _classpath_provider = deps.classpath_provider or ClasspathProvider({ client_provider = _client_provider })
-	local _binaries = deps.binaries or Binaries({ client_provider = _client_provider })
+	-- Precedence: explicit language_server wins; otherwise a custom
+	-- client_provider composes into the default jdtls gateway; otherwise
+	-- share the default gateway. Explicit classpath_provider / binaries /
+	-- lsp_compiler below still win per-concern.
+	local _language_server = deps.language_server
+		or (
+			deps.client_provider and LanguageServer.new({ client_provider = deps.client_provider })
+			or compilers.language_server
+		)
+	local _classpath_provider = deps.classpath_provider or ClasspathProvider({ language_server = _language_server })
+	local _binaries = deps.binaries or Binaries({ language_server = _language_server })
 	local _method_id_resolver = deps.method_id_resolver
 		or MethodIdResolver({
 			classpath_provider = _classpath_provider,
@@ -109,9 +122,10 @@ local function resolve_deps(deps)
 		root_finder = deps.root_finder or root_finder,
 		check_junit_jar_deps = deps.check_junit_jar_deps or {},
 		client_provider = _client_provider,
+		language_server = _language_server,
 		classpath_provider = _classpath_provider,
 		binaries = _binaries,
-		lsp_compiler = deps.lsp_compiler or compilers.lsp,
+		lsp_compiler = deps.lsp_compiler or LspCompiler({ language_server = _language_server }),
 		build_tool_getter = deps.build_tool_getter or build_tools.get,
 		method_id_resolver = _method_id_resolver,
 	}
