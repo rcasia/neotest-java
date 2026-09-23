@@ -1,4 +1,4 @@
-.PHONY: clean test test-fail-fast test-e2e lux-sync lux-build lux-lint lux-test
+.PHONY: clean test test-fail-fast test-e2e lux-sync lux-build lux-fmt lux-lint lux-test
 
 all: hooks test
 
@@ -66,6 +66,9 @@ lux-sync:
 
 lux-build:
 	lx --lua-version 5.1 build
+
+lux-fmt:
+	lx --lua-version 5.1 fmt
 
 lux-lint:
 	lx --lua-version 5.1 lint
