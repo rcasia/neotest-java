@@ -190,6 +190,7 @@ require("neotest").setup({
       -- configuration options
     }, {
       -- dependency overrides (all optional)
+      language_server = my_custom_language_server,
       client_provider = my_custom_client_provider,
       classpath_provider = my_custom_classpath_provider,
       binaries = my_custom_binaries,
@@ -200,6 +201,13 @@ require("neotest").setup({
   },
 })
 ```
+
+`language_server` is the single seam for all Java language-server
+interaction (`get_java_home`, `get_classpath`, `compile`). Pass it to
+replace java-home, classpath, and compilation behavior at once — e.g.
+to back neotest-java with a non-jdtls server. Explicit
+`client_provider` / `classpath_provider` / `binaries` / `lsp_compiler`
+overrides still work and win per-concern over `language_server`.
 
 ### Example: Using coc.nvim as LSP client
 
@@ -247,6 +255,11 @@ require("neotest").setup({
   },
 })
 ```
+
+`get_classpath` normally returns a `neotest-java.Classpath` value
+object (`lua/neotest-java/model/classpath.lua`, same idea as `Path`:
+entry rules and the `:`/`;` separator live in one place). Plain strings
+from custom providers keep working — callers coerce via `tostring()`.
 
 ### Type Reference
 

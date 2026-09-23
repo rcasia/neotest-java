@@ -20,7 +20,7 @@ off work to one of these:
 | [`nvim-neotest/neotest`](https://github.com/nvim-neotest/neotest) | Yes | The framework this *is* an adapter for — defines `neotest.Adapter`, `RunSpec`, `Result`, `Tree`, and the `lib.files`/`lib.treesitter` helpers reused directly in `core/`. |
 | [`nvim-neotest/nvim-nio`](https://github.com/nvim-neotest/nvim-nio) | Yes | Async runtime (`nio`) — lets LSP requests and process calls happen off the main thread without blocking Neovim. |
 | [`nvim-treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) + `tree-sitter-java` | Yes | Parses Java source so `positions_discoverer.lua` can find classes and test methods (see [flow 1](#1-test-discovery)). |
-| A Java language server (e.g. [`nvim-jdtls`](https://github.com/mfussenegger/nvim-jdtls)/JDT.LS) | Yes, at runtime | neotest-java doesn't bundle or configure a Java LSP itself — it just looks for an already-attached client named `jdtls` (`core/spec_builder/compiler/client_provider.lua`) to resolve the `java` binary, the classpath, and to trigger workspace compiles (see [flow 2](#2-spec-building)). No `jdtls` client attached means spec building can't proceed. |
+| A Java language server (e.g. [`nvim-jdtls`](https://github.com/mfussenegger/nvim-jdtls)/JDT.LS) | Yes, at runtime | neotest-java doesn't bundle or configure a Java LSP itself — the `JavaLanguageServer` gateway (`core/language_server/`, jdtls-backed by default: three single-purpose resolvers for java-home, classpath, and compile fronted by one seam) resolves the `java` binary, the classpath, and triggers workspace compiles (see [flow 2](#2-spec-building)). No compatible client attached means spec building can't proceed. |
 | [`mfussenegger/nvim-dap`](https://github.com/mfussenegger/nvim-dap) | Only for debugging | Only required if you run tests with `strategy = "dap"`; both `core/spec_builder/init.lua` and `build_tool/launcher.lua` `pcall`-require it and fail gracefully/loudly if it's missing. |
 | [JUnit Platform Console Standalone](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone) (a jar, not a plugin) | Yes | The actual test runner — downloaded by `install.lua` and invoked as a subprocess by the command built in [flow 2](#2-spec-building). |
 
@@ -104,7 +104,8 @@ sequenceDiagram
 **In plain terms:** `core/spec_builder/init.lua` is the orchestrator. It
 figures out which module the test belongs to (Maven or Gradle,
 single-module or multi-module — see [root
-finding](#4-finding-the-project-root)), asks the Java LSP client (JDT.LS)
+finding](#4-finding-the-project-root)), asks the `JavaLanguageServer`
+gateway (jdtls-backed by default)
 for the `java` binary path and the project's classpath, triggers a
 workspace compile, and hands everything to
 `command/junit_command_builder.lua`, which assembles the actual
@@ -177,12 +178,20 @@ A quick map for "which file do I touch?":
   files, checksums, directory scanning, XML reading, detecting Maven vs
   Gradle.
 - **`model/`** — value objects: `Path` (cross-platform paths),
-  `Project`/`Module` (multi-module layout), `JunitResult` (a parsed
+  `Classpath` (ordered entries + platform separator, same idea as
+  `Path`), `Project`/`Module` (multi-module layout), `JunitResult` (a parsed
   `<testcase>` XML node).
 - **`core/`** — the adapter's actual behavior: discovery, root-finding,
   spec building, result parsing.
+- **`core/language_server/`** — the single seam for all Java-LSP
+  interaction: `init.lua` exposes `JavaLanguageServer`
+  (`get_java_home`/`get_classpath`/`compile`) backed by three
+  single-purpose jdtls resolvers (`jdtls_java_home`,
+  `jdtls_classpath`, `jdtls_compile`). `Binaries`,
+  `ClasspathProvider`, and `LspCompiler` are thin delegates of this
+  gateway, so a future server only replaces the gateway.
 - **`core/spec_builder/`** — orchestrates building the command to run
-  tests: build-tool detection, classpath via LSP, compile-on-run.
+  tests: build-tool detection, classpath via the gateway, compile-on-run.
 - **`core/position_ids/`** — computes stable IDs for classes/methods so
   neotest can match tree nodes to JUnit results.
 - **`command/`** — building the actual JUnit CLI invocation, locating
