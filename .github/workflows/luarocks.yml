@@ -43,25 +43,22 @@ jobs:
       - name: Set Version
         run: echo "LUAROCKS_VERSION=${{ needs.check_tag.outputs.tag }}" >> $GITHUB_ENV
 
-      - name: Install C/C++ Compiler
-        uses: rlalik/setup-cpp-compiler@master
-        with:
-          compiler: clang-latest
-
-      - name: Install tree-sitter CLI
-        uses: baptiste0928/cargo-install@v3
-        with:
-          crate: tree-sitter-cli
-
       - name: LuaRocks Upload
         uses: nvim-neorocks/luarocks-tag-release@v7
         env:
           LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
         with:
           version: ${{ env.LUAROCKS_VERSION }}
+          # NOTE: tree-sitter-java is intentionally NOT a luarocks dependency.
+          # The Java parser is provided by nvim-treesitter (`:TSInstall java`,
+          # see README prerequisites and `:checkhealth neotest-java`).
+          # Listing it here broke the release workflow because the
+          # tree-sitter-java rock needs the `treesitter-parser` build backend
+          # (luarocks-build-treesitter-parser), which luarocks 3.13 in the
+          # action's nix environment cannot find in the isolated test tree
+          # (see Release run 35866794049).
           dependencies: |
             neotest
             nvim-nio
-            tree-sitter-java
             nvim-dap
             nvim-dap-ui
