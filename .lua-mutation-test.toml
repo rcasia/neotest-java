@@ -1,0 +1,17 @@
+# Mutation testing config for lua-mutation-test (lmut).
+# CI: .github/workflows/mutation.yml. Local: `lmut run`.
+#
+# NOTE: lmut resolves test/source globs relative to the mutated PATH and runs
+# the test command inside a copy of that PATH. PATH must therefore be the repo
+# root (not `lua/`): `bash scripts/test` needs scripts/, tests/, and lua/
+# present (test deps are auto-cloned by scripts/minimal_init.lua).
+version = "1"
+test_command = "bash scripts/test"
+timeout = 5
+test_globs = ["tests/**/*_spec.lua", "tests/*_spec.lua"]
+source_globs = ["lua/**/*.lua", "lua/*.lua"]
+
+# "easy" samples a subset of mutable sites to minimize CI cost.
+# "normal" visits every site but caps mutants per operator per site (3).
+# Default "very_hard" is unlimited.
+difficulty = "easy"

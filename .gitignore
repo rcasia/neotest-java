@@ -35,3 +35,6 @@ pack/
 
 # OpenSpec: archived changes are historical record, not active work
 openspec/changes/archive/
+
+# lmut incremental cache — restored via actions/cache in CI, never committed
+.lua-mutation-test/

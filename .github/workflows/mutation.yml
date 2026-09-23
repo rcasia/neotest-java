@@ -1,0 +1,80 @@
+name: Mutation
+
+on:
+  schedule:
+    - cron: "00 6 * * 1" # every monday at 06:00 UTC
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "lua/**"
+      - "tests/**"
+      - "scripts/**"
+      - "lux.toml"
+      - "lux.lock"
+      - "Makefile"
+      - ".lua-mutation-test.toml"
+      - ".github/workflows/mutation.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120 # bound worst-case cost: full suite runs once per mutant
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Neovim
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      - name: Restore lmut incremental cache
+        id: lmut-cache-restore
+        # Best-effort: a cache outage must never fail mutation testing.
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          # lmut's incremental cache (mutation-cache.json). lmut validates
+          # entries against current file hashes itself, so restoring a
+          # slightly stale cache is safe: only changed files re-run.
+          path: .lua-mutation-test/cache
+          key: lmut-${{ runner.os }}-0.0.6-${{ hashFiles('lux.lock', 'lux.toml', '.lua-mutation-test.toml') }}
+          restore-keys: |
+            lmut-${{ runner.os }}-0.0.6-
+
+      - name: Run mutation testing
+        # fail-under: 0 (default) keeps this informational: never blocks
+        # PR fast checks, results surface via job summary + annotations.
+        # path is repo root: the test command needs scripts/, tests/ and
+        # lua/ present (test deps are auto-cloned by scripts/minimal_init.lua).
+        # cache: 'true' (action default) reuses the previous lmut.log from
+        # the Actions cache when all run inputs are unchanged: re-runs and
+        # identical pushes finish instantly.
+        uses: lua-mutation-test/lua-mutation-test-action@v0
+        with:
+          version: 0.0.6
+          path: .
+          test-command: bash scripts/test
+          config: .lua-mutation-test.toml
+          cache: "true"
+
+      - name: Save lmut incremental cache
+        # Always persist (even on failure): lmut flushes partial results,
+        # so the next run resumes instead of restarting from scratch.
+        # Key is unique per commit; restores match via restore-keys prefix.
+        # Save conflicts (re-runs) are harmless.
+        if: always()
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: .lua-mutation-test/cache
+          key: lmut-${{ runner.os }}-0.0.6-${{ hashFiles('lux.lock', 'lux.toml', '.lua-mutation-test.toml') }}-${{ github.sha }}
