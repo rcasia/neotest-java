@@ -7,7 +7,7 @@ local JdtlsCompile = require("neotest-java.core.language_server.jdtls_compile")
 --- whole table with its own three methods; callers never change.
 --- @class neotest-java.JavaLanguageServer
 --- @field get_java_home fun(cwd: neotest-java.Path): neotest-java.Path
---- @field get_classpath fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by the platform separator
+--- @field get_classpath fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): neotest-java.Classpath | string runtime + test + extra entries, in order. Custom providers may return a plain string; callers coerce via tostring().
 --- @field compile fun(opts: { base_dir: neotest-java.Path, compile_mode: "full" | "incremental" })
 
 --- @class neotest-java.JavaLanguageServerDeps

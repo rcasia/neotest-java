@@ -178,7 +178,8 @@ A quick map for "which file do I touch?":
   files, checksums, directory scanning, XML reading, detecting Maven vs
   Gradle.
 - **`model/`** — value objects: `Path` (cross-platform paths),
-  `Project`/`Module` (multi-module layout), `JunitResult` (a parsed
+  `Classpath` (ordered entries + platform separator, same idea as
+  `Path`), `Project`/`Module` (multi-module layout), `JunitResult` (a parsed
   `<testcase>` XML node).
 - **`core/`** — the adapter's actual behavior: discovery, root-finding,
   spec building, result parsing.

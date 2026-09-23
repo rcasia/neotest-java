@@ -1,5 +1,7 @@
 local nio = require("nio")
 
+local Classpath = require("neotest-java.model.classpath")
+
 -- Classpath separator: ";" on Windows, ":" on Unix.
 -- Computed once at module load time since the platform doesn't change at runtime.
 local DEFAULT_PATH_SEPARATOR = vim.fn.has("win32") == 1 and ";" or ":"
@@ -10,7 +12,7 @@ local DEFAULT_PATH_SEPARATOR = vim.fn.has("win32") == 1 and ";" or ":"
 --- @field path_separator? string Defaults to ";" on Windows, ":" on Unix. Inject in tests to avoid platform-dependent behavior.
 
 --- @param deps neotest-java.JdtlsClasspathDeps
---- @return { get_classpath: fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string }
+--- @return { get_classpath: fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): neotest-java.Classpath }
 local function JdtlsClasspath(deps)
 	deps = deps or {}
 	assert(deps.client_provider, "JdtlsClasspath requires a client_provider")
@@ -21,7 +23,7 @@ local function JdtlsClasspath(deps)
 
 	--- @param base_dir neotest-java.Path
 	--- @param additional_classpath_entries? neotest-java.Path[]
-	--- @return string classpaths joined by the platform separator
+	--- @return neotest-java.Classpath runtime + test + extra entries, in order
 	local function get_classpath(base_dir, additional_classpath_entries)
 		additional_classpath_entries = additional_classpath_entries or {}
 
@@ -72,13 +74,15 @@ local function JdtlsClasspath(deps)
 			end)
 			:totable()
 
-		return vim.iter({
+		local entries = vim.iter({
 			runtime.wait(),
 			test.wait(),
 			additional_classpath_entries_strings,
 		})
 			:flatten()
-			:join(path_separator)
+			:totable()
+
+		return Classpath(entries, { separator = path_separator })
 	end
 
 	return {

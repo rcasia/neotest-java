@@ -75,7 +75,10 @@ describe("JavaLanguageServer (jdtls)", function()
 				schedule = sync_schedule,
 				path_separator = ":",
 			})
-			eq("source_classpath:test_classpath:additional", server.get_classpath(Path("some"), { Path("additional") }))
+			eq(
+				"source_classpath:test_classpath:additional",
+				tostring(server.get_classpath(Path("some"), { Path("additional") }))
+			)
 		end)
 	)
 
@@ -87,7 +90,10 @@ describe("JavaLanguageServer (jdtls)", function()
 				schedule = sync_schedule,
 				path_separator = ";",
 			})
-			eq("source_classpath;test_classpath;additional", server.get_classpath(Path("some"), { Path("additional") }))
+			eq(
+				"source_classpath;test_classpath;additional",
+				tostring(server.get_classpath(Path("some"), { Path("additional") }))
+			)
 		end)
 	)
 

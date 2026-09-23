@@ -256,6 +256,11 @@ require("neotest").setup({
 })
 ```
 
+`get_classpath` normally returns a `neotest-java.Classpath` value
+object (`lua/neotest-java/model/classpath.lua`, same idea as `Path`:
+entry rules and the `:`/`;` separator live in one place). Plain strings
+from custom providers keep working — callers coerce via `tostring()`.
+
 ### Type Reference
 
 See the `neotest-java.Dependencies` type annotation in

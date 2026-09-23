@@ -1,5 +1,5 @@
 --- @class neotest-java.ClasspathProvider
---- @field get_classpath async fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): string classpaths joined by ":"
+--- @field get_classpath async fun(base_dir: neotest-java.Path, additional_classpath_entries?: neotest-java.Path[]): neotest-java.Classpath | string runtime + test + extra entries, in order. Custom providers may return a plain string; callers coerce via tostring().
 
 --- @class neotest-java.ClasspathProviderDeps
 --- @field language_server? neotest-java.JavaLanguageServer Single seam for language-server interaction. One of language_server / client_provider is required.

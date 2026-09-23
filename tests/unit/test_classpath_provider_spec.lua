@@ -1,4 +1,5 @@
 local Path = require("neotest-java.model.path")
+local Classpath = require("neotest-java.model.classpath")
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
@@ -17,12 +18,12 @@ describe("Classpath Provider", function()
 					get_classpath = function(base_dir, additional)
 						seen_base = base_dir
 						seen_extra = additional
-						return "source_classpath:test_classpath:additional"
+						return Classpath({ "source_classpath", "test_classpath", "additional" }, { separator = ":" })
 					end,
 				},
 			})
 			local result = provider.get_classpath(Path("some"), { Path("additional") })
-			eq("source_classpath:test_classpath:additional", result)
+			eq("source_classpath:test_classpath:additional", tostring(result))
 			eq(Path("some"), seen_base)
 			eq({ Path("additional") }, seen_extra)
 		end)
