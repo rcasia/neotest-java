@@ -157,6 +157,30 @@ describe("ResultBuilder", function()
 		)
 	end)
 
+	it("matches a single report testcase without parentheses to the discovered method ID", function()
+		-- given — JUnit Vintage reports a plain method as "firstTestMethod",
+		-- while discovery identifies the node as "firstTestMethod()".
+		local file_path = Path("MyTest.java")
+		local tree = TREES.TWO_TESTS_IN_FILE(file_path)
+		local jrs = { jr(passing("firstTestMethod", "com.example.ExampleTest")) }
+
+		-- then
+		eq(
+			{
+				["com.example.ExampleTest#firstTestMethod()"] = {
+					status = "passed",
+					output = TEMPNAME,
+				},
+			},
+			ResultBuilder({
+				scan_dir = scan_dir_returning(file_path),
+				junit_result_reader = reader_returning(jrs),
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+		)
+	end)
+
 	it("builds failed results when assertion message contains a greater-than character", function()
 		-- given
 		local file_path = Path("MyTest.java")
