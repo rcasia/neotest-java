@@ -7,6 +7,28 @@ local clean_id = function(str)
 	return str:gsub("%(.*", "")
 end
 
+--- @param tree neotest.Tree
+--- @param id string
+--- @return string | nil
+local function matching_test_id(tree, id)
+	if tree:get_key(id) then
+		return id
+	end
+
+	local method_base = clean_id(id)
+	return vim
+		.iter(tree:iter())
+		--- @param pos neotest.Position
+		:map(function(_, pos)
+			if pos.type == "test" then
+				return pos.id
+			end
+		end)
+		:find(function(pos_id)
+			return clean_id(pos_id) == method_base
+		end)
+end
+
 --- @return table <string, neotest-java.JunitResult[]>
 local function group_by_method_base(testcases)
 	local groups = {}
@@ -70,17 +92,9 @@ local ResultBuilder = function(deps)
 					--- @type neotest-java.JunitResult
 					local jres = items[1]
 
-					results[id] = jres:result()
+					results[matching_test_id(tree, id) or id] = jres:result()
 				else
-					local _id = vim
-						.iter(tree:iter())
-						--- @param pos neotest.Position
-						:map(function(_, pos)
-							return pos.id
-						end)
-						:find(function(pos_id)
-							return clean_id(pos_id) == clean_id(items[1]:id())
-						end)
+					local _id = matching_test_id(tree, id)
 
 					if _id then
 						results[_id] = JunitResult.merge_results(items, deps.tempname_fn)

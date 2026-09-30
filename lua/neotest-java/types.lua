@@ -11,9 +11,11 @@
 
 ---@class neotest.Tree
 ---@field data fun(): neotest.Position
+---@field get_key fun(self: neotest.Tree, key: string): neotest.Tree?
 ---@field iter fun(): fun():integer[], neotest.Position
 ---@field to_list fun(): neotest.Position[]
 ---@field children fun(): neotest.Tree[]
+---@field parent fun(self: neotest.Tree): neotest.Tree?
 ---@field root fun(): neotest.Tree
 
 ---@class neotest.Error

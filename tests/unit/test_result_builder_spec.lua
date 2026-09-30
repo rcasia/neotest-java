@@ -4,6 +4,7 @@ local JunitResult = require("neotest-java.model.junit_result")
 local Path = require("neotest-java.model.path")
 local eq = require("tests.assertions").eq
 local TREES = require("tests.trees")
+local Tree = require("neotest.types").Tree
 
 local current_dir = vim.fn.fnamemodify(vim.fn.expand("%:p:h"), ":p")
 
@@ -179,6 +180,101 @@ describe("ResultBuilder", function()
 				tempname_fn = fake_tempname,
 			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
 		)
+	end)
+
+	it("preserves failure details when matching a single Vintage testcase to the selected method", function()
+		local id = "com.example.ExampleTest#firstTestMethod()"
+		local tree = Tree.from_list({
+			id = id,
+			name = "firstTestMethod",
+			path = tostring(Path("MyTest.java")),
+			range = { 2, 2, 5, 3 },
+			type = "test",
+		}, function(pos)
+			return pos.id
+		end)
+		local jrs = {
+			jr(
+				failing(
+					"firstTestMethod",
+					"com.example.ExampleTest",
+					"assertion failed",
+					"java.lang.AssertionError",
+					"trace"
+				)
+			),
+		}
+
+		local result = ResultBuilder({
+			scan_dir = scan_dir_returning(Path("any/TEST-junit-vintage.xml")),
+			junit_result_reader = reader_returning(jrs),
+			remove_file = remove_file,
+			tempname_fn = fake_tempname,
+		}).build_results(DEFAULT_SPEC, { code = 1, output = "output" }, tree)
+
+		eq({
+			[id] = {
+				status = "failed",
+				short = "assertion failed",
+				errors = { { message = "assertion failed" } },
+				output = TEMPNAME,
+			},
+		}, result)
+	end)
+
+	for _, name in ipairs({ "parameterizedMethodShouldFail[0]", "parameterizedMethodShouldFail(Integer, Integer)[1]" }) do
+		it("matches a single parameterized invocation to the selected method: " .. name, function()
+			local tree = TREES.PARAMETERIZED_TEST
+			local jrs = { jr(passing(name)) }
+
+			local result = ResultBuilder({
+				scan_dir = scan_dir_returning(Path("any/TEST-parameterized.xml")),
+				junit_result_reader = reader_returning(jrs),
+				remove_file = remove_file,
+				tempname_fn = fake_tempname,
+			}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+
+			eq({
+				[tree:data().id] = {
+					status = "passed",
+					output = TEMPNAME,
+				},
+			}, result)
+		end)
+	end
+
+	it("prefers an exact method ID when another method shares its base name", function()
+		local id = "com.example.ExampleTest#firstTestMethod(java.lang.String)"
+		local filepath = tostring(Path("MyTest.java"))
+		local tree = Tree.from_list({
+			{ id = filepath, name = filepath, path = filepath, type = "file", range = { 0, 0, 20, 0 } },
+			{
+				id = "com.example.ExampleTest#firstTestMethod()",
+				name = "firstTestMethod",
+				path = filepath,
+				type = "test",
+				range = { 2, 2, 5, 3 },
+			},
+			{
+				id = id,
+				name = "firstTestMethod",
+				path = filepath,
+				type = "test",
+				range = { 7, 2, 10, 3 },
+			},
+		}, function(pos)
+			return pos.id
+		end)
+		local jrs = { jr(passing("firstTestMethod(java.lang.String)")) }
+
+		local result = ResultBuilder({
+			scan_dir = scan_dir_returning(Path("any/TEST-exact.xml")),
+			junit_result_reader = reader_returning(jrs),
+			remove_file = remove_file,
+			tempname_fn = fake_tempname,
+		}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
+
+		eq({ [id] = { status = "passed", output = TEMPNAME } }, result)
 	end)
 
 	it("builds failed results when assertion message contains a greater-than character", function()
