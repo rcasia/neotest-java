@@ -130,6 +130,7 @@ sequenceDiagram
     rb->>rb: find TEST-*.xml report files
     rb->>jr: parse each report into JunitResult objects
     jr-->>rb: pass/fail/error + output per test
+    rb->>rb: match report IDs to discovered test nodes
     rb->>rb: merge parameterized-test<br/>iterations back into one result
     rb-->>neotest: results, shown in the UI
 ```
@@ -137,9 +138,12 @@ sequenceDiagram
 **In plain terms:** `core/result_builder.lua` looks for the
 `TEST-*.xml` files JUnit wrote to the reports directory, and
 `core/junit_result_reader.lua` + `model/junit_result.lua` parse them into
-pass/fail/error status with output and stack traces. One extra step: a
-single `@ParameterizedTest`/`@TestFactory` method produces *multiple*
-JUnit testcases (one per invocation) — `result_builder.lua` groups those
+pass/fail/error status with output and stack traces. The result builder
+matches report IDs to discovered test nodes, preferring an exact match
+and otherwise matching the class and method name without the parameter
+signature. This also handles single JUnit Vintage testcases whose names
+omit `()`. A single `@ParameterizedTest`/`@TestFactory` method produces
+*multiple* JUnit testcases (one per invocation) — `result_builder.lua` groups those
 back together and merges them into a single result for the one tree node
 neotest knows about, then deletes the temporary report files.
 
