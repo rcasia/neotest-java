@@ -21,7 +21,9 @@ local MethodIdResolver = function(deps)
 			end
 			local javap_path = javap_paths[module_dir:to_string()]
 			if not classpaths[module_dir:to_string()] then
-				classpaths[module_dir:to_string()] = deps.classpath_provider.get_classpath(module_dir)
+				-- tostring coerces both Classpath structs and plain strings
+				-- returned by custom providers.
+				classpaths[module_dir:to_string()] = tostring(deps.classpath_provider.get_classpath(module_dir))
 			end
 			local classpath = classpaths[module_dir:to_string()]
 
