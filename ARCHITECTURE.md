@@ -20,7 +20,7 @@ off work to one of these:
 | [`nvim-neotest/neotest`](https://github.com/nvim-neotest/neotest) | Yes | The framework this *is* an adapter for — defines `neotest.Adapter`, `RunSpec`, `Result`, `Tree`, and the `lib.files`/`lib.treesitter` helpers reused directly in `core/`. |
 | [`nvim-neotest/nvim-nio`](https://github.com/nvim-neotest/nvim-nio) | Yes | Async runtime (`nio`) — lets LSP requests and process calls happen off the main thread without blocking Neovim. |
 | [`nvim-treesitter`](https://github.com/nvim-treesitter/nvim-treesitter) + `tree-sitter-java` | Yes | Parses Java source so `positions_discoverer.lua` can find classes and test methods (see [flow 1](#1-test-discovery)). |
-| A Java language server (e.g. [`nvim-jdtls`](https://github.com/mfussenegger/nvim-jdtls)/JDT.LS) | Yes, at runtime | neotest-java doesn't bundle or configure a Java LSP itself — the `JavaLanguageServer` gateway (`core/language_server/`, jdtls-backed by default: three single-purpose resolvers for java-home, classpath, and compile fronted by one seam) resolves the `java` binary, the classpath, and triggers workspace compiles (see [flow 2](#2-spec-building)). No compatible client attached means spec building can't proceed. |
+| A Java language server (e.g. [`nvim-jdtls`](https://github.com/mfussenegger/nvim-jdtls)/JDT.LS or [`intellij-lsp.nvim`](https://github.com/Rishabh-Pathak/intellij-lsp.nvim)) | Yes, at runtime | neotest-java doesn't bundle or configure a Java LSP itself — the `JavaLanguageServer` gateway (`core/language_server/`, backed by JDTLS or IntelliJ LSP: single-purpose resolvers for java-home, classpath, and compile fronted by one seam) resolves the `java` binary, the classpath, and triggers workspace compiles (see [flow 2](#2-spec-building)). No compatible client attached means spec building can't proceed. |
 | [`mfussenegger/nvim-dap`](https://github.com/mfussenegger/nvim-dap) | Only for debugging | Only required if you run tests with `strategy = "dap"`; both `core/spec_builder/init.lua` and `build_tool/launcher.lua` `pcall`-require it and fail gracefully/loudly if it's missing. |
 | [JUnit Platform Console Standalone](https://mvnrepository.com/artifact/org.junit.platform/junit-platform-console-standalone) (a jar, not a plugin) | Yes | The actual test runner — downloaded by `install.lua` and invoked as a subprocess by the command built in [flow 2](#2-spec-building). |
 
@@ -83,7 +83,7 @@ sequenceDiagram
     participant neotest
     participant sb as spec_builder
     participant proj as root_finder /<br/>build_tool / Project
-    participant lsp as JDT.LS (via LSP)
+    participant lsp as Java LSP<br/>(JDT.LS / IntelliJ)
     participant cb as junit_command_builder
 
     neotest->>sb: build_spec(args)
@@ -105,7 +105,7 @@ sequenceDiagram
 figures out which module the test belongs to (Maven or Gradle,
 single-module or multi-module — see [root
 finding](#4-finding-the-project-root)), asks the `JavaLanguageServer`
-gateway (jdtls-backed by default)
+gateway (dispatching to JDTLS or IntelliJ LSP based on the active client)
 for the `java` binary path and the project's classpath, triggers a
 workspace compile, and hands everything to
 `command/junit_command_builder.lua`, which assembles the actual
@@ -185,11 +185,11 @@ A quick map for "which file do I touch?":
   spec building, result parsing.
 - **`core/language_server/`** — the single seam for all Java-LSP
   interaction: `init.lua` exposes `JavaLanguageServer`
-  (`get_java_home`/`get_classpath`/`compile`) backed by three
-  single-purpose jdtls resolvers (`jdtls_java_home`,
-  `jdtls_classpath`, `jdtls_compile`). `Binaries`,
-  `ClasspathProvider`, and `LspCompiler` are thin delegates of this
-  gateway, so a future server only replaces the gateway.
+  (`get_java_home`/`get_classpath`/`compile`) dispatching dynamically to
+  single-purpose resolvers for JDTLS (`jdtls_java_home`, `jdtls_classpath`, `jdtls_compile`)
+  or IntelliJ LSP (`intellij_java_home`, `intellij_classpath`, `intellij_compile`,
+  assisted by `document_uri`). `Binaries`, `ClasspathProvider`, and `LspCompiler`
+  are thin delegates of this gateway, so upstream callers never change.
 - **`core/spec_builder/`** — orchestrates building the command to run
   tests: build-tool detection, classpath via the gateway, compile-on-run.
 - **`core/position_ids/`** — computes stable IDs for classes/methods so

@@ -88,14 +88,14 @@ describe("ClientProvider", function()
 			local java_file = Path("/some/project/src/Main.java")
 
 			local provider = ClientProvider({
-				get_clients = function(_)
+				get_clients = function(opts)
 					get_clients_call_count = get_clients_call_count + 1
-					-- first call (no bufnr): jdtls not running yet
-					if get_clients_call_count == 1 then
+					-- fast-path checks (no bufnr): neither client running yet
+					if not opts.bufnr then
 						return {}
 					end
-					-- polling calls (with bufnr): ready on 3rd overall call
-					if get_clients_call_count >= 3 then
+					-- polling calls (with bufnr): ready on 2nd polling round
+					if get_clients_call_count >= 5 then
 						return { mock_client }
 					end
 					return {}
@@ -126,6 +126,43 @@ describe("ClientProvider", function()
 			eq(java_file:to_string(), bufadd_arg)
 			eq(java_file:to_string(), bufload_arg)
 			assert(sleep_count >= 1, "expected at least one sleep call during polling")
+		end)
+	)
+
+	it(
+		"detects intellij client when running",
+		async(function()
+			local queried_names = {}
+			local intellij_client = { name = "intellij", initialized = true }
+
+			local provider = ClientProvider({
+				get_clients = function(opts)
+					table.insert(queried_names, opts.name)
+					if opts.name == "intellij" then
+						return { intellij_client }
+					end
+					return {}
+				end,
+				globpath = function()
+					error("should not be called on fast path")
+				end,
+				bufadd = function()
+					error("should not be called on fast path")
+				end,
+				bufload = function()
+					error("should not be called on fast path")
+				end,
+				sleep = function()
+					error("should not be called on fast path")
+				end,
+				hrtime = function()
+					return 0
+				end,
+			})
+
+			local result = provider(Path("/some/project"))
+			eq(intellij_client, result)
+			assert(vim.tbl_contains(queried_names, "intellij"), "expected intellij to be queried")
 		end)
 	)
 end)
