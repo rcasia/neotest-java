@@ -8,12 +8,17 @@ local Path = require("neotest-java.model.path")
 --- @field bufload fun(path: string)
 --- @field sleep fun(ms: number)
 --- @field hrtime fun(): number
+--- @field client_name? string
+--- @field client_names? string[]
 
 --- @param deps neotest-java.ClientProviderDeps
 ---@diagnostic disable-next-line: undefined-doc-name
 --- @return fun(cwd: neotest-java.Path): vim.lsp.Client
 local function ClientProvider(deps)
 	local client
+	local client_names = deps.client_names
+		or (deps.client_name and { deps.client_name })
+		or { "intellij", "jdtls" }
 
 	--- @param dir neotest-java.Path
 	--- @return neotest-java.Path
@@ -58,21 +63,29 @@ local function ClientProvider(deps)
 			return client
 		end
 
-		client = deps.get_clients({ name = "jdtls" })[1]
-
-		if not client then
-			local any_java_file = find_any_java_file(cwd)
-			local bufnr = preload_file_for_lsp(any_java_file)
-
-			assert(
-				wait(10000, function()
-					client = deps.get_clients({ name = "jdtls", bufnr = bufnr })[1]
-					---@diagnostic disable-next-line: undefined-field
-					return not not client and not not client.initialized
-				end, 1000),
-				"jdtls client not started in time"
-			)
+		for _, name in ipairs(client_names) do
+			client = deps.get_clients({ name = name })[1]
+			if client and client.initialized then
+				return client
+			end
 		end
+
+		local any_java_file = find_any_java_file(cwd)
+		local bufnr = preload_file_for_lsp(any_java_file)
+
+		assert(
+			wait(10000, function()
+				for _, name in ipairs(client_names) do
+					client = deps.get_clients({ name = name, bufnr = bufnr })[1]
+					---@diagnostic disable-next-line: undefined-field
+					if client and client.initialized then
+						return true
+					end
+				end
+				return false
+			end, 1000),
+			table.concat(client_names, " or ") .. " client not started in time"
+		)
 
 		return client
 	end
