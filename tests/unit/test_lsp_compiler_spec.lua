@@ -1,28 +1,27 @@
-local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
 local Path = require("neotest-java.model.path")
 
 local assertions = require("tests.assertions")
 local eq = assertions.eq
 
-describe("LSP compiler", function()
-	it("works", function()
-		local compiler = LspCompiler({
-			client_provider = function(cwd)
-				eq(Path("/path/to/project"), cwd)
-				return {
-					request = function(_, params, opts)
-						eq("java/buildWorkspace", params)
-						eq({ forceRebuild = false }, opts)
+local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
 
-						return true
-					end,
-				}
-			end,
+describe("LSP compiler", function()
+	it("forwards to the language server gateway", function()
+		local seen_opts
+		local compiler = LspCompiler({
+			---@diagnostic disable-next-line: missing-fields
+			language_server = {
+				compile = function(opts)
+					seen_opts = opts
+				end,
+			},
 		})
 
 		compiler.compile({
 			base_dir = Path("/path/to/project"),
 			compile_mode = "incremental",
 		})
+
+		eq({ base_dir = Path("/path/to/project"), compile_mode = "incremental" }, seen_opts)
 	end)
 end)

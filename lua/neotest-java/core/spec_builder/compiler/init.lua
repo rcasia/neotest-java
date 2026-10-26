@@ -1,5 +1,6 @@
 local nio = require("nio")
 local ClientProvider = require("neotest-java.core.spec_builder.compiler.client_provider")
+local LanguageServer = require("neotest-java.core.language_server")
 local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compiler")
 
 ---@class NeotestJavaCompiler.Opts
@@ -27,14 +28,20 @@ local client_provider = ClientProvider({
 	end,
 })
 
+--- Single jdtls gateway shared by all delegates: swapping servers in the
+--- future means building a different gateway here, not touching callers.
+local language_server = LanguageServer.new({ client_provider = client_provider })
+
 ---@class neotest-java.Compilers
+---@field language_server neotest-java.JavaLanguageServer
 ---@field lsp NeotestJavaCompiler
 ---@diagnostic disable-next-line: undefined-doc-name
 ---@field client_provider fun(cwd: neotest-java.Path): vim.lsp.Client
 
 ---@type neotest-java.Compilers
 local compilers = {
-	lsp = LspCompiler({ client_provider = client_provider }),
+	language_server = language_server,
+	lsp = LspCompiler({ language_server = language_server }),
 	client_provider = client_provider,
 }
 

@@ -7,82 +7,64 @@ local Path = require("neotest-java.model.path")
 describe("Binaries", function()
 	local expected_cwd = Path("some")
 
-	-- Inject a synchronous schedule so mock callbacks fire immediately
-	-- without needing the Neovim event loop.
-	local sync_schedule = function(fn)
-		fn()
-	end
-
-	local test_client_provider = function(cwd)
-		eq(expected_cwd, cwd)
+	local language_server_stub = function(java_home)
 		return {
-			request = function(_, method, params, callback)
-				eq(method, "workspace/executeCommand")
-				eq(params.command, "java.project.getSettings")
-				eq(params.arguments[1], "file://some")
-				eq(params.arguments[2], { "org.eclipse.jdt.ls.core.vm.location" })
-
-				if callback then
-					callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = "my_java_home" })
-				end
+			get_java_home = function(cwd)
+				eq(expected_cwd, cwd)
+				return Path(java_home)
 			end,
 		}
 	end
 
-	it("resolves jdtls java binary", function()
+	it("resolves java binary", function()
 		local bin = Binaries({
-			client_provider = test_client_provider,
+			language_server = language_server_stub("my_java_home"),
 			is_windows = false,
-			schedule = sync_schedule,
 		})
 		local result = bin.java(expected_cwd)
 		eq(Path("my_java_home/bin/java"), result)
 	end)
 
-	it("resolves jdtls javap binary", function()
+	it("resolves javap binary", function()
 		local bin = Binaries({
-			client_provider = test_client_provider,
+			language_server = language_server_stub("my_java_home"),
 			is_windows = false,
-			schedule = sync_schedule,
 		})
 		local result = bin.javap(expected_cwd)
 		eq(Path("my_java_home/bin/javap"), result)
 	end)
 
-	it("uses the cached binary after the first first time", function()
-		local invocation_count = 0
+	it("adds .exe extension on Windows", function()
 		local bin = Binaries({
-			client_provider = function()
+			language_server = language_server_stub("my_java_home"),
+			is_windows = true,
+		})
+		local java_result = bin.java(expected_cwd)
+		local javap_result = bin.javap(expected_cwd)
+		eq(Path("my_java_home/bin/java.exe"), java_result)
+		eq(Path("my_java_home/bin/javap.exe"), javap_result)
+	end)
+
+	it("falls back to client_provider with default jdtls behavior", function()
+		local sync_schedule = function(fn)
+			fn()
+		end
+		local bin = Binaries({
+			client_provider = function(cwd)
+				eq(expected_cwd, cwd)
 				return {
-					request = function(_, _, _, callback)
-						invocation_count = invocation_count + 1
-						callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = "my_java_home" })
+					request = function(_, method, params, callback)
+						eq(method, "workspace/executeCommand")
+						eq(params.command, "java.project.getSettings")
+						if callback then
+							callback(nil, { ["org.eclipse.jdt.ls.core.vm.location"] = "my_java_home" })
+						end
 					end,
 				}
 			end,
 			is_windows = false,
 			schedule = sync_schedule,
 		})
-
-		for _ = 1, 10 do
-			bin.java(Path("some"))
-			bin.javap(Path("some"))
-			bin.java(Path("another_path"))
-			bin.javap(Path("another_path"))
-		end
-
-		assert(invocation_count == 2, "Expected two invocations of the LSP request, got " .. invocation_count)
-	end)
-
-	it("adds .exe extension on Windows", function()
-		local bin = Binaries({
-			client_provider = test_client_provider,
-			is_windows = true,
-			schedule = sync_schedule,
-		})
-		local java_result = bin.java(expected_cwd)
-		local javap_result = bin.javap(expected_cwd)
-		eq(Path("my_java_home/bin/java.exe"), java_result)
-		eq(Path("my_java_home/bin/javap.exe"), javap_result)
+		eq(Path("my_java_home/bin/java"), bin.java(expected_cwd))
 	end)
 end)

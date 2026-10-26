@@ -102,7 +102,9 @@ local SpecBuilder = function(deps)
 				module.base_dir,
 				deps.scan(module.base_dir, { search_patterns = { Path("test/resources$"):to_string() } })
 			)
-			command:classpath_file_arg(classpath_file_arg)
+			-- tostring coerces both Classpath structs and plain strings
+			-- returned by custom providers.
+			command:classpath_file_arg(tostring(classpath_file_arg))
 
 			-- DAP STRATEGY
 			if args.strategy == "dap" then
