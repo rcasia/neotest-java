@@ -66,6 +66,6 @@ jobs:
       # Current lux.toml dependencies:
       #   neotest, nvim-nio, nvim-dap, nvim-dap-ui
       - name: Lux Upload
-        run: lx upload --sign-protocol none
+        run: lx upload
         env:
           LUX_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
