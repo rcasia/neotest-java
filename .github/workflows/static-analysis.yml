@@ -8,6 +8,7 @@ on:
       - "*.lua"
       - ".stylua.toml"
       - ".luacheckrc"
+      - ".pre-commit-config.yaml"
       - "lux.toml"
       - "lux.lock"
       - ".github/workflows/static-analysis.yml"
@@ -19,32 +20,45 @@ on:
       - "*.lua"
       - ".stylua.toml"
       - ".luacheckrc"
+      - ".pre-commit-config.yaml"
       - "lux.toml"
       - "lux.lock"
       - ".github/workflows/static-analysis.yml"
       - ".github/workflows/lux.yml"
 
 jobs:
-  luacheck:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Luacheck
-        uses: lunarmodules/luacheck@v1.2.0
-
-  stylua:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Stylua
-        uses: JohnnyMorganz/stylua-action@v5
+      - name: Install Lux
+        uses: lumen-oss/gh-actions-lux@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: latest # NOTE: we recommend pinning to a specific version in case of formatting changes
-          # CLI arguments
-          args: --check .
+          version: 0.46.0
+      # lux's auto-installed static Lua can't dlopen C modules
+      # (`lfs.so: undefined symbol: lua_gettop`), which `lx lint`
+      # needs via luacheck → luafilesystem. A distro Lua links
+      # liblua dynamically, so luafilesystem loads fine when lux
+      # detects and uses the system interpreter instead.
+      - name: Install system Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1 liblua5.1-0-dev
+      - name: Lint with lux
+        run: lx --lua-version 5.1 lint
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install Lux
+        uses: lumen-oss/gh-actions-lux@v1
+        with:
+          version: 0.46.0
+      - name: Check formatting with lux
+        run: |
+          lx --lua-version 5.1 fmt
+          git diff --exit-code
 
   lua-language-server:
     runs-on: ubuntu-latest
