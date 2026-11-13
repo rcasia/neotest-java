@@ -38,6 +38,9 @@ end
 ---@field default_junit_jar_version neotest-java.JunitVersion
 ---@field test_classname_patterns string[] | nil
 ---@field disable_update_notifications boolean | nil
+---@field debug_startup_timeout_ms? number Maximum JDWP readiness wait (default 30000).
+---@field debug_exit_timeout_ms? number Maximum exit/report wait after DAP closes (default 5000).
+---@field debug_shutdown_timeout_ms? number Grace period before SIGKILL (default 1000).
 ---@field get_supported_versions fun(): table[]
 
 ---@type neotest-java.ConfigOpts

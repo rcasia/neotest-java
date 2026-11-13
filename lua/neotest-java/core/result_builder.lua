@@ -44,8 +44,11 @@ end
 -- Public API
 -- -----------------------------------------------------------------------------
 
+--- @class neotest-java.StrategyResult : neotest.StrategyResult
+--- @field error? string Strategy infrastructure/cancellation failure.
+
 --- @class neotest-java.ResultBuilder
---- @field build_results fun(spec: neotest.RunSpec, result: neotest.StrategyResult, tree: neotest.Tree): table<string, neotest.Result>
+--- @field build_results fun(spec: neotest.RunSpec, result: neotest-java.StrategyResult, tree: neotest.Tree): table<string, neotest.Result>
 
 --- @class neotest-java.ResultBuilderDeps
 --- @field scan_dir fun(dir: neotest-java.Path, opts: { search_patterns: string[] }): neotest-java.Path[]
@@ -68,21 +71,64 @@ local ResultBuilder = function(deps)
 
 	return {
 		--- @param spec neotest.RunSpec
-		--- @param result neotest.StrategyResult
+		--- @param result neotest-java.StrategyResult
 		--- @param tree neotest.Tree
 		--- @return table<string, neotest.Result>
 		build_results = function(spec, result, tree)
-			if result.code ~= 0 and result.code ~= 1 then
-				local node = tree:data()
-				return { [node.id] = JunitResult.ERROR(node.id, result.output, deps.tempname_fn) }
+			local function failure(message)
+				return {
+					status = "failed",
+					output = result.output,
+					short = message,
+					errors = { { message = message } },
+				}
+			end
+			local function failed_selection(message)
+				local failures = {}
+				for _, position in tree:iter() do
+					if position.type == "test" then
+						failures[position.id] = failure(message)
+					end
+				end
+				if next(failures) == nil then
+					failures[tree:data().id] = failure(message)
+				end
+				return failures
+			end
+			local function cleanup()
+				if spec.context.cleanup_reports then
+					spec.context.cleanup_reports()
+				end
 			end
 
-			if spec.context.strategy == "dap" then
-				spec.context.terminated_command_event.wait()
+			local process = spec.context.process
+			local infrastructure_error = result.error
+			if process then
+				if infrastructure_error or (result.code ~= 0 and result.code ~= 1) then
+					process.stop(infrastructure_error or "Debug strategy failed")
+				end
+				local state = process.wait_exit()
+				infrastructure_error = infrastructure_error or state.error
+				if state.cancelled or not state.exited then
+					infrastructure_error = infrastructure_error or "Java debug test cancelled or timed out"
+				elseif state.code ~= 0 and state.code ~= 1 then
+					infrastructure_error = infrastructure_error
+						or ("Java test exited with code " .. tostring(state.code))
+				end
+			end
+			if infrastructure_error or (result.code ~= 0 and result.code ~= 1) then
+				cleanup()
+				return failed_selection(
+					infrastructure_error or ("Test process exited with code " .. tostring(result.code))
+				)
 			end
 
 			local report_files = find_report_files(spec.context.reports_dir)
-			local testcases = deps.junit_result_reader.read_all(report_files)
+			local read_ok, testcases = pcall(deps.junit_result_reader.read_all, report_files)
+			if not read_ok then
+				cleanup()
+				return failed_selection("Could not read JUnit reports: " .. tostring(testcases))
+			end
 			local groups = group_by_method_base(testcases)
 
 			local results = {}
@@ -111,6 +157,18 @@ local ResultBuilder = function(deps)
 				if not ok then
 					log.debug("Could not remove report file: " .. filepath .. " - " .. tostring(err or "unknown error"))
 				end
+			end
+			cleanup()
+
+			-- Missing framework evidence is an infrastructure failure, never a
+			-- pass or an inferred skip (including a partially reported selection).
+			for _, position in tree:iter() do
+				if position.type == "test" and not results[position.id] then
+					results[position.id] = failure("No JUnit result reported for selected test: " .. position.id)
+				end
+			end
+			if next(results) == nil then
+				return failed_selection("No JUnit results found in " .. tostring(spec.context.reports_dir))
 			end
 
 			return results

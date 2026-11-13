@@ -49,8 +49,10 @@ local function mkdir(dir)
 end
 
 local function report_folder_name_gen(module_dir, build_dir)
-	local base = (module_dir and module_dir:append(build_dir:to_string())) or build_dir
-	return base:append("junit-reports"):append(nio.fn.strftime("%d%m%y%H%M%S"))
+	local base = build_dir.is_absolute and build_dir or module_dir:append(build_dir:to_string())
+	local parent = base:append("junit-reports")
+	nio.fn.mkdir(tostring(parent), "p")
+	return Path(assert(vim.uv.fs_mkdtemp(tostring(parent:append("run-XXXXXX")))))
 end
 
 local function remove_file(filepath)
@@ -199,7 +201,7 @@ local function NeotestJavaAdapter(config, deps)
 		mkdir = mkdir,
 		scan = scan,
 		compile = function(base_dir, compile_mode)
-			resolved.lsp_compiler.compile({
+			return resolved.lsp_compiler.compile({
 				base_dir = base_dir,
 				compile_mode = compile_mode,
 			})
@@ -208,6 +210,9 @@ local function NeotestJavaAdapter(config, deps)
 		build_tool_getter = resolved.build_tool_getter,
 		detect_project_type = detect_project_type,
 		launch_debug_test = launcher.launch_debug_test,
+		cleanup_reports = function(dir)
+			nio.fn.delete(tostring(dir), "rf")
+		end,
 		root_finder = resolved.root_finder,
 	})
 
