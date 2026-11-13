@@ -5,6 +5,7 @@ local logger = require("neotest-java.logger")
 local random_port = require("neotest-java.util.random_port")
 local Project = require("neotest-java.model.project")
 local Path = require("neotest-java.model.path")
+local nio = require("nio")
 
 --- @class neotest-java.BuildSpecDependencies
 --- @field mkdir fun(dir: neotest-java.Path)
@@ -150,7 +151,7 @@ local SpecBuilder = function(deps)
 							process.claim()
 							return cfg
 						end,
-						after = function(reason)
+						after = nio.create(function(reason)
 							if reason then
 								process.stop(reason)
 							end
@@ -158,7 +159,7 @@ local SpecBuilder = function(deps)
 							if state.error or state.cancelled or not state.exited then
 								error(state.error or "Java test process did not exit")
 							end
-						end,
+						end, 1),
 					},
 					cwd = module.base_dir:to_string(),
 					symbol = position.type == "test" and position.name or nil,

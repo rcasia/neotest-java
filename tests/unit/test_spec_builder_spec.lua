@@ -565,7 +565,16 @@ describe("SpecBuilder", function()
 		}
 
 		-- Mock launch_debug_test
-		local mock_terminated_event = { mock = "event" }
+		local claimed, waited = false, false
+		local mock_terminated_event = {
+			claim = function()
+				claimed = true
+			end,
+			wait_exit = function()
+				waited = true
+				return { exited = true, code = 0 }
+			end,
+		}
 		local launch_debug_test_called = false
 		local launch_debug_test_args = {}
 		local captured_port = nil
@@ -677,6 +686,14 @@ describe("SpecBuilder", function()
 		eq(Path("report_folder"), actual.context.reports_dir)
 		---@diagnostic disable-next-line: need-check-nil
 		eq(mock_terminated_event, actual.context.terminated_command_event)
+		local cfg = {}
+		assert(actual)
+		eq(cfg, actual.strategy.before(cfg))
+		eq(true, claimed)
+		-- Legacy Neotest calls this hook outside nio; newer strategies await
+		-- it inside nio. Both must work without blocking the main loop.
+		actual.strategy.after()
+		eq(true, waited)
 	end)
 
 	for _, failure in ipairs({ "throw", "false" }) do
