@@ -1,112 +1,203 @@
 local async = require("tests.async_helpers").async
-local assertions = require("tests.assertions")
-local eq = assertions.eq
-
+local eq = require("tests.assertions").eq
 local Path = require("neotest-java.model.path")
 local BuildToolLauncher = require("neotest-java.build_tool.launcher").new
+local BANNER = "Listening for transport dt_socket at address: 12345"
 
---- Build a stub job runner mimicking the shape the job runner contract
---- exposes (`Job:new(opts)` returning an object with `start()`). The stub captures
---- the callbacks and lets `start()` drive them synchronously via
---- `on_start`, matching how a real job would invoke them from its own
---- process lifecycle (started -> stdout/stderr chunks -> exit) without
---- needing real process I/O or a scheduler tick.
-local function stub_job_runner(on_start)
-	local started_opts = nil
+local function fixture(on_start)
+	local opts, kills
+	kills = {}
+	local launcher = BuildToolLauncher({
+		dap_repl = false,
+		job_runner = {
+			new = function(_, callbacks)
+				opts = callbacks
+				return {
+					start = function()
+						on_start(callbacks)
+						return {
+							kill = function(_, signal)
+								kills[#kills + 1] = signal
+								if signal == 9 then
+									callbacks.on_exit(nil, 137, 9)
+								end
+							end,
+						}
+					end,
+				}
+			end,
+		},
+	})
+	return launcher, function()
+		return opts, kills
+	end
+end
 
-	return {
-		new = function(_, opts)
-			started_opts = opts
-			return {
-				start = function()
-					if on_start then
-						on_start(opts)
-					end
-				end,
-			}
-		end,
-		opts = function()
-			return started_opts
-		end,
-	}
+local function launch(launcher, opts)
+	return launcher.launch_debug_test("java", { "-jar", "test.jar" }, Path("/fake/cwd"), opts)
 end
 
 describe("BuildToolLauncher", function()
 	it(
-		"starts the job with the given command, args and cwd",
+		"retains the system handle and the legacy bounded event API",
 		async(function()
-			local runner = stub_job_runner(function(opts)
-				opts.on_stdout(nil, "Listening for transport dt_socket at address: 12345")
+			local launcher, inspect = fixture(function(opts)
+				opts.on_stdout(nil, BANNER)
 			end)
-			local launcher = BuildToolLauncher({ job_runner = runner, dap_repl = false })
-
-			launcher.launch_debug_test("java", { "-jar", "foo.jar" }, Path("/fake/cwd"))
-
-			local opts = runner.opts()
-			assert(opts ~= nil, "job runner should have been started with opts")
+			local process = launch(launcher)
+			local opts = inspect()
 			eq("java", opts.command)
-			eq({ "-jar", "foo.jar" }, opts.args)
-			eq(Path("/fake/cwd"):to_string(), opts.cwd)
+			eq({ "-jar", "test.jar" }, opts.args)
+			eq(tostring(Path("/fake/cwd")), opts.cwd)
+			eq(false, process.is_set())
+			opts.on_exit(nil, 0, 0)
+			opts.on_exit(nil, 8, 0) -- duplicate completion cannot overwrite the outcome
+			eq(true, process.is_set())
+			eq(0, process.wait().code)
+		end)
+	)
+
+	for _, stream in ipairs({ "on_stdout", "on_stderr" }) do
+		it(
+			"recognizes split JDWP readiness on " .. stream,
+			async(function()
+				local launcher, inspect = fixture(function(opts)
+					opts[stream](nil, nil)
+					opts[stream](nil, "Listening for transport dt_")
+					opts[stream](nil, "socket at address: 99")
+				end)
+				local process = launch(launcher)
+				eq(true, process.state.ready)
+				inspect().on_exit(nil, 0)
+			end)
+		)
+	end
+
+	for _, code in ipairs({ 0, 1, 7 }) do
+		it(
+			"fails promptly on pre-readiness exit " .. code,
+			async(function()
+				local launcher = fixture(function(opts)
+					opts.on_stderr(nil, "broken classpath")
+					opts.on_exit(nil, code)
+				end)
+				local ok, err = pcall(launch, launcher)
+				eq(false, ok)
+				assert(tostring(err):find("before JDWP readiness", 1, true))
+				assert(tostring(err):find("broken classpath", 1, true))
+			end)
+		)
+	end
+
+	it(
+		"settles startup exceptions",
+		async(function()
+			local launcher = fixture(function()
+				error("spawn exploded")
+			end)
+			local ok, err = pcall(launch, launcher)
+			eq(false, ok)
+			assert(tostring(err):find("spawn exploded", 1, true))
 		end)
 	)
 
 	it(
-		"resolves the returned event only once stdout reports 'Listening'",
+		"bounds missing readiness and escalates only its owned process",
 		async(function()
-			local resolved = false
-			local runner = stub_job_runner(function(opts)
-				-- irrelevant stdout should not resolve the wait
-				opts.on_stdout(nil, "compiling...")
-				eq(false, resolved)
-				opts.on_stdout(nil, "Listening for transport dt_socket at address: 54321")
+			local launcher, inspect = fixture(function(opts)
+				opts.on_stdout(nil, "Listening is not a JDWP banner")
 			end)
-			local launcher = BuildToolLauncher({ job_runner = runner, dap_repl = false })
-
-			launcher.launch_debug_test("java", {}, Path("/fake/cwd"))
-			resolved = true
-
-			eq(true, resolved)
+			local ok, err = pcall(launch, launcher, { startup_timeout_ms = 10, shutdown_timeout_ms = 10 })
+			eq(false, ok)
+			assert(tostring(err):find("Timed out", 1, true))
+			local _, kills = inspect()
+			eq({ 15, 9 }, kills)
 		end)
 	)
 
 	it(
-		"sets the terminated event when the job exits",
+		"bounds exit and makes cancellation idempotent",
 		async(function()
-			local runner = stub_job_runner(function(opts)
-				opts.on_stdout(nil, "Listening")
+			local launcher, inspect = fixture(function(opts)
+				opts.on_stdout(nil, BANNER)
 			end)
-			local launcher = BuildToolLauncher({ job_runner = runner, dap_repl = false })
-
-			local terminated_event = launcher.launch_debug_test("java", {}, Path("/fake/cwd"))
-
-			local opts = runner.opts()
-			assert(opts ~= nil, "job runner should have been started with opts")
-			local terminated_before = terminated_event.is_set()
-			opts.on_exit(nil, 0)
-			local terminated_after = terminated_event.is_set()
-
-			eq(false, terminated_before)
-			eq(true, terminated_after)
+			local process = launch(launcher, { exit_timeout_ms = 10, shutdown_timeout_ms = 10 })
+			local state = process.wait_exit()
+			eq(true, state.cancelled)
+			process.stop("another cancellation")
+			eq(true, state.exited)
+			local _, kills = inspect()
+			eq({ 15, 9 }, kills)
+			assert(state.error:find("exit/report", 1, true))
 		end)
 	)
 
 	it(
-		"ignores nil stdout/stderr chunks without erroring",
+		"reaps an unclaimed ready process without limiting a claimed debugger",
 		async(function()
-			local runner = stub_job_runner(function(opts)
-				opts.on_stdout(nil, nil)
-				opts.on_stderr(nil, nil)
-				opts.on_stdout(nil, "Listening")
+			local launcher, inspect = fixture(function(opts)
+				opts.on_stdout(nil, BANNER)
 			end)
-			local launcher = BuildToolLauncher({ job_runner = runner, dap_repl = false })
-
-			local terminated_event = launcher.launch_debug_test("java", {}, Path("/fake/cwd"))
-			eq(false, terminated_event.is_set())
+			local process = launch(launcher, { attach_timeout_ms = 10, shutdown_timeout_ms = 10 })
+			eq(true, process.wait_exit(200).exited)
+			local _, kills = inspect()
+			eq({ 15, 9 }, kills)
+			local other, inspect_other = fixture(function(opts)
+				opts.on_stdout(nil, BANNER)
+			end)
+			local claimed = launch(other, { attach_timeout_ms = 10 })
+			claimed.claim()
+			require("nio").wrap(function(callback)
+				local timer = vim.uv.new_timer()
+				timer:start(30, 0, function()
+					timer:close()
+					callback()
+				end)
+			end, 1)()
+			eq(false, claimed.state.cancelled)
+			inspect_other().on_exit(nil, 0)
 		end)
 	)
 
-	it("defaults to a vim.system-backed job runner when no job_runner is injected", function()
-		local launcher = BuildToolLauncher({ dap_repl = false })
-		assert(launcher.launch_debug_test ~= nil, "launch_debug_test should exist with default deps")
-	end)
+	it(
+		"does not stop a concurrent invocation",
+		async(function()
+			local first, inspect_first = fixture(function(opts)
+				opts.on_stdout(nil, BANNER)
+			end)
+			local second, inspect_second = fixture(function(opts)
+				opts.on_stdout(nil, BANNER)
+			end)
+			local a = launch(first, { shutdown_timeout_ms = 10 })
+			local b = launch(second)
+			a.stop()
+			eq(true, a.wait_exit(200).exited)
+			local _, first_kills = inspect_first()
+			local _, second_kills = inspect_second()
+			eq({ 15, 9 }, first_kills)
+			eq({}, second_kills)
+			eq(false, b.state.cancelled)
+			inspect_second().on_exit(nil, 0)
+		end)
+	)
+	it(
+		"reaps startup even if the readiness task is cancelled",
+		async(function()
+			local nio = require("nio")
+			local launcher, inspect = fixture(function() end)
+			local task = nio.run(function()
+				launch(launcher, { startup_timeout_ms = 10, shutdown_timeout_ms = 10 })
+			end, function() end)
+			task.cancel()
+			nio.wrap(function(callback)
+				local timer = vim.uv.new_timer()
+				timer:start(50, 0, function()
+					timer:close()
+					callback()
+				end)
+			end, 1)()
+			local _, kills = inspect()
+			eq({ 15, 9 }, kills)
+		end)
+	)
 end)

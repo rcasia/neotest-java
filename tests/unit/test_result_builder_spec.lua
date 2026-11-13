@@ -95,13 +95,18 @@ local function reader_returning(jrs)
 	}
 end
 
+local function missing(id)
+	local message = "No JUnit result reported for selected test: " .. id
+	return { status = "failed", output = "output", short = message, errors = { { message = message } } }
+end
+
 describe("ResultBuilder", function()
 	local remove_file = function() end
 	local fake_tempname = function()
 		return TEMPNAME
 	end
 
-	it("returns empty when the reader returns empty", function()
+	it("fails selected tests when the reader returns empty", function()
 		-- given
 		local file_path = current_dir .. "tests/fixtures/maven-demo/src/test/java/com/example/ExampleTest.java"
 		local tree = TREES.TWO_TESTS_IN_FILE(Path(file_path))
@@ -115,7 +120,10 @@ describe("ResultBuilder", function()
 		}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
 
 		-- then
-		eq({}, result)
+		eq({
+			["com.example.ExampleTest#firstTestMethod()"] = missing("com.example.ExampleTest#firstTestMethod()"),
+			["com.example.ExampleTest#secondTestMethod()"] = missing("com.example.ExampleTest#secondTestMethod()"),
+		}, result)
 	end)
 
 	it("should build results from report", function()
@@ -172,6 +180,7 @@ describe("ResultBuilder", function()
 					status = "passed",
 					output = TEMPNAME,
 				},
+				["com.example.ExampleTest#secondTestMethod()"] = missing("com.example.ExampleTest#secondTestMethod()"),
 			},
 			ResultBuilder({
 				scan_dir = scan_dir_returning(file_path),
@@ -274,7 +283,10 @@ describe("ResultBuilder", function()
 			tempname_fn = fake_tempname,
 		}).build_results(DEFAULT_SPEC, SUCCESSFUL_RESULT, tree)
 
-		eq({ [id] = { status = "passed", output = TEMPNAME } }, result)
+		eq({
+			[id] = { status = "passed", output = TEMPNAME },
+			["com.example.ExampleTest#firstTestMethod()"] = missing("com.example.ExampleTest#firstTestMethod()"),
+		}, result)
 	end)
 
 	it("builds failed results when assertion message contains a greater-than character", function()
@@ -308,6 +320,7 @@ describe("ResultBuilder", function()
 					status = "failed",
 					output = TEMPNAME,
 				},
+				["com.example.ExampleTest#secondTestMethod()"] = missing("com.example.ExampleTest#secondTestMethod()"),
 			},
 			ResultBuilder({
 				scan_dir = scan_dir_returning(file_path),

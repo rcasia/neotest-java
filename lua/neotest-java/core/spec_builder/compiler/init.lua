@@ -8,7 +8,7 @@ local LspCompiler = require("neotest-java.core.spec_builder.compiler.lsp_compile
 
 --- Interface for Java compilers
 ---@class NeotestJavaCompiler
----@field compile fun(opts: NeotestJavaCompiler.Opts): string classpath_file_arg
+---@field compile fun(opts: NeotestJavaCompiler.Opts): boolean? true on success; throws/false on failure.
 
 local client_provider = ClientProvider({
 	get_clients = function(opts)

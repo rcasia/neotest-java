@@ -19,7 +19,7 @@ describe("Binaries", function()
 			request = function(_, method, params, callback)
 				eq(method, "workspace/executeCommand")
 				eq(params.command, "java.project.getSettings")
-				eq(params.arguments[1], "file://some")
+				eq(params.arguments[1], vim.uri_from_fname(expected_cwd:to_string()))
 				eq(params.arguments[2], { "org.eclipse.jdt.ls.core.vm.location" })
 
 				if callback then
